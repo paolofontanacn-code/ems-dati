@@ -1,0 +1,118 @@
+# EMS Cismondi - SOLO SIMULAZIONE: ogni 2 ore GitHub esegue lo stesso programma del Mango sui dati Huawei
+# a 5 minuti, misura il carico di lavoro che avrebbe il Mango e riaddestra i modelli.
+name: EMS simulazione
+
+on:
+  schedule:
+    - cron: "17 */2 * * *"        # ogni 2 ore, al minuto 17 (lontano dall'inizio dell'ora, meno ritardi)
+  workflow_dispatch:              # avvio manuale dal tab Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ems
+  cancel-in-progress: false
+
+jobs:
+  ems:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Repository
+        uses: actions/checkout@v4
+
+      - name: Memoria del Mango (ripristino)
+        id: memoria
+        uses: actions/cache/restore@v4
+        with:
+          path: memoria_mango
+          key: memoria-${{ github.run_id }}
+          restore-keys: memoria-
+
+      - name: Memoria del Mango (dal backup giornaliero se la cache manca)
+        if: steps.memoria.outputs.cache-matched-key == ''
+        run: |
+          ultimo=$(ls backup/*.tar.gz 2>/dev/null | sort | tail -1 || true)
+          if [ -n "$ultimo" ]; then tar -xzf "$ultimo"; echo "Ripristinato $ultimo"; else echo "Nessun backup: si parte da zero"; fi
+
+      - name: Lua
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lua5.1
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ml/requirements.txt
+
+      - name: Librerie Python
+        run: pip install -q -r ml/requirements.txt
+
+      - name: Credenziali (dai segreti del repository)
+        env:
+          EMS_CHIAVE: ${{ secrets.EMS_CHIAVE }}
+          HUAWEI_TOKEN_INIZIALE: ${{ secrets.HUAWEI_TOKEN_INIZIALE }}
+          GME_LOGIN: ${{ secrets.GME_LOGIN }}
+          GME_PASSWORD: ${{ secrets.GME_PASSWORD }}
+        run: |
+          python3 -c "import json,os; json.dump({'Login': os.environ['GME_LOGIN'], 'Password': os.environ['GME_PASSWORD']}, open('mango/gme_credenziali.json','w'))"
+          if [ -f segreti/token_fusionsolar.enc ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -in segreti/token_fusionsolar.enc -out mango/token_fusionsolar.json -pass env:EMS_CHIAVE
+          else
+            printf '%s' "$HUAWEI_TOKEN_INIZIALE" > mango/token_fusionsolar.json
+          fi
+
+      - name: Simulazione (stesso programma del Mango)
+        env:
+          EMS_REPO_DIR: ${{ github.workspace }}
+          EMS_DATI: ${{ github.workspace }}/memoria_mango
+          EMS_STORICO: ${{ github.workspace }}/memoria_mango/storico
+          EMS_RAM: ${{ runner.temp }}/ram
+          HUAWEI_CLIENT_SECRET: ${{ secrets.HUAWEI_CLIENT_SECRET }}
+        run: |
+          lua5.1 mango/ems_sim.lua github
+          mkdir -p misure && lua5.1 mango/benchmark_mango.lua > misure/benchmark_github.txt
+          tail -40 memoria_mango/ems_sim.log || true
+
+      - name: Machine learning
+        continue-on-error: true
+        env:
+          EMS_REPO_DIR: ${{ github.workspace }}
+        run: python ml/addestra.py
+
+      - name: Token cifrato e pulizia delle credenziali
+        if: always()
+        env:
+          EMS_CHIAVE: ${{ secrets.EMS_CHIAVE }}
+        run: |
+          mkdir -p segreti
+          if [ -s mango/token_fusionsolar.json ]; then
+            openssl enc -aes-256-cbc -pbkdf2 -salt -in mango/token_fusionsolar.json -out segreti/token_fusionsolar.enc -pass env:EMS_CHIAVE
+          fi
+          rm -f mango/token_fusionsolar.json mango/gme_credenziali.json
+
+      - name: Backup giornaliero della memoria
+        run: |
+          D=$(TZ=Europe/Rome date +%F)
+          if [ -f memoria_mango/stato.json ] && [ ! -f backup/$D.tar.gz ]; then
+            mkdir -p backup
+            tar -czf backup/$D.tar.gz memoria_mango/stato.json memoria_mango/modelli.json
+            ls backup/*.tar.gz | sort | head -n -7 | xargs -r rm -f
+          fi
+
+      - name: Memoria del Mango (salvataggio)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: memoria_mango
+          key: memoria-${{ github.run_id }}
+
+      - name: Salvataggio nel repository
+        run: |
+          git config user.name "ems-simulazione"
+          git config user.email "ems-simulazione@users.noreply.github.com"
+          git add -A
+          git commit -q -m "EMS: aggiornamento $(TZ=Europe/Rome date '+%d/%m/%Y %H:%M')" || { echo "Niente da salvare"; exit 0; }
+          git pull -q --rebase --autostash || true
+          git push -q

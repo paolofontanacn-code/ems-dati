@@ -1,0 +1,8 @@
+# credenziali in chiaro: mai nel repository
+mango/token_fusionsolar.json
+mango/gme_credenziali.json
+mango/github.token
+mango/config_locale.lua
+# memoria del Mango: sta nella cache di GitHub Actions (piu' un backup giornaliero in backup/)
+memoria_mango/
+__pycache__/
