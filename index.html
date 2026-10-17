@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EMS Cismondi</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.min.css">
+<script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
+<style>
+:root {
+  --sfondo: #f6f7f9; --carta: #ffffff; --testo: #1d2330; --tenue: #667085; --bordo: #dfe3ea; --accento: #1f6feb;
+  --reale: #1d2330; --auto: #8a94a6; --A: #1f6feb; --B: #e07a10; --C: #8a3ffc;
+  --fv: #d4a106; --carico: #d1435b; --rete: #0f9d8a; --batt: #5b6b86;
+  --carica: rgba(30,160,90,.55); --rete_c: rgba(230,130,20,.6); --scarica: rgba(210,50,60,.6); --rit: rgba(120,130,150,.45);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sfondo: #11151c; --carta: #1a2029; --testo: #e6e9ef; --tenue: #9aa4b5; --bordo: #2c3440; --accento: #58a6ff;
+    --reale: #e6e9ef; --auto: #8a94a6; --A: #58a6ff; --B: #f0a040; --C: #b98cff;
+    --fv: #e8c040; --carico: #ff7088; --rete: #3cc9b4; --batt: #9fb0cc;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--sfondo); color: var(--testo); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { padding: 14px 16px 6px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+h1 { font-size: 20px; margin: 0; }
+.nota { color: var(--tenue); font-size: 13px; }
+.etichetta { font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 4px; background: var(--accento); color: #fff; }
+.barra { position: sticky; top: 0; z-index: 5; background: var(--sfondo); padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-bottom: 1px solid var(--bordo); }
+button, select { font: inherit; color: var(--testo); background: var(--carta); border: 1px solid var(--bordo); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+button:hover, select:hover { border-color: var(--accento); }
+.scelte { padding: 8px 16px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.scelte label { display: inline-flex; gap: 5px; align-items: center; background: var(--carta); border: 1px solid var(--bordo); border-radius: 14px; padding: 3px 10px; font-size: 13px; cursor: pointer; user-select: none; }
+.scelte label.on { border-color: var(--accento); color: var(--accento); }
+.scelte input { margin: 0; }
+main { padding: 10px 16px 40px; display: grid; gap: 14px; }
+section { background: var(--carta); border: 1px solid var(--bordo); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+section h2 { font-size: 15px; margin: 0 0 4px; }
+section .spiega { color: var(--tenue); font-size: 13px; margin: 0 0 8px; }
+.grafico { width: 100%; overflow: hidden; }
+.tessere { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.tessera { border: 1px solid var(--bordo); border-radius: 8px; padding: 8px 10px; }
+.tessera b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+.tessera span { color: var(--tenue); font-size: 12px; }
+.tab { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 5px 8px; border-bottom: 1px solid var(--bordo); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+td.testo { text-align: left; white-space: normal; min-width: 180px; }
+.pos { color: #1a9c5b; } .neg { color: #d1435b; }
+.legenda-azioni { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--tenue); margin-top: 4px; }
+.legenda-azioni i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -2px; margin-right: 4px; }
+pre { font-size: 12px; overflow-x: auto; margin: 0; white-space: pre; }
+.errore { color: #d1435b; }
+.vuoto { color: var(--tenue); font-style: italic; }
+.uplot { font-family: inherit; }
+.u-legend { font-size: 12px; }
+.u-legend .u-series th { cursor: pointer; }
+</style>
+</head>
+<body>
+<header>
+  <h1>EMS Cismondi</h1>
+  <span class="etichetta">SOLO SIMULAZIONE</span>
+  <span class="nota" id="aggiornato">caricamento…</span>
+</header>
+<div class="barra">
+  <button id="prec" title="Giorno precedente">◀</button>
+  <select id="giorno"></select>
+  <button id="succ" title="Giorno successivo">▶</button>
+  <button id="ultimo">Ultimo</button>
+  <button id="aggiorna">Aggiorna</button>
+  <span class="nota" id="tipo"></span>
+</div>
+<div class="scelte" id="scelte"></div>
+<main id="principale"></main>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------- dove sono i dati
+// Su GitHub Pages i dati si leggono dal repository (raw.githubusercontent.com: aggiornato pochi minuti dopo ogni giro).
+const H = location.hostname;
+const BASE = H.endsWith(".github.io")
+  ? `https://raw.githubusercontent.com/${H.split(".")[0]}/${location.pathname.split("/")[1] || "ems-dati"}/main/`
+  : "./";
+
+// ---------------------------------------------------------------- pannelli selezionabili
+const PANNELLI = [
+  ["tabella", "Euro e kWh del giorno"],
+  ["potenze", "Potenze reali"],
+  ["soc", "SOC batteria"],
+  ["batteria", "Potenza batteria"],
+  ["prezzi", "Prezzi e azioni"],
+  ["rete", "Prelievo dalla rete"],
+  ["previsioni", "Previsto e reale"],
+  ["meteo", "Meteo"],
+  ["periodi", "Periodi di carica/scarica"],
+  ["piano", "Piano calcolato"],
+  ["giornaliero", "Giorno per giorno"],
+  ["registro", "Registro ultimo giro"],
+];
+const PREDEFINITI = ["tabella", "potenze", "soc", "prezzi", "giornaliero"];
+function leggiScelte() {
+  try { const v = JSON.parse(localStorage.getItem("ems_pannelli")); if (Array.isArray(v)) return new Set(v); } catch (e) {}
+  return new Set(PREDEFINITI);
+}
+function salvaScelte() { try { localStorage.setItem("ems_pannelli", JSON.stringify([...scelte])); } catch (e) {} }
+let scelte = leggiScelte();
+
+// ---------------------------------------------------------------- utilità
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const $ = id => document.getElementById(id);
+const fmt = (v, d = 2) => (v == null || isNaN(v)) ? "–" : Number(v).toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
+const num = v => { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; };
+
+function csv(testo) {
+  const righe = []; let campo = "", riga = [], q = false;
+  for (let i = 0; i < testo.length; i++) {
+    const c = testo[i];
+    if (q) { if (c === '"') { if (testo[i + 1] === '"') { campo += '"'; i++; } else q = false; } else campo += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { riga.push(campo); campo = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && testo[i + 1] === "\n") i++; riga.push(campo); campo = ""; if (riga.length > 1 || riga[0] !== "") righe.push(riga); riga = []; }
+    else campo += c;
+  }
+  if (campo !== "" || riga.length) { riga.push(campo); righe.push(riga); }
+  if (!righe.length) return [];
+  const intest = righe.shift();
+  return righe.map(r => { const o = {}; intest.forEach((k, i) => o[k] = r[i]); return o; });
+}
+
+const cache = new Map();
+async function scarica(percorso, tipo = "testo") {
+  const chiave = percorso + "|" + tipo;
+  if (cache.has(chiave)) return cache.get(chiave);
+  const p = (async () => {
+    const r = await fetch(BASE + percorso + "?t=" + Math.floor(Date.now() / 60000), { cache: "no-store" });
+    if (!r.ok) throw new Error(`${percorso}: HTTP ${r.status}`);
+    if (tipo === "gz") {
+      const flusso = r.body.pipeThrough(new DecompressionStream("gzip"));
+      return await new Response(flusso).text();
+    }
+    return tipo === "json" ? await r.json() : await r.text();
+  })();
+  cache.set(chiave, p);
+  p.catch(() => cache.delete(chiave));
+  return p;
+}
+
+// ---------------------------------------------------------------- grafici (uPlot)
+const grafici = [];
+function sezione(id, titolo, spiega) {
+  const s = document.createElement("section"); s.id = "p_" + id;
+  s.innerHTML = `<h2>${titolo}</h2>` + (spiega ? `<p class="spiega">${spiega}</p>` : "");
+  $("principale").appendChild(s); return s;
+}
+function larghezza(el) { const cs = getComputedStyle(el); return Math.max(260, Math.floor(el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight))); }
+
+function grafico(contenitore, x, serie, opz = {}) {
+  const div = document.createElement("div"); div.className = "grafico"; contenitore.appendChild(div);
+  const tenue = css("--tenue"), bordo = css("--bordo");
+  const asse = { stroke: tenue, grid: { stroke: bordo, width: 1 }, ticks: { stroke: bordo } };
+  const o = {
+    width: larghezza(contenitore), height: opz.altezza || 260,
+    tzDate: ts => uPlot.tzDate(new Date(ts * 1e3), "Europe/Rome"),
+    scales: { x: { time: true }, ...(opz.scale || {}) },
+    axes: [{ ...asse, ...(opz.giorni
+        ? { space: 50, incrs: [86400, 2 * 86400, 7 * 86400, 14 * 86400, 30 * 86400], values: (u, v) => v.map(a => new Date(a * 1e3).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit" })) }
+        : { space: 45, incrs: [900, 1800, 3600, 7200, 10800, 21600, 43200, 86400], values: (u, v) => v.map(a => new Date(a * 1e3).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" })) }) },
+      { ...asse, label: opz.unita || "", size: 60, values: (u, v) => v.map(a => fmt(a, opz.dec ?? 0)) },
+           ...(opz.assi || []).map(a => ({ ...asse, ...a }))],
+    series: [{ label: opz.giorni ? "Giorno" : "Ora", value: (u, v) => v == null ? "–" : new Date(v * 1e3).toLocaleString("it-IT", opz.giorni ? { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit" } : { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" }) },
+      ...serie.map(s => ({ spanGaps: false, width: 1.6, points: { show: false }, value: (u, v) => v == null ? "–" : fmt(v, s.dec ?? opz.dec ?? 0), ...s }))],
+    cursor: { sync: { key: "giorno" } },
+    legend: { live: true },
+    hooks: opz.hooks || {},
+  };
+  const dati = [x, ...serie.map(s => s.dati)];
+  serie.forEach(s => delete s.dati);
+  const u = new uPlot(o, dati, div);
+  grafici.push([u, contenitore]);
+  return u;
+}
+window.addEventListener("resize", () => { for (const [u, c] of grafici) u.setSize({ width: larghezza(c), height: u.height }); });
+
+// ---------------------------------------------------------------- colori delle azioni
+function coloreAzione(a) {
+  if (!a || a === "AUTO") return null;
+  if (a === "RITARDATA") return css("--rit");
+  if (a === "CARICA_FV") return css("--carica");
+  if (a === "CARICA_RETE") return css("--rete_c");
+  return css("--scarica");
+}
+function legendaAzioni() {
+  return `<div class="legenda-azioni"><span><i style="background:${css("--carica")}"></i>carica da FV</span>
+    <span><i style="background:${css("--rete_c")}"></i>carica da rete (max 1 kW)</span><span><i style="background:${css("--scarica")}"></i>scarica forzata</span>
+    <span><i style="background:${css("--rit")}"></i>carica ritardata</span><span>(vuoto = automatico)</span></div>`;
+}
+// strisce delle azioni A/B/C: grafico sottile sotto quello principale, stesso asse dei tempi
+function corsie(contenitore, x, azioni) {
+  const passo = x.length > 1 ? x[1] - x[0] : 300;
+  const disegna = u => {
+    const c = u.ctx, { left, top, width, height } = u.bbox, h = height / 3;
+    ["A", "B", "C"].forEach((p, k) => {
+      const y = top + k * h;
+      c.fillStyle = css("--bordo"); c.fillRect(left, y + h - 1, width, 1);
+      for (let i = 0; i < x.length; i++) {
+        const col = coloreAzione(azioni[p][i]); if (!col) continue;
+        const x0 = u.valToPos(x[i], "x", true), x1 = u.valToPos(x[i] + passo, "x", true);
+        c.fillStyle = col; c.fillRect(x0, y + 1, Math.max(1, x1 - x0 + 0.5), h - 2);
+      }
+    });
+  };
+  const u = grafico(contenitore, x, [{ label: "", show: false, dati: x.map(() => null) }], { altezza: 90, hooks: { draw: [disegna] }, scale: { y: { range: [0, 1] } } });
+  // etichette A/B/C al posto dei numeri dell'asse
+  u.axes[1].values = () => [];
+  u.setScale("y", { min: 0, max: 1 });
+  u.root.querySelector(".u-legend").style.display = "none";
+  const et = document.createElement("div");
+  et.style.cssText = "display:flex;gap:14px;font-size:12px;color:var(--tenue);margin:-4px 0 2px 60px";
+  et.innerHTML = "<span>righe dall'alto: A · B · C</span>";
+  u.root.after(et);
+  return u;
+}
+
+// ---------------------------------------------------------------- stato
+let indice = null, giorni = [];
+
+async function caricaIndice() {
+  indice = await scarica("pannello/indice.json", "json");
+  giorni = indice.giorni || [];
+  const sel = $("giorno"), prima = sel.value;
+  sel.innerHTML = giorni.map(g => `<option value="${g.g}">${new Date(g.g + "T12:00:00").toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" })}${g.tipo === "oggi" ? " · in corso" : g.tipo === "storico" ? " · solo reale" : ""}</option>`).join("");
+  const dalLink = new URLSearchParams(location.search).get("giorno");
+  sel.value = (prima && giorni.some(g => g.g === prima)) ? prima : (dalLink && giorni.some(g => g.g === dalLink)) ? dalLink : (giorni.length ? giorni[giorni.length - 1].g : "");
+  const ag = new Date(indice.aggiornato);
+  $("aggiornato").textContent = "dati aggiornati al " + ag.toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " (un giro ogni 2 ore)";
+}
+
+function disegnaScelte() {
+  $("scelte").innerHTML = PANNELLI.map(([id, nome]) => `<label class="${scelte.has(id) ? "on" : ""}"><input type="checkbox" data-id="${id}" ${scelte.has(id) ? "checked" : ""}>${nome}</label>`).join("");
+  $("scelte").querySelectorAll("input").forEach(i => i.addEventListener("change", () => {
+    i.checked ? scelte.add(i.dataset.id) : scelte.delete(i.dataset.id); salvaScelte(); disegnaScelte(); mostra();
+  }));
+}
+
+// ---------------------------------------------------------------- dati del giorno
+async function datiGiorno(g) {
+  const info = giorni.find(x => x.g === g) || { tipo: "simulato" };
+  if (info.tipo === "storico") {
+    const mese = g.slice(0, 4) + g.slice(5, 7);
+    const righe = csv(await scarica(`storico/storico_${mese}.csv.gz`, "gz"));
+    const fmtG = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Rome" });
+    const r = righe.filter(x => fmtG.format(new Date(x.ts * 1000)) === g).sort((a, b) => a.ts - b.ts).map(x => {
+      const c = num(x.contatore_w) || 0;
+      return { ts: x.ts, fv_w: x.fv_w, carico_w: x.carico_w, contatore_w: c, prelievo_w: Math.max(0, -c), immissione_w: Math.max(0, c) };
+    });
+    let meteo = null; try { meteo = await scarica(`storico/meteo_${mese}.json`, "json"); } catch (e) {}
+    return { info, righe: r, meteo };
+  }
+  const righe = csv(info.tipo === "oggi" ? await scarica("pannello/oggi.csv") : await scarica(`dati/${g}/dataset.csv.gz`, "gz")).sort((a, b) => a.ts - b.ts);
+  let periodi = [];
+  try { periodi = csv(await scarica(info.tipo === "oggi" ? "pannello/oggi_periodi.csv" : `dati/${g}/periodi.csv`)); } catch (e) {}
+  return { info, righe, periodi };
+}
+const col = (righe, k, f = 1) => righe.map(r => { const v = num(r[k]); return v == null ? null : v * f; });
+
+// ---------------------------------------------------------------- pannelli
+function pTabella(d, g) {
+  const s = sezione("tabella", "Euro e kWh del giorno", d.info.tipo === "oggi" ? "Giorno in corso: totali parziali fino all'ultima lettura." :
+    d.info.tipo === "storico" ? "Giorno prima dell'avvio della simulazione: solo energia reale." :
+    "Netto = acquisti − cessioni (+ usura batteria e 0,10 € per ogni cambiamento negli scenari). Beneficio = automatico simulato − scenario.");
+  const R = d.righe, k = 300 / 3.6e6;
+  const kwh = n => R.reduce((a, r) => a + (num(r[n]) || 0), 0) * k;
+  const somma = n => R.reduce((a, r) => a + (num(r[n]) || 0), 0);
+  let fv = kwh("fv_w"), car = kwh("carico_w"), pr = kwh("prelievo_w"), im = kwh("immissione_w");
+  const gg = (indice && d.info.tipo === "simulato") ? giornaliero.find(x => x.giorno === g) : null;
+  if (gg) { fv = num(gg.fv_kwh); car = num(gg.carico_kwh); pr = num(gg.prel_kwh); im = num(gg.imm_kwh); }
+  let h = `<div class="tessere">
+    <div class="tessera"><span>Produzione FV</span><b>${fmt(fv, 1)}</b><span>kWh</span></div>
+    <div class="tessera"><span>Consumo casa</span><b>${fmt(car, 1)}</b><span>kWh</span></div>
+    <div class="tessera"><span>Prelievo reale</span><b>${fmt(pr, 1)}</b><span>kWh</span></div>
+    <div class="tessera"><span>Immissione reale</span><b>${fmt(im, 1)}</b><span>kWh</span></div></div>`;
+  if (d.info.tipo !== "storico") {
+    h += `<div class="tab"><table><tr><th>Tariffa</th><th>Reale netto €</th><th>Automatico simulato €</th><th>Scenario ottimizzato €</th><th>Beneficio €</th><th>Prelievo scenario kWh</th><th>Immissione scenario kWh</th><th>Cambiamenti</th></tr>`;
+    for (const p of ["A", "B", "C"]) {
+      let reale, auto, scen;
+      if (gg) { reale = num(gg[p + "_reale_netto_eur"]); auto = num(gg[p + "_auto_netto_eur"]); scen = num(gg[p + "_scenario_netto_eur"]); }
+      else {
+        reale = somma(p + "_reale_costo_eur") - somma("reale_ricavo_eur");
+        auto = somma(p + "_auto_costo_eur") - somma(p + "_auto_ricavo_eur") + somma(p + "_auto_usura_eur");
+        scen = somma(p + "_costo_eur") - somma(p + "_ricavo_eur") + somma(p + "_usura_eur") + somma(p + "_costo_interventi_eur");
+      }
+      const ben = (auto != null && scen != null) ? auto - scen : null;
+      const ult = [...R].reverse().find(r => r[p + "_comandi_oggi"] !== "" && r[p + "_comandi_oggi"] != null);
+      h += `<tr><td><b style="color:${css("--" + p)}">${p}</b></td><td>${fmt(reale)}</td><td>${fmt(auto)}</td><td>${fmt(scen)}</td>
+        <td class="${ben > 0.005 ? "pos" : ben < -0.005 ? "neg" : ""}">${fmt(ben)}</td><td>${fmt(somma(p + "_prel_kwh"), 1)}</td><td>${fmt(somma(p + "_imm_kwh"), 1)}</td><td>${ult ? ult[p + "_comandi_oggi"] : "–"}</td></tr>`;
+    }
+    h += `</table></div><p class="spiega">A = prezzo fisso 0,12 €/kWh · B = PUN medio mensile per fascia + 0,02 · C = PUN orario + 0,02; per tutti + perdite, trasporto, oneri, accise, IVA (dispacciamento non noto: 0). Cessione = prezzo zonale NORD orario −40 % di imposte. Il reale netto non comprende l'usura della batteria.</p>`;
+  }
+  s.insertAdjacentHTML("beforeend", h);
+}
+
+function pPotenze(d) {
+  const s = sezione("potenze", "Potenze reali (misurate da Huawei)", "Rete: sopra lo zero immissione, sotto lo zero prelievo. Batteria: sopra lo zero in carica. Clic su una voce della legenda per nasconderla.");
+  const R = d.righe, x = R.map(r => +r.ts);
+  const serie = [
+    { label: "FV", stroke: css("--fv"), dati: col(R, "fv_w") },
+    { label: "Consumo", stroke: css("--carico"), dati: col(R, "carico_w") },
+    { label: "Rete", stroke: css("--rete"), dati: R.map(r => (num(r.immissione_w) || 0) - (num(r.prelievo_w) || 0)) },
+  ];
+  if (d.info.tipo !== "storico") serie.push({ label: "Batteria", stroke: css("--batt"), dati: col(R, "batteria_w") });
+  grafico(s, x, serie, { unita: "W" });
+}
+
+function pSoc(d) {
+  const s = sezione("soc", "SOC della batteria: reale e simulati", "Ogni scenario ha la sua batteria virtuale (15 kWh, 6–95 %), partita dal SOC reale. Automatico simulato = la modalità attuale rifatta dal simulatore: se si scosta dal reale, il simulatore va corretto.");
+  const R = d.righe, x = R.map(r => +r.ts);
+  grafico(s, x, [
+    { label: "Reale", stroke: css("--reale"), width: 2.2, dati: col(R, "soc") },
+    { label: "Automatico sim.", stroke: css("--auto"), dash: [6, 4], dati: col(R, "auto_soc") },
+    { label: "A", stroke: css("--A"), dati: col(R, "A_soc") },
+    { label: "B", stroke: css("--B"), dati: col(R, "B_soc") },
+    { label: "C", stroke: css("--C"), dati: col(R, "C_soc") },
+  ], { unita: "%", scale: { y: { range: [0, 100] } } });
+}
+
+function pBatteria(d) {
+  const s = sezione("batteria", "Potenza della batteria: reale e simulata", "Sopra lo zero in carica, sotto lo zero in scarica.");
+  const R = d.righe, x = R.map(r => +r.ts);
+  grafico(s, x, [
+    { label: "Reale", stroke: css("--reale"), width: 2, dati: col(R, "batteria_w") },
+    { label: "Automatico sim.", stroke: css("--auto"), dash: [6, 4], dati: col(R, "auto_batteria_w") },
+    { label: "A", stroke: css("--A"), dati: col(R, "A_batteria_w") },
+    { label: "B", stroke: css("--B"), dati: col(R, "B_batteria_w") },
+    { label: "C", stroke: css("--C"), dati: col(R, "C_batteria_w") },
+  ], { unita: "W" });
+}
+
+function pPrezzi(d) {
+  const s = sezione("prezzi", "Prezzi e azioni decise", "Costo d'acquisto di ogni tariffa, prezzo NORD e valore della cessione. In basso le azioni degli scenari A, B, C.");
+  const R = d.righe, x = R.map(r => +r.ts);
+  const az = { A: R.map(r => r.A_azione), B: R.map(r => r.B_azione), C: R.map(r => r.C_azione) };
+  grafico(s, x, [
+    { label: "Acquisto A", stroke: css("--A"), dati: col(R, "costo_A"), dec: 3 },
+    { label: "Acquisto B", stroke: css("--B"), dati: col(R, "costo_B"), dec: 3 },
+    { label: "Acquisto C", stroke: css("--C"), dati: col(R, "costo_C"), dec: 3 },
+    { label: "NORD", stroke: css("--tenue"), dash: [3, 3], dati: col(R, "nord"), dec: 3 },
+    { label: "Cessione", stroke: css("--rete"), dati: col(R, "valore_cessione"), dec: 3 },
+  ], { unita: "€/kWh", dec: 2, altezza: 280 });
+  corsie(s, x, az);
+  s.insertAdjacentHTML("beforeend", legendaAzioni());
+}
+
+function pRete(d) {
+  const s = sezione("rete", "Prelievo dalla rete: reale, automatico simulato e scenari", "Il prelievo massimo ammesso è 7 kW.");
+  const R = d.righe, x = R.map(r => +r.ts), k = 3.6e6 / 300;
+  grafico(s, x, [
+    { label: "Reale", stroke: css("--reale"), width: 2, dati: col(R, "prelievo_w") },
+    { label: "Automatico sim.", stroke: css("--auto"), dash: [6, 4], dati: col(R, "auto_prel_kwh", k) },
+    { label: "A", stroke: css("--A"), dati: col(R, "A_prel_kwh", k) },
+    { label: "B", stroke: css("--B"), dati: col(R, "B_prel_kwh", k) },
+    { label: "C", stroke: css("--C"), dati: col(R, "C_prel_kwh", k) },
+  ], { unita: "W" });
+}
+
+function pPrevisioni(d) {
+  const s = sezione("previsioni", "Previsto e reale", "Previsione del momento e previsione fatta la sera prima, per consumo e produzione FV.");
+  const R = d.righe, x = R.map(r => +r.ts);
+  grafico(s, x, [
+    { label: "Consumo reale", stroke: css("--carico"), width: 2, dati: col(R, "carico_w") },
+    { label: "Consumo previsto", stroke: css("--carico"), dash: [6, 4], dati: col(R, "prev_carico_w") },
+    { label: "Consumo previsto sera prima", stroke: css("--carico"), dash: [2, 3], dati: col(R, "prev_carico_sera_w") },
+    { label: "FV reale", stroke: css("--fv"), width: 2, dati: col(R, "fv_w") },
+    { label: "FV previsto", stroke: css("--fv"), dash: [6, 4], dati: col(R, "prev_fv_w") },
+    { label: "FV previsto sera prima", stroke: css("--fv"), dash: [2, 3], dati: col(R, "prev_fv_sera_w") },
+  ], { unita: "W" });
+}
+
+function pMeteo(d) {
+  const s = sezione("meteo", "Meteo", "Temperatura e radiazione solare (Open-Meteo).");
+  let x, t, ghi;
+  if (d.info.tipo === "storico") {
+    if (!d.meteo) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Meteo non disponibile per questo giorno.</p>`); return; }
+    const t0 = num(d.righe[0]?.ts), t1 = num(d.righe[d.righe.length - 1]?.ts);
+    const ore = Object.keys(d.meteo).map(Number).filter(h => t0 != null && h >= t0 - 3600 && h <= t1 + 3600).sort((a, b) => a - b);
+    x = ore; t = ore.map(h => num(d.meteo[h].temp)); ghi = ore.map(h => num(d.meteo[h].ghi));
+  } else {
+    const R = d.righe; x = R.map(r => +r.ts); t = col(R, "temp_c"); ghi = col(R, "ghi_wm2");
+  }
+  grafico(s, x, [
+    { label: "Temperatura °C", stroke: css("--carico"), scale: "t", dati: t, dec: 1 },
+    { label: "Radiazione W/m²", stroke: css("--fv"), scale: "y", dati: ghi },
+  ], { unita: "W/m²", scale: { t: {} }, assi: [{ scale: "t", side: 1, size: 50, grid: { show: false }, values: (u, v) => v.map(a => fmt(a, 1) + "°") }] });
+}
+
+function pPeriodi(d) {
+  const s = sezione("periodi", "Periodi di carica e scarica decisi", "Ogni riga è un periodo diverso dall'automatico, con il motivo della decisione.");
+  const P = (d.periodi || []).filter(p => p.azione && p.azione !== "AUTO");
+  if (!P.length) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun periodo diverso dall'automatico.</p>`); return; }
+  const ora = v => v ? v.slice(11, 16) : "";
+  s.insertAdjacentHTML("beforeend", `<div class="tab"><table><tr><th>Scenario</th><th>Dalle</th><th>Alle</th><th>Azione</th><th>SOC %</th><th>Carica FV kWh</th><th>Carica rete kWh</th><th>Scarica kWh</th><th>€ netto</th><th>Motivo</th></tr>` +
+    P.map(p => `<tr><td><b style="color:${css("--" + p.profilo)}">${p.profilo}</b></td><td>${ora(p.inizio)}</td><td>${ora(p.fine)}</td><td>${p.azione.replace("_", " ").toLowerCase()}</td>
+      <td>${fmt(num(p.soc_inizio), 0)} → ${fmt(num(p.soc_fine), 0)}</td><td>${fmt(num(p.carica_fv_kwh), 2)}</td><td>${fmt(num(p.carica_rete_kwh), 2)}</td><td>${fmt(num(p.scarica_kwh), 2)}</td>
+      <td>${fmt(num(p.euro_netto))}</td><td class="testo">${p.motivo || ""}</td></tr>`).join("") + `</table></div>`);
+}
+
+async function pPiano() {
+  const s = sezione("piano", "Piano calcolato", "");
+  if (!indice.piano) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun piano ancora calcolato (i prezzi del giorno dopo arrivano dalle 13:30).</p>`); return; }
+  const P = csv(await scarica("pannello/piano.csv"));
+  s.querySelector("h2").textContent = "Piano calcolato per il " + new Date(indice.piano + "T12:00:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+  s.insertAdjacentHTML("beforeend", `<p class="spiega">Quello che ogni scenario prevede di fare, con le previsioni e i prezzi noti al momento del calcolo. Il piano viene ricalcolato durante il giorno.</p>`);
+  const per = { A: [], B: [], C: [] };
+  for (const r of P) if (per[r.profilo]) per[r.profilo].push(r);
+  const x = per.A.map(r => Date.parse(r.inizio) / 1000);
+  const az = { A: per.A.map(r => r.azione), B: per.B.map(r => r.azione), C: per.C.map(r => r.azione) };
+  grafico(s, x, [
+    { label: "SOC A", stroke: css("--A"), dati: per.A.map(r => num(r.soc)) },
+    { label: "SOC B", stroke: css("--B"), dati: per.B.map(r => num(r.soc)) },
+    { label: "SOC C", stroke: css("--C"), dati: per.C.map(r => num(r.soc)) },
+  ], { unita: "%", scale: { y: { range: [0, 100] } } });
+  corsie(s, x, az);
+  grafico(s, x, [
+    { label: "FV previsto", stroke: css("--fv"), dati: per.A.map(r => num(r.fv_w)) },
+    { label: "Consumo previsto", stroke: css("--carico"), dati: per.A.map(r => num(r.carico_w)) },
+  ], { unita: "W", altezza: 200 });
+  s.insertAdjacentHTML("beforeend", legendaAzioni());
+}
+
+let giornaliero = [];
+function pGiornaliero() {
+  const s = sezione("giornaliero", "Giorno per giorno", "Energia di ogni giorno (anche prima dell'avvio della simulazione) e beneficio degli scenari rispetto all'automatico simulato.");
+  const G = giornaliero; if (!G.length) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun dato.</p>`); return; }
+  const x = G.map(r => Date.parse(r.giorno + "T12:00:00") / 1000);
+  grafico(s, x, [
+    { label: "FV kWh", stroke: css("--fv"), dati: G.map(r => num(r.fv_kwh)), dec: 1 },
+    { label: "Consumo kWh", stroke: css("--carico"), dati: G.map(r => num(r.carico_kwh)), dec: 1 },
+    { label: "Prelievo kWh", stroke: css("--rete"), dati: G.map(r => num(r.prel_kwh)), dec: 1 },
+  ], { unita: "kWh", altezza: 220, giorni: true });
+  const sim = G.filter(r => r.tipo === "simulato");
+  if (sim.length) {
+    const xs = sim.map(r => Date.parse(r.giorno + "T12:00:00") / 1000);
+    // beneficio cumulato: quanto avrebbe fatto risparmiare ogni scenario dall'avvio della simulazione
+    grafico(s, xs, ["A", "B", "C"].map(p => {
+      let somma = 0;
+      return { label: "Beneficio cumulato " + p, stroke: css("--" + p), width: 2, points: { show: true, size: 6 },
+               dati: sim.map(r => (somma += num(r[p + "_beneficio_eur"]) || 0)), dec: 2 };
+    }), { unita: "€", dec: 2, altezza: 220, giorni: true });
+    const tot = p => sim.reduce((a, r) => a + (num(r[p + "_beneficio_eur"]) || 0), 0);
+    s.insertAdjacentHTML("beforeend", `<p class="spiega">Beneficio totale su ${sim.length} giorni simulati: A ${fmt(tot("A"))} € · B ${fmt(tot("B"))} € · C ${fmt(tot("C"))} €.</p>`);
+  }
+}
+
+function pRegistro() {
+  const s = sezione("registro", "Registro dell'ultimo giro", "Le ultime righe scritte dal programma su GitHub.");
+  s.insertAdjacentHTML("beforeend", `<pre>${(indice.registro || []).map(r => r.replace(/[<&]/g, c => c === "<" ? "&lt;" : "&amp;")).join("\n") || "–"}</pre>`);
+}
+
+// ---------------------------------------------------------------- disegno della pagina
+let generazione = 0;
+async function mostra() {
+  const mia = ++generazione;
+  grafici.splice(0).forEach(([u]) => u.destroy());
+  $("principale").innerHTML = "";
+  const g = $("giorno").value;
+  if (!g) { $("principale").innerHTML = `<section class="vuoto">Nessun dato ancora disponibile: il pannello si riempie dopo il primo giro.</section>`; return; }
+  const info = giorni.find(x => x.g === g);
+  $("tipo").textContent = info.tipo === "storico" ? "giorno prima della simulazione: solo dati reali" : info.tipo === "oggi" ? "giorno in corso" : "giorno simulato completo";
+  try { history.replaceState(null, "", "?giorno=" + g); } catch (e) {}
+  let d;
+  try { d = await datiGiorno(g); } catch (e) { $("principale").innerHTML = `<section class="errore">Dati del giorno non leggibili: ${e.message}</section>`; return; }
+  if (mia !== generazione) return;
+  const solo = info.tipo === "storico";
+  const avviso = id => { const s = sezione(id, PANNELLI.find(p => p[0] === id)[1]); s.insertAdjacentHTML("beforeend", `<p class="vuoto">Non disponibile per i giorni prima dell'avvio della simulazione.</p>`); };
+  for (const [id] of PANNELLI) {
+    if (!scelte.has(id)) continue;
+    try {
+      if (id === "tabella") pTabella(d, g);
+      else if (id === "potenze") pPotenze(d);
+      else if (id === "meteo") pMeteo(d);
+      else if (id === "giornaliero") pGiornaliero();
+      else if (id === "registro") pRegistro();
+      else if (id === "piano") await pPiano();
+      else if (solo) avviso(id);
+      else if (id === "soc") pSoc(d);
+      else if (id === "batteria") pBatteria(d);
+      else if (id === "prezzi") pPrezzi(d);
+      else if (id === "rete") pRete(d);
+      else if (id === "previsioni") pPrevisioni(d);
+      else if (id === "periodi") pPeriodi(d);
+    } catch (e) { sezione(id, PANNELLI.find(p => p[0] === id)[1]).insertAdjacentHTML("beforeend", `<p class="errore">Errore: ${e.message}</p>`); }
+    if (mia !== generazione) return;
+  }
+}
+
+async function avvio(ricarica) {
+  if (ricarica) cache.clear();
+  try {
+    await caricaIndice();
+    giornaliero = csv(await scarica("pannello/giornaliero.csv"));
+  } catch (e) {
+    $("aggiornato").textContent = "";
+    $("principale").innerHTML = `<section class="errore">Dati non ancora disponibili (${e.message}). Il pannello si riempie dopo il primo giro di GitHub con questa versione; riprova tra qualche minuto.</section>`;
+    return;
+  }
+  await mostra();
+}
+
+$("giorno").addEventListener("change", mostra);
+$("prec").addEventListener("click", () => { const s = $("giorno"); if (s.selectedIndex > 0) { s.selectedIndex--; mostra(); } });
+$("succ").addEventListener("click", () => { const s = $("giorno"); if (s.selectedIndex < s.options.length - 1) { s.selectedIndex++; mostra(); } });
+$("ultimo").addEventListener("click", () => { const s = $("giorno"); s.selectedIndex = s.options.length - 1; mostra(); });
+$("aggiorna").addEventListener("click", () => avvio(true));
+disegnaScelte();
+avvio(false);
+</script>
+</body>
+</html>

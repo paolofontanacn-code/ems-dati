@@ -81,6 +81,12 @@ jobs:
           EMS_REPO_DIR: ${{ github.workspace }}
         run: python ml/addestra.py
 
+      - name: Pannello (dati per la pagina con i grafici)
+        continue-on-error: true
+        env:
+          EMS_DATI: ${{ github.workspace }}/memoria_mango
+        run: python ml/pannello.py
+
       - name: Token cifrato e pulizia delle credenziali
         if: always()
         env:

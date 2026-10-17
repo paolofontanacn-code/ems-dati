@@ -2,6 +2,9 @@
 
 **SOLO SIMULAZIONE**: nessun comando viene inviato all'inverter Huawei.
 
+**Pagina con i grafici**: https://paolofontanacn-code.github.io/ems-dati/ (giorno per giorno, reale e scenari A, B, C;
+si aggiorna a ogni giro). I file che legge sono nella cartella `pannello/`, preparati da `ml/pannello.py`.
+
 Ogni 2 ore GitHub esegue **lo stesso programma che girerà sul Mango** (cartella `mango/`, in Lua) e misura il
 carico di lavoro che il Mango avrebbe. I dati dell'impianto arrivano dallo **storico Huawei a 5 minuti**: le letture
 vengono "rigiocate" una per una, come se il Mango le leggesse in tempo reale ogni 5 minuti. Il machine learning
@@ -56,8 +59,8 @@ dal PC (esegue `mango/benchmark_mango.lua` sul Mango via SSH), poi caricare il f
    coinvolto), rigioca le letture ogni 5 minuti con il programma del Mango, scarica prezzi GME (dalle 13:30) e meteo,
    ottimizza, registra, chiude i giorni finiti; poi il machine learning riaddestra i modelli e prepara le previsioni.
 3. Le chiamate reali a Huawei sono circa 70-110 al giorno (il Mango ne farebbe circa 870 con le letture ogni 5 minuti).
-4. Ogni giro dura indicativamente 2-4 minuti: circa 700-1.400 minuti al mese sui 2.000 gratuiti per i repository
-   privati (da verificare nel tab Actions dopo i primi giorni).
+4. Ogni giro dura indicativamente 2-4 minuti. Il repository e' pubblico (serve alla pagina con i grafici): i minuti
+   di GitHub Actions sui runner standard dei repository pubblici non hanno il limite di 2.000 al mese.
 
 Avvio manuale: tab **Actions** > **EMS simulazione** > **Run workflow**.
 
@@ -66,3 +69,9 @@ Avvio manuale: tab **Actions** > **EMS simulazione** > **Run workflow**.
 Si fa dal PC con `INSTALLA_EMS.bat` (pacchetto Installa_EMS): crea o prepara questo repository, carica i file,
 imposta segreti e permessi, avvia il primo giro e ne controlla l'esito. Se si rilancia, riparte da zero
 con una nuova autorizzazione Huawei.
+
+## Prossimi aggiornamenti (annotati)
+
+- **Scenario 0 - senza batteria**: FV senza accumulo, autoconsumo solo istantaneo, il resto acquistato dalla rete
+  con le tariffe A, B, C (stesse componenti di costo) e l'eccedenza ceduta al prezzo NORD -40 %. Da calcolare nel
+  programma del Mango come gli altri scenari e da mostrare nella pagina accanto a reale, automatico, A, B, C.
