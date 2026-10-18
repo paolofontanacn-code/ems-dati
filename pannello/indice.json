@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-18T16:20:27+02:00",
+ "aggiornato": "2026-10-18T16:21:48+02:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -141,7 +141,7 @@
  "oggi": "2026-10-18",
  "piano": "2026-10-18",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 18/10/2026 14:18:42 UTC",
+  "Controllo di rete del giro su GitHub - 18/10/2026 14:21:28 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -191,6 +191,8 @@
   "2026-10-18 04:00:00  Coefficienti da GitHub: non applicati: non accettato",
   "2026-10-18 13:30:00  Prezzi GME del 20261019 salvati: 24 ore, NORD da 0.2189 a 0.3446 EUR/kWh, con quarti d'ora",
   "2026-10-18 13:30:00  Richiesta delle previsioni di 20261019 inviata a GitHub",
-  "2026-10-18 14:00:00  GitHub: inviati 2 file"
+  "2026-10-18 14:00:00  GitHub: inviati 2 file",
+  "2026-10-18 16:21:43  GitHub: rigioco 2026-10-18 15:55:00 -> 2026-10-18 16:00:00 (1 letture dallo storico)",
+  "2026-10-18 16:00:00  Previsioni di GitHub per 20261019 non accettate (servono almeno 10 giorni di addestramento e 1 giorno con previsioni del Mango per il confronto): uso le mie"
  ]
 }
