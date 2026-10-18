@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-18T13:03:35+02:00",
+ "aggiornato": "2026-10-18T16:20:27+02:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -141,12 +141,15 @@
  "oggi": "2026-10-18",
  "piano": "2026-10-18",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 18/10/2026 11:03:17 UTC",
+  "Controllo di rete del giro su GitHub - 18/10/2026 14:18:42 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
   "  DNS Cloudflare:   NON TROVATO ",
   "  DNS su HTTPS:     NON TROVATO Status 0",
+  "  IPv6 DNS di GitHub: NON TROVATO [Errno -5] No address associated with hostname",
+  "  IPv6 DNS Google:    NON TROVATO ",
+  "  curl come la simulazione (codice, indirizzo usato): 000 curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com",
   "  HTTPS con DNS di GitHub: -",
   "  HTTPS con IP pubblico -: -",
   "eu5.fusionsolar.huawei.com",
@@ -154,6 +157,9 @@
   "  DNS Google:       80.158.6.36",
   "  DNS Cloudflare:   80.158.6.36",
   "  DNS su HTTPS:     80.158.6.36",
+  "  IPv6 DNS di GitHub: NON TROVATO [Errno -5] No address associated with hostname",
+  "  IPv6 DNS Google:    NON TROVATO ",
+  "  curl come la simulazione (codice, indirizzo usato): 302 80.158.6.36",
   "  HTTPS con DNS di GitHub: 302",
   "  HTTPS con IP pubblico 80.158.6.36: 302",
   "api.mercatoelettrico.org",
@@ -161,6 +167,9 @@
   "  DNS Google:       192.188.248.52",
   "  DNS Cloudflare:   192.188.248.52",
   "  DNS su HTTPS:     192.188.248.52",
+  "  IPv6 DNS di GitHub: NON TROVATO [Errno -5] No address associated with hostname",
+  "  IPv6 DNS Google:    NON TROVATO ",
+  "  curl come la simulazione (codice, indirizzo usato): 403 192.188.248.52",
   "  HTTPS con DNS di GitHub: 403",
   "  HTTPS con IP pubblico 192.188.248.52: 403"
  ],
@@ -169,17 +178,19 @@
   "202610"
  ],
  "registro": [
-  "2026-10-18 12:40:20  GitHub: rigioco 2026-10-17 12:20:00 -> 2026-10-18 12:20:00 (288 letture dallo storico)",
+  "2026-10-18 16:18:50  Riepilogo recuperato dal repository",
+  "2026-10-18 16:19:07  GitHub: rigioco 2026-10-17 12:20:00 -> 2026-10-18 15:55:00 (331 letture dallo storico)",
   "2026-10-17 12:40:00  Prezzi GME del 20261017 salvati: 24 ore, NORD da 0.1883 a 0.2769 EUR/kWh, con quarti d'ora",
   "2026-10-17 13:30:00  Prezzi GME del 20261018 salvati: 24 ore, NORD da 0.1880 a 0.2650 EUR/kWh, con quarti d'ora",
   "2026-10-17 13:30:00  Richiesta delle previsioni di 20261018 inviata a GitHub",
+  "2026-10-17 13:30:00  Previsioni di GitHub per 20261018 non accettate (servono almeno 10 giorni di addestramento e 1 giorno con previsioni del Mango per il confronto): uso le mie",
+  "2026-10-17 13:45:00  Piano della sera per 20261018 salvato",
   "2026-10-17 14:00:00  GitHub: inviati 2 file",
-  "2026-10-17 21:00:00  Piano della sera per 20261018 salvato",
   "2026-10-18 00:00:00  Giorno 20261017 chiuso: profilo A beneficio 0.00 EUR, B 0.00 EUR, C 0.00 EUR",
   "2026-10-18 00:00:00  GitHub: inviati 9 file",
   "2026-10-18 04:00:00  Coefficienti da GitHub: non applicati: non accettato",
-  "2026-10-18 04:55:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 60002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-10-18 04:55:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 60002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
-  "2026-10-18 13:03:29  GitHub: rigioco 2026-10-18 12:20:00 -> 2026-10-18 12:40:00 (4 letture dallo storico)"
+  "2026-10-18 13:30:00  Prezzi GME del 20261019 salvati: 24 ore, NORD da 0.2189 a 0.3446 EUR/kWh, con quarti d'ora",
+  "2026-10-18 13:30:00  Richiesta delle previsioni di 20261019 inviata a GitHub",
+  "2026-10-18 14:00:00  GitHub: inviati 2 file"
  ]
 }

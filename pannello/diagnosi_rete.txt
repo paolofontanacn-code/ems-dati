@@ -1,9 +1,12 @@
-Controllo di rete del giro su GitHub - 18/10/2026 11:03:17 UTC
+Controllo di rete del giro su GitHub - 18/10/2026 14:18:42 UTC
 oauth2.fusionsolar.huawei.com
   DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname
   DNS Google:       NON TROVATO 
   DNS Cloudflare:   NON TROVATO 
   DNS su HTTPS:     NON TROVATO Status 0
+  IPv6 DNS di GitHub: NON TROVATO [Errno -5] No address associated with hostname
+  IPv6 DNS Google:    NON TROVATO 
+  curl come la simulazione (codice, indirizzo usato): 000 curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com
   HTTPS con DNS di GitHub: -
   HTTPS con IP pubblico -: -
 eu5.fusionsolar.huawei.com
@@ -11,6 +14,9 @@ eu5.fusionsolar.huawei.com
   DNS Google:       80.158.6.36
   DNS Cloudflare:   80.158.6.36
   DNS su HTTPS:     80.158.6.36
+  IPv6 DNS di GitHub: NON TROVATO [Errno -5] No address associated with hostname
+  IPv6 DNS Google:    NON TROVATO 
+  curl come la simulazione (codice, indirizzo usato): 302 80.158.6.36
   HTTPS con DNS di GitHub: 302
   HTTPS con IP pubblico 80.158.6.36: 302
 api.mercatoelettrico.org
@@ -18,5 +24,8 @@ api.mercatoelettrico.org
   DNS Google:       192.188.248.52
   DNS Cloudflare:   192.188.248.52
   DNS su HTTPS:     192.188.248.52
+  IPv6 DNS di GitHub: NON TROVATO [Errno -5] No address associated with hostname
+  IPv6 DNS Google:    NON TROVATO 
+  curl come la simulazione (codice, indirizzo usato): 403 192.188.248.52
   HTTPS con DNS di GitHub: 403
   HTTPS con IP pubblico 192.188.248.52: 403

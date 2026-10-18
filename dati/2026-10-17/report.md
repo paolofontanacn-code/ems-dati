@@ -31,10 +31,10 @@ Errore medio consumi: sera prima - W, modello 489.45 W.  FV: sera prima - W, mod
 Rendimenti usati: carica 0.974, scarica 0.970. Ore con SOC reale >= 90 %: 3.00.
 
 ## Carico di lavoro del Mango
-Cicli: 172. CPU per ciclo: media 0.153 s, massimo 0.753 s (qui). Calcolo del piano: massimo 0.654 s (qui).
+Cicli: 172. CPU per ciclo: media 0.153 s, massimo 0.740 s (qui). Calcolo del piano: massimo 0.650 s (qui).
 Stima sul Mango: media da tarare, massimo da tarare, piano da tarare (lanciare benchmark_mango.lua sul Mango e scrivere FATTORE_MANGO in config.lua).
-Memoria Lua massima 15556.23 kB. Scritture nella memoria interna 1323.09 kB al giorno.
-Chiamate che il Mango farebbe in un giorno: Huawei 516 (limite 950), GME 18, meteo 17, GitHub 4; dati ricevuti circa 825.90 kB.
+Memoria Lua massima 15327.88 kB. Scritture nella memoria interna 1349.94 kB al giorno.
+Chiamate che il Mango farebbe in un giorno: Huawei 516 (limite 950), GME 18, meteo 17, GitHub 4; dati ricevuti circa 825.75 kB.
 
 ## Periodi di carica e scarica forzata (profili)
 Nessun periodo forzato: tutti i profili sono rimasti in autoconsumo.
