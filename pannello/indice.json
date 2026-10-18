@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-18T16:21:48+02:00",
+ "aggiornato": "2026-10-18T19:33:27+02:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -141,7 +141,7 @@
  "oggi": "2026-10-18",
  "piano": "2026-10-18",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 18/10/2026 14:21:28 UTC",
+  "Controllo di rete del giro su GitHub - 18/10/2026 17:32:17 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -193,6 +193,10 @@
   "2026-10-18 13:30:00  Richiesta delle previsioni di 20261019 inviata a GitHub",
   "2026-10-18 14:00:00  GitHub: inviati 2 file",
   "2026-10-18 16:21:43  GitHub: rigioco 2026-10-18 15:55:00 -> 2026-10-18 16:00:00 (1 letture dallo storico)",
-  "2026-10-18 16:00:00  Previsioni di GitHub per 20261019 non accettate (servono almeno 10 giorni di addestramento e 1 giorno con previsioni del Mango per il confronto): uso le mie"
+  "2026-10-18 16:00:00  Previsioni di GitHub per 20261019 non accettate (servono almeno 10 giorni di addestramento e 1 giorno con previsioni del Mango per il confronto): uso le mie",
+  "2026-10-18 19:32:23  Rinnovo token Huawei: tentativo 1 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
+  "2026-10-18 19:32:43  Rinnovo token Huawei: tentativo 2 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
+  "2026-10-18 19:33:04  Rinnovo token Huawei: tentativo 3 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
+  "2026-10-18 19:33:24  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token"
  ]
 }
