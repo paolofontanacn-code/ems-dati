@@ -69,11 +69,12 @@ local function richiedi(c, token, giorno, gran, cartella_prezzi, log)
   local per, note = {}, {}
   for _, x in ipairs(J.decode(testo)) do
     local nota = campo(x, "Notes")
-    if type(nota) == "string" and nota:match("%S") then note[nota] = true end
+    if type(nota) == "string" and nota:match("%S") and nota:lower() ~= "null" then note[nota] = true end
     local fd = tostring(campo(x, "FlowDate") or "")
     local zona = (tostring(campo(x, "Zone") or ""):upper():gsub("%s", ""))
     local p = numero(campo(x, "Period"))
-    if gran == "PT60" and not p then p = numero(campo(x, "Hour")) end
+    -- dati orari reali del GME (verificato il 18/10/2026): "Period" vale "0" e l'ora e' in "Hour" (1..24)
+    if gran == "PT60" and (not p or p < 1) then p = numero(campo(x, "Hour")) end
     local prezzo = numero(campo(x, "Price"))
     if (fd == "" or fd == giorno) and (zona == c.ZONA or zona == "PUN") and p and p >= 1 and prezzo then
       per[math.floor(p)] = per[math.floor(p)] or {}

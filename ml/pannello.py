@@ -132,7 +132,12 @@ def main():
     if oggi:
         giorni.append({"g": oggi, "tipo": "oggi"})
     giorni.sort(key=lambda x: x["g"])
+    diagnosi = []
+    if os.path.isfile(os.path.join(OUT, "diagnosi_rete.txt")):
+        with open(os.path.join(OUT, "diagnosi_rete.txt"), encoding="utf-8") as fh:
+            diagnosi = [x.rstrip("\n") for x in fh]
     indice = {"aggiornato": ora.isoformat(timespec="seconds"), "giorni": giorni, "oggi": oggi, "piano": piano,
+              "diagnosi_rete": diagnosi,
               "mesi_storico": sorted(os.path.basename(f)[8:14] for f in glob.glob("storico/storico_*.csv.gz")),
               "registro": registro}
     with open(os.path.join(OUT, "indice.json"), "w", encoding="utf-8") as fh:

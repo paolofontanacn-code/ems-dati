@@ -75,3 +75,5 @@ con una nuova autorizzazione Huawei.
 - **Scenario 0 - senza batteria**: FV senza accumulo, autoconsumo solo istantaneo, il resto acquistato dalla rete
   con le tariffe A, B, C (stesse componenti di costo) e l'eccedenza ceduta al prezzo NORD -40 %. Da calcolare nel
   programma del Mango come gli altri scenari e da mostrare nella pagina accanto a reale, automatico, A, B, C.
+- **Pagina - curve nascoste**: quando si cambia giorno le curve nascoste dalla legenda devono restare nascoste
+  (oggi tornano tutte visibili perche' i grafici vengono ridisegnati). La scelta dei pannelli invece resta gia'.

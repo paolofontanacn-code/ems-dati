@@ -454,7 +454,10 @@ function pGiornaliero() {
 
 function pRegistro() {
   const s = sezione("registro", "Registro dell'ultimo giro", "Le ultime righe scritte dal programma su GitHub.");
-  s.insertAdjacentHTML("beforeend", `<pre>${(indice.registro || []).map(r => r.replace(/[<&]/g, c => c === "<" ? "&lt;" : "&amp;")).join("\n") || "–"}</pre>`);
+  const esc = r => r.replace(/[<&]/g, c => c === "<" ? "&lt;" : "&amp;");
+  s.insertAdjacentHTML("beforeend", `<pre>${(indice.registro || []).map(esc).join("\n") || "–"}</pre>`);
+  if ((indice.diagnosi_rete || []).length)
+    s.insertAdjacentHTML("beforeend", `<h2 style="margin-top:12px">Controllo di rete</h2><pre>${indice.diagnosi_rete.map(esc).join("\n")}</pre>`);
 }
 
 // ---------------------------------------------------------------- disegno della pagina

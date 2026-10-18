@@ -63,6 +63,11 @@ jobs:
             printf '%s' "$HUAWEI_TOKEN_INIZIALE" > mango/token_fusionsolar.json
           fi
 
+      - name: Controllo di rete (Huawei, GME)
+        continue-on-error: true
+        timeout-minutes: 3
+        run: python ml/diagnosi_rete.py
+
       - name: Simulazione (stesso programma del Mango)
         env:
           EMS_REPO_DIR: ${{ github.workspace }}
