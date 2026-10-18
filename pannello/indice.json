@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-17T22:36:15+02:00",
+ "aggiornato": "2026-10-18T02:03:13+02:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -146,6 +146,7 @@
   "2026-10-17 12:10:00  Prezzi GME del 20261017 non scaricati: prezzo NORD o PUN dell'ora 1 mancante (attese 24 ore): dati del 20261017 non usati",
   "2026-10-17 15:43:10  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token",
   "2026-10-17 19:09:39  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token",
-  "2026-10-17 22:36:11  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token"
+  "2026-10-17 22:36:11  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token",
+  "2026-10-18 02:03:09  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token"
  ]
 }
