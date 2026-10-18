@@ -1,0 +1,4 @@
+profilo,inizio,fine,durata_min,azione,categoria,motivo,soc_inizio,soc_fine,carica_fv_kwh,carica_rete_kwh,scarica_kwh,prelievo_kwh,immissione_kwh,nord_medio,costo_medio,euro_netto
+A,2026-10-17T09:40:00+02:00,2026-10-18T00:00:00+02:00,860,AUTO,auto,avvio,6,59.437133,13.983083,0,4.993594,0.110115,0,0.19221,0.177231,-0.332906
+B,2026-10-17T09:40:00+02:00,2026-10-18T00:00:00+02:00,860,AUTO,auto,avvio,6,59.437133,13.983083,0,4.993594,0.110115,0,0.19221,0.307671,-0.332906
+C,2026-10-17T09:40:00+02:00,2026-10-18T00:00:00+02:00,860,AUTO,auto,avvio,6,59.437133,13.983083,0,4.993594,0.110115,0,0.19221,0.314215,-0.332906

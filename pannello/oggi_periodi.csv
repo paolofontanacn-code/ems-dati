@@ -1,0 +1,2 @@
+profilo,inizio,fine,durata_min,azione,categoria,motivo,soc_inizio,soc_fine,carica_fv_kwh,carica_rete_kwh,scarica_kwh,prelievo_kwh,immissione_kwh,nord_medio,costo_medio,euro_netto
+C,2026-10-18T00:00:00+02:00,2026-10-18T01:00:00+02:00,60,AUTO,auto,avvio,59.437133,55.651224,0,0,0.543417,0,0,0.246156,0.399691,-0.036228
