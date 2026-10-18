@@ -1,10 +1,10 @@
-# EMS Cismondi - SOLO SIMULAZIONE: ogni 2 ore GitHub esegue lo stesso programma del Mango sui dati Huawei
+# EMS Cismondi - SOLO SIMULAZIONE: ogni 30 minuti GitHub esegue lo stesso programma del Mango sui dati Huawei
 # a 5 minuti, misura il carico di lavoro che avrebbe il Mango e riaddestra i modelli.
 name: EMS simulazione
 
 on:
   schedule:
-    - cron: "17 */2 * * *"        # ogni 2 ore, al minuto 17 (lontano dall'inizio dell'ora, meno ritardi)
+    - cron: "7,37 * * * *"        # ogni 30 minuti, ai minuti 7 e 37 (GitHub ne ritarda o salta alcuni)
   workflow_dispatch:              # avvio manuale dal tab Actions
 
 permissions:

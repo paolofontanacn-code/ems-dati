@@ -125,7 +125,7 @@ def main():
     log = os.path.join(DATI, "ems_sim.log")
     if os.path.isfile(log):
         with open(log, encoding="utf-8", errors="replace") as fh:
-            registro = [x.rstrip("\n") for x in fh.readlines()[-25:]]
+            registro = [x.rstrip("\n") for x in fh.readlines()[-80:]]
 
     giorni = [{"g": g, "tipo": "storico"} for g in sorted(sto) if g not in riep and g not in sim and sto[g]["n"] >= 200]
     giorni += [{"g": g, "tipo": "simulato"} for g in sim]

@@ -234,7 +234,7 @@ async function caricaIndice() {
   const dalLink = new URLSearchParams(location.search).get("giorno");
   sel.value = (prima && giorni.some(g => g.g === prima)) ? prima : (dalLink && giorni.some(g => g.g === dalLink)) ? dalLink : (giorni.length ? giorni[giorni.length - 1].g : "");
   const ag = new Date(indice.aggiornato);
-  $("aggiornato").textContent = "dati aggiornati al " + ag.toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " (un giro ogni 2 ore)";
+  $("aggiornato").textContent = "dati aggiornati al " + ag.toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " (giri programmati ogni 30 minuti)";
 }
 
 function disegnaScelte() {

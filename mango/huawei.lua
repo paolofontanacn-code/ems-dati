@@ -75,8 +75,22 @@ function M.nuovo(c, cartella, stato, log)
     if not testo then error("manca il token Huawei: eseguire  lua ems_sim.lua autorizza", 0) end
     local t = J.decode(testo)
     if os.time() < (t.ottenuto_il or 0) + (tonumber(t.expires_in) or 0) - 120 then return t end
-    local nuovo, codice = H.post_form(c.URL_OAUTH .. "/rest/dp/uidm/oauth2/v1/token", {
-      grant_type = "refresh_token", refresh_token = t.refresh_token, client_id = c.CLIENT_ID, client_secret = c.CLIENT_SECRET })
+    -- il server dei token a volte non viene trovato (visto da GitHub il 17-18/10/2026): fino a 4 tentativi,
+    -- solo per errori di rete; un rifiuto di Huawei (HTTP) non viene ripetuto
+    -- dopo un rinnovo fallito per rete non si riprova per 10 minuti (evita attese ripetute a ogni chiamata)
+    if self.rinnovo_fallito and os.time() - self.rinnovo_fallito < 600 then
+      error("rete: rinnovo token Huawei non riuscito poco fa (server dei token non raggiungibile)", 0)
+    end
+    local nuovo, codice
+    for tentativo = 1, 4 do
+      local ok, a, b = pcall(H.post_form, c.URL_OAUTH .. "/rest/dp/uidm/oauth2/v1/token", {
+        grant_type = "refresh_token", refresh_token = t.refresh_token, client_id = c.CLIENT_ID, client_secret = c.CLIENT_SECRET })
+      if ok then nuovo, codice = a, b; break end
+      if not tostring(a):match("^rete:") then error(a, 0) end
+      if tentativo == 4 then self.rinnovo_fallito = os.time(); error(a, 0) end
+      log("Rinnovo token Huawei: tentativo " .. tentativo .. " non riuscito (" .. tostring(a):sub(1, 90) .. "), riprovo tra 20 s")
+      os.execute("sleep 20")
+    end
     if not nuovo.access_token then
       error("rinnovo token Huawei non riuscito (HTTP " .. tostring(codice) .. "): rifare  lua ems_sim.lua autorizza", 0)
     end
