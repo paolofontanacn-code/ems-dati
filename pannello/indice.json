@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-18T19:33:27+02:00",
+ "aggiornato": "2026-10-18T21:40:55+02:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -141,7 +141,7 @@
  "oggi": "2026-10-18",
  "piano": "2026-10-18",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 18/10/2026 17:32:17 UTC",
+  "Controllo di rete del giro su GitHub - 18/10/2026 19:39:39 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -197,6 +197,10 @@
   "2026-10-18 19:32:23  Rinnovo token Huawei: tentativo 1 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
   "2026-10-18 19:32:43  Rinnovo token Huawei: tentativo 2 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
   "2026-10-18 19:33:04  Rinnovo token Huawei: tentativo 3 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
-  "2026-10-18 19:33:24  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token"
+  "2026-10-18 19:33:24  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token",
+  "2026-10-18 21:39:50  Rinnovo token Huawei: tentativo 1 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
+  "2026-10-18 21:40:11  Rinnovo token Huawei: tentativo 2 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
+  "2026-10-18 21:40:31  Rinnovo token Huawei: tentativo 3 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
+  "2026-10-18 21:40:52  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token"
  ]
 }
