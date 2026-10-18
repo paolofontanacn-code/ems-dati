@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-18T12:43:35+02:00",
+ "aggiornato": "2026-10-18T13:03:35+02:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -141,7 +141,7 @@
  "oggi": "2026-10-18",
  "piano": "2026-10-18",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 18/10/2026 10:40:00 UTC",
+  "Controllo di rete del giro su GitHub - 18/10/2026 11:03:17 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -179,6 +179,7 @@
   "2026-10-18 00:00:00  GitHub: inviati 9 file",
   "2026-10-18 04:00:00  Coefficienti da GitHub: non applicati: non accettato",
   "2026-10-18 04:55:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 60002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-10-18 04:55:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 60002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3"
+  "2026-10-18 04:55:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 60002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
+  "2026-10-18 13:03:29  GitHub: rigioco 2026-10-18 12:20:00 -> 2026-10-18 12:40:00 (4 letture dallo storico)"
  ]
 }
