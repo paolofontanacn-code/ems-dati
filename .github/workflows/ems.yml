@@ -92,6 +92,13 @@ jobs:
           EMS_DATI: ${{ github.workspace }}/memoria_mango
         run: python ml/pannello.py
 
+      - name: Email giornaliera (resoconto dell'ultimo giorno chiuso)
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python ml/email_report.py
+
       - name: Token cifrato e pulizia delle credenziali
         if: always()
         env:

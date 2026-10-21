@@ -36,13 +36,13 @@ for k = 1, 136 do
   local car = 600 + ((h >= 18 and h < 23) and 1500 or 0) + ((h < 7) and 900 or 0)
   local nord = 0.11 + ((h >= 18 and h < 21) and 0.10 or 0)
   quarti[k] = { t = k * 900, giorno = (k <= 40) and "20990101" or "20990102", fv = fv, carico = car, di_giorno = fv >= 100,
-    mezzanotte = (k == 41), vend = nord * 0.6, costo = { A = 0.223, B = 0.25, C = 0.24 + nord * 0.1 } }
+    mezzanotte = (k == 41), vend = nord, costo = { F0 = 0.2228, F0R = 0.2228 } }
 end
 local prof = {}
-for _, p in ipairs({ "A", "B", "C" }) do prof[p] = { soc0 = 40, prev_azione = "AUTO", finestre_oggi = 0, giorno_oggi = "20990101" } end
+for _, p in ipairs(c.PROFILI) do prof[p] = { soc0 = 40, prev_azione = "AUTO", finestre_oggi = 0, giorno_oggi = "20990101", carica_rete = (c.PROFILI_CARICA_RETE or {})[p] } end
 local vf = {}
-for _, p in ipairs({ "A", "B", "C" }) do vf[p] = { costo = 0.24, vend = 0.07, e_notte = 8 } end
-O.pianifica(c, e, quarti, { "A", "B", "C" }, prof, 0.0667, vf)
+for _, p in ipairs(c.PROFILI) do vf[p] = { costo = 0.22, vend = 0.10, e_notte = 8 } end
+O.pianifica(c, e, quarti, c.PROFILI, prof, c.USURA_EUR_KWH, vf)
 local t2 = orologio()
 risultati.ottimizzatore_s = t2 - t1
 

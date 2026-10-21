@@ -1,9 +1,7 @@
--- prezzi_acquisto.lua - costo del kWh prelevato per i profili A, B, C e valore del kWh ceduto
---   costo = [energia x (1 + PERDITE) + DISPACCIAMENTO + TRASPORTO + ONERI + ACCISE] x (1 + IVA)
---   A: energia = PREZZO_FISSO_A
---   B: energia = PUN medio mensile della fascia + SPREAD_B   (stimato con i giorni del mese gia' pubblicati)
---   C: energia = PUN orario + SPREAD_C
---   cessione = NORD orario x (1 - IMPOSTA_CESSIONI)
+-- prezzi_acquisto.lua - costo del kWh prelevato e valore del kWh ceduto
+--   costo = [PREZZO_FISSO_A x (1 + PERDITE) + DISPACCIAMENTO + TRASPORTO + ONERI + ACCISE] x (1 + IVA), uguale per
+--   tutti i profili (prezzo fisso F0); cessione = NORD x (1 - IMPOSTA_CESSIONI)
+--   Le medie del PUN per fascia restano calcolate solo come informazione.
 local T = require "lib_tempo"
 local M = {}
 
@@ -56,16 +54,13 @@ function M.pun_fascia(stato, mese, fascia, pun_ora)
   return pun_ora, "PUN orario (nessuna media disponibile)"
 end
 
--- costi dei tre profili per un istante t con prezzi orari (nord, pun in EUR/kWh)
+-- costo d'acquisto di ogni profilo per un istante t (prezzo fisso: uguale per tutti)
 function M.costi(c, stato, t, pun)
   local cal = T.calendario(t)
-  local mese = cal.giorno:sub(1, 6)
-  local pf = M.pun_fascia(stato, mese, cal.fascia, pun)
-  return {
-    A = M.costo_da_energia(c, c.PREZZO_FISSO_A),
-    B = M.costo_da_energia(c, pf + c.SPREAD_B),
-    C = M.costo_da_energia(c, pun + c.SPREAD_C),
-  }, pf, cal.fascia
+  local v = M.costo_da_energia(c, c.PREZZO_FISSO_A)
+  local r = {}
+  for _, p in ipairs(c.PROFILI) do r[p] = v end
+  return r, nil, cal.fascia
 end
 
 return M

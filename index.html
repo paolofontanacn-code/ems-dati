@@ -156,10 +156,35 @@ function sezione(id, titolo, spiega) {
 }
 function larghezza(el) { const cs = getComputedStyle(el); return Math.max(260, Math.floor(el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight))); }
 
+// ---------------------------------------------------------------- profili simulati (letti dai dati: F0, F0R; A, B, C nei giorni vecchi)
+const NOMI_PROFILI = { F0: "Senza carica da rete", F0R: "Con carica da rete", A: "A (prezzo fisso)", B: "B (PUN per fascia)", C: "C (PUN orario)" };
+const COLORI = ["--A", "--B", "--C"];
+let PROF = [];
+const nomeP = p => NOMI_PROFILI[p] || p;
+const coloreP = p => css(COLORI[Math.max(0, PROF.indexOf(p)) % COLORI.length]);
+function profiliDi(righe) {
+  const r = righe[0] || {};
+  return Object.keys(r).filter(k => /^[A-Za-z0-9]+_azione$/.test(k)).map(k => k.slice(0, -7));
+}
+
+// curve nascoste dalla legenda: restano nascoste anche cambiando giorno (memoria del browser)
+let nascoste = {};
+try { nascoste = JSON.parse(localStorage.getItem("ems_curve_nascoste")) || {}; } catch (e) {}
+function salvaNascoste() { try { localStorage.setItem("ems_curve_nascoste", JSON.stringify(nascoste)); } catch (e) {} }
+
 function grafico(contenitore, x, serie, opz = {}) {
   const div = document.createElement("div"); div.className = "grafico"; contenitore.appendChild(div);
   const tenue = css("--tenue"), bordo = css("--bordo");
   const asse = { stroke: tenue, grid: { stroke: bordo, width: 1 }, ticks: { stroke: bordo } };
+  const idg = (contenitore.id || "g") + "|" + (opz.id || "");
+  const chiave = s => idg + "|" + s.label;
+  const hooks = { ...(opz.hooks || {}) };
+  hooks.setSeries = [...(hooks.setSeries || []), (u, i) => {
+    if (i == null || i < 1) return;
+    const s = u.series[i];
+    if (s.show) delete nascoste[idg + "|" + s.label]; else nascoste[idg + "|" + s.label] = true;
+    salvaNascoste();
+  }];
   const o = {
     width: larghezza(contenitore), height: opz.altezza || 260,
     tzDate: ts => uPlot.tzDate(new Date(ts * 1e3), "Europe/Rome"),
@@ -170,10 +195,11 @@ function grafico(contenitore, x, serie, opz = {}) {
       { ...asse, label: opz.unita || "", size: 60, values: (u, v) => v.map(a => fmt(a, opz.dec ?? 0)) },
            ...(opz.assi || []).map(a => ({ ...asse, ...a }))],
     series: [{ label: opz.giorni ? "Giorno" : "Ora", value: (u, v) => v == null ? "–" : new Date(v * 1e3).toLocaleString("it-IT", opz.giorni ? { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit" } : { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" }) },
-      ...serie.map(s => ({ spanGaps: false, width: 1.6, points: { show: false }, value: (u, v) => v == null ? "–" : fmt(v, s.dec ?? opz.dec ?? 0), ...s }))],
+      ...serie.map(s => ({ spanGaps: false, width: 1.6, points: { show: false }, value: (u, v) => v == null ? "–" : fmt(v, s.dec ?? opz.dec ?? 0),
+                           ...s, show: s.show === false ? false : !nascoste[chiave(s)] }))],
     cursor: { sync: { key: "giorno" } },
     legend: { live: true },
-    hooks: opz.hooks || {},
+    hooks,
   };
   const dati = [x, ...serie.map(s => s.dati)];
   serie.forEach(s => delete s.dati);
@@ -196,29 +222,29 @@ function legendaAzioni() {
     <span><i style="background:${css("--rete_c")}"></i>carica da rete (max 1 kW)</span><span><i style="background:${css("--scarica")}"></i>scarica forzata</span>
     <span><i style="background:${css("--rit")}"></i>carica ritardata</span><span>(vuoto = automatico)</span></div>`;
 }
-// strisce delle azioni A/B/C: grafico sottile sotto quello principale, stesso asse dei tempi
-function corsie(contenitore, x, azioni) {
+// strisce delle azioni dei profili: grafico sottile sotto quello principale, stesso asse dei tempi
+function corsie(contenitore, x, azioni, profili) {
   const passo = x.length > 1 ? x[1] - x[0] : 300;
+  const n = Math.max(1, profili.length);
   const disegna = u => {
-    const c = u.ctx, { left, top, width, height } = u.bbox, h = height / 3;
-    ["A", "B", "C"].forEach((p, k) => {
+    const c = u.ctx, { left, top, width, height } = u.bbox, h = height / n;
+    profili.forEach((p, k) => {
       const y = top + k * h;
       c.fillStyle = css("--bordo"); c.fillRect(left, y + h - 1, width, 1);
       for (let i = 0; i < x.length; i++) {
-        const col = coloreAzione(azioni[p][i]); if (!col) continue;
+        const col = coloreAzione((azioni[p] || [])[i]); if (!col) continue;
         const x0 = u.valToPos(x[i], "x", true), x1 = u.valToPos(x[i] + passo, "x", true);
         c.fillStyle = col; c.fillRect(x0, y + 1, Math.max(1, x1 - x0 + 0.5), h - 2);
       }
     });
   };
-  const u = grafico(contenitore, x, [{ label: "", show: false, dati: x.map(() => null) }], { altezza: 90, hooks: { draw: [disegna] }, scale: { y: { range: [0, 1] } } });
-  // etichette A/B/C al posto dei numeri dell'asse
+  const u = grafico(contenitore, x, [{ label: "", show: false, dati: x.map(() => null) }], { altezza: 30 + 22 * n, hooks: { draw: [disegna] }, scale: { y: { range: [0, 1] } } });
   u.axes[1].values = () => [];
   u.setScale("y", { min: 0, max: 1 });
   u.root.querySelector(".u-legend").style.display = "none";
   const et = document.createElement("div");
   et.style.cssText = "display:flex;gap:14px;font-size:12px;color:var(--tenue);margin:-4px 0 2px 60px";
-  et.innerHTML = "<span>righe dall'alto: A · B · C</span>";
+  et.innerHTML = "<span>righe dall'alto: " + profili.map(nomeP).join(" · ") + "</span>";
   u.root.after(et);
   return u;
 }
@@ -269,7 +295,7 @@ const col = (righe, k, f = 1) => righe.map(r => { const v = num(r[k]); return v 
 function pTabella(d, g) {
   const s = sezione("tabella", "Euro e kWh del giorno", d.info.tipo === "oggi" ? "Giorno in corso: totali parziali fino all'ultima lettura." :
     d.info.tipo === "storico" ? "Giorno prima dell'avvio della simulazione: solo energia reale." :
-    "Netto = acquisti − cessioni (+ usura batteria e 0,10 € per ogni cambiamento negli scenari). Beneficio = automatico simulato − scenario.");
+    "Netto = acquisti − cessioni (+ usura batteria e 0,10 € per ogni cambiamento negli scenari). Beneficio = differenza di netto (positivo = lo scenario costa meno).");
   const R = d.righe, k = 300 / 3.6e6;
   const kwh = n => R.reduce((a, r) => a + (num(r[n]) || 0), 0) * k;
   const somma = n => R.reduce((a, r) => a + (num(r[n]) || 0), 0);
@@ -282,27 +308,34 @@ function pTabella(d, g) {
     <div class="tessera"><span>Prelievo reale</span><b>${fmt(pr, 1)}</b><span>kWh</span></div>
     <div class="tessera"><span>Immissione reale</span><b>${fmt(im, 1)}</b><span>kWh</span></div></div>`;
   if (d.info.tipo !== "storico") {
-    h += `<div class="tab"><table><tr><th>Tariffa</th><th>Reale netto €</th><th>Automatico simulato €</th><th>Scenario ottimizzato €</th><th>Beneficio €</th><th>Prelievo scenario kWh</th><th>Immissione scenario kWh</th><th>Cambiamenti</th></tr>`;
-    for (const p of ["A", "B", "C"]) {
-      let reale, auto, scen;
-      if (gg) { reale = num(gg[p + "_reale_netto_eur"]); auto = num(gg[p + "_auto_netto_eur"]); scen = num(gg[p + "_scenario_netto_eur"]); }
-      else {
-        reale = somma(p + "_reale_costo_eur") - somma("reale_ricavo_eur");
-        auto = somma(p + "_auto_costo_eur") - somma(p + "_auto_ricavo_eur") + somma(p + "_auto_usura_eur");
-        scen = somma(p + "_costo_eur") - somma(p + "_ricavo_eur") + somma(p + "_usura_eur") + somma(p + "_costo_interventi_eur");
+    const zero = gg && gg.zero_netto_eur !== "" && gg.zero_netto_eur != null ? num(gg.zero_netto_eur)
+      : (R.some(r => r.zero_costo_eur !== undefined) ? somma("zero_costo_eur") - somma("zero_ricavo_eur") : null);
+    h += `<div class="tab"><table><tr><th>Scenario</th><th>Netto €</th><th>Beneficio sull'automatico €</th><th>Beneficio su senza batteria €</th><th>Prelievo kWh</th><th>Immissione kWh</th><th>Cambiamenti</th></tr>`;
+    const riga = (nome, colore, netto, ben, benz, prel, imm, cambi) => `<tr><td><b style="color:${colore}">${nome}</b></td><td>${fmt(netto)}</td>
+      <td class="${ben > 0.005 ? "pos" : ben < -0.005 ? "neg" : ""}">${fmt(ben)}</td><td class="${benz > 0.005 ? "pos" : benz < -0.005 ? "neg" : ""}">${fmt(benz)}</td>
+      <td>${fmt(prel, 1)}</td><td>${fmt(imm, 1)}</td><td>${cambi ?? "–"}</td></tr>`;
+    const p0 = PROF[0];
+    if (zero != null) h += riga("Senza batteria", css("--tenue"), zero, null, null, gg ? null : somma("zero_prel_kwh"), gg ? null : somma("zero_imm_kwh"));
+    if (p0) {
+      const reale = gg ? num(gg[p0 + "_reale_netto_eur"]) : somma(p0 + "_reale_costo_eur") - somma("reale_ricavo_eur");
+      const auto = gg ? num(gg[p0 + "_auto_netto_eur"]) : somma(p0 + "_auto_costo_eur") - somma(p0 + "_auto_ricavo_eur") + somma(p0 + "_auto_usura_eur");
+      h += riga("Reale (oggi l'impianto)", css("--reale"), reale, null, zero != null && reale != null ? zero - reale : null, pr, im);
+      h += riga("Automatico simulato", css("--auto"), auto, null, zero != null && auto != null ? zero - auto : null, somma("auto_prel_kwh"), somma("auto_imm_kwh"));
+      for (const p of PROF) {
+        const a = gg ? num(gg[p + "_auto_netto_eur"]) : somma(p + "_auto_costo_eur") - somma(p + "_auto_ricavo_eur") + somma(p + "_auto_usura_eur");
+        const sc = gg ? num(gg[p + "_scenario_netto_eur"]) : somma(p + "_costo_eur") - somma(p + "_ricavo_eur") + somma(p + "_usura_eur") + somma(p + "_costo_interventi_eur");
+        const ult = [...R].reverse().find(r => r[p + "_comandi_oggi"] !== "" && r[p + "_comandi_oggi"] != null);
+        h += riga(nomeP(p), coloreP(p), sc, a != null && sc != null ? a - sc : null, zero != null && sc != null ? zero - sc : null,
+                  somma(p + "_prel_kwh"), somma(p + "_imm_kwh"), ult ? ult[p + "_comandi_oggi"] : null);
       }
-      const ben = (auto != null && scen != null) ? auto - scen : null;
-      const ult = [...R].reverse().find(r => r[p + "_comandi_oggi"] !== "" && r[p + "_comandi_oggi"] != null);
-      h += `<tr><td><b style="color:${css("--" + p)}">${p}</b></td><td>${fmt(reale)}</td><td>${fmt(auto)}</td><td>${fmt(scen)}</td>
-        <td class="${ben > 0.005 ? "pos" : ben < -0.005 ? "neg" : ""}">${fmt(ben)}</td><td>${fmt(somma(p + "_prel_kwh"), 1)}</td><td>${fmt(somma(p + "_imm_kwh"), 1)}</td><td>${ult ? ult[p + "_comandi_oggi"] : "–"}</td></tr>`;
     }
-    h += `</table></div><p class="spiega">A = prezzo fisso 0,12 €/kWh · B = PUN medio mensile per fascia + 0,02 · C = PUN orario + 0,02; per tutti + perdite, trasporto, oneri, accise, IVA (dispacciamento non noto: 0). Cessione = prezzo zonale NORD orario −40 % di imposte. Il reale netto non comprende l'usura della batteria.</p>`;
+    h += `</table></div><p class="spiega">Acquisto: prezzo fisso F0 0,12 €/kWh + perdite, trasporto, oneri, accise, IVA (dispacciamento non noto: 0) = ${fmt(num((R.find(r => r.costo_acquisto) || {}).costo_acquisto), 4)} €/kWh. Cessione: prezzo zonale NORD del quarto d'ora. Usura batteria: 0,02 €/kWh scaricato. Il reale non comprende l'usura.</p>`;
   }
   s.insertAdjacentHTML("beforeend", h);
 }
 
 function pPotenze(d) {
-  const s = sezione("potenze", "Potenze reali (misurate da Huawei)", "Rete: sopra lo zero immissione, sotto lo zero prelievo. Batteria: sopra lo zero in carica. Clic su una voce della legenda per nasconderla.");
+  const s = sezione("potenze", "Potenze reali (misurate da Huawei)", "Rete: sopra lo zero immissione, sotto lo zero prelievo. Batteria: sopra lo zero in carica. Clic su una voce della legenda per nasconderla: resta nascosta anche cambiando giorno.");
   const R = d.righe, x = R.map(r => +r.ts);
   const serie = [
     { label: "FV", stroke: css("--fv"), dati: col(R, "fv_w") },
@@ -319,9 +352,7 @@ function pSoc(d) {
   grafico(s, x, [
     { label: "Reale", stroke: css("--reale"), width: 2.2, dati: col(R, "soc") },
     { label: "Automatico sim.", stroke: css("--auto"), dash: [6, 4], dati: col(R, "auto_soc") },
-    { label: "A", stroke: css("--A"), dati: col(R, "A_soc") },
-    { label: "B", stroke: css("--B"), dati: col(R, "B_soc") },
-    { label: "C", stroke: css("--C"), dati: col(R, "C_soc") },
+    ...PROF.map(p => ({ label: nomeP(p), stroke: coloreP(p), dati: col(R, p + "_soc") })),
   ], { unita: "%", scale: { y: { range: [0, 100] } } });
 }
 
@@ -331,36 +362,36 @@ function pBatteria(d) {
   grafico(s, x, [
     { label: "Reale", stroke: css("--reale"), width: 2, dati: col(R, "batteria_w") },
     { label: "Automatico sim.", stroke: css("--auto"), dash: [6, 4], dati: col(R, "auto_batteria_w") },
-    { label: "A", stroke: css("--A"), dati: col(R, "A_batteria_w") },
-    { label: "B", stroke: css("--B"), dati: col(R, "B_batteria_w") },
-    { label: "C", stroke: css("--C"), dati: col(R, "C_batteria_w") },
+    ...PROF.map(p => ({ label: nomeP(p), stroke: coloreP(p), dati: col(R, p + "_batteria_w") })),
   ], { unita: "W" });
 }
 
 function pPrezzi(d) {
-  const s = sezione("prezzi", "Prezzi e azioni decise", "Costo d'acquisto di ogni tariffa, prezzo NORD e valore della cessione. In basso le azioni degli scenari A, B, C.");
+  const s = sezione("prezzi", "Prezzi e azioni decise", "Costo d'acquisto, prezzo NORD e valore della cessione. In basso le azioni di ogni scenario.");
   const R = d.righe, x = R.map(r => +r.ts);
-  const az = { A: R.map(r => r.A_azione), B: R.map(r => r.B_azione), C: R.map(r => r.C_azione) };
-  grafico(s, x, [
-    { label: "Acquisto A", stroke: css("--A"), dati: col(R, "costo_A"), dec: 3 },
-    { label: "Acquisto B", stroke: css("--B"), dati: col(R, "costo_B"), dec: 3 },
-    { label: "Acquisto C", stroke: css("--C"), dati: col(R, "costo_C"), dec: 3 },
-    { label: "NORD", stroke: css("--tenue"), dash: [3, 3], dati: col(R, "nord"), dec: 3 },
-    { label: "Cessione", stroke: css("--rete"), dati: col(R, "valore_cessione"), dec: 3 },
-  ], { unita: "€/kWh", dec: 2, altezza: 280 });
-  corsie(s, x, az);
+  const az = {};
+  for (const p of PROF) az[p] = R.map(r => r[p + "_azione"]);
+  const vecchi = R.some(r => r.costo_A !== undefined);
+  const serie = vecchi
+    ? [{ label: "Acquisto A", stroke: css("--A"), dati: col(R, "costo_A"), dec: 3 }, { label: "Acquisto B", stroke: css("--B"), dati: col(R, "costo_B"), dec: 3 },
+       { label: "Acquisto C", stroke: css("--C"), dati: col(R, "costo_C"), dec: 3 }]
+    : [{ label: "Acquisto F0", stroke: css("--A"), dati: col(R, "costo_acquisto"), dec: 4 }];
+  serie.push({ label: "NORD orario", stroke: css("--tenue"), dash: [3, 3], dati: col(R, "nord"), dec: 3 },
+             { label: "NORD quarto d'ora", stroke: css("--tenue"), dati: col(R, "nord_15"), dec: 3 },
+             { label: "Cessione", stroke: css("--rete"), dati: col(R, "valore_cessione"), dec: 3 });
+  grafico(s, x, serie, { unita: "€/kWh", dec: 2, altezza: 280, id: vecchi ? "vecchi" : "" });
+  corsie(s, x, az, PROF);
   s.insertAdjacentHTML("beforeend", legendaAzioni());
 }
 
 function pRete(d) {
-  const s = sezione("rete", "Prelievo dalla rete: reale, automatico simulato e scenari", "Il prelievo massimo ammesso è 7 kW.");
+  const s = sezione("rete", "Prelievo dalla rete: reale, senza batteria, automatico simulato e scenari", "Il prelievo massimo ammesso è 7 kW.");
   const R = d.righe, x = R.map(r => +r.ts), k = 3.6e6 / 300;
   grafico(s, x, [
     { label: "Reale", stroke: css("--reale"), width: 2, dati: col(R, "prelievo_w") },
+    { label: "Senza batteria", stroke: css("--tenue"), dash: [2, 3], dati: col(R, "zero_prel_kwh", k) },
     { label: "Automatico sim.", stroke: css("--auto"), dash: [6, 4], dati: col(R, "auto_prel_kwh", k) },
-    { label: "A", stroke: css("--A"), dati: col(R, "A_prel_kwh", k) },
-    { label: "B", stroke: css("--B"), dati: col(R, "B_prel_kwh", k) },
-    { label: "C", stroke: css("--C"), dati: col(R, "C_prel_kwh", k) },
+    ...PROF.map(p => ({ label: nomeP(p), stroke: coloreP(p), dati: col(R, p + "_prel_kwh", k) })),
   ], { unita: "W" });
 }
 
@@ -400,7 +431,7 @@ function pPeriodi(d) {
   if (!P.length) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun periodo diverso dall'automatico.</p>`); return; }
   const ora = v => v ? v.slice(11, 16) : "";
   s.insertAdjacentHTML("beforeend", `<div class="tab"><table><tr><th>Scenario</th><th>Dalle</th><th>Alle</th><th>Azione</th><th>SOC %</th><th>Carica FV kWh</th><th>Carica rete kWh</th><th>Scarica kWh</th><th>€ netto</th><th>Motivo</th></tr>` +
-    P.map(p => `<tr><td><b style="color:${css("--" + p.profilo)}">${p.profilo}</b></td><td>${ora(p.inizio)}</td><td>${ora(p.fine)}</td><td>${p.azione.replace("_", " ").toLowerCase()}</td>
+    P.map(p => `<tr><td><b style="color:${coloreP(p.profilo)}">${nomeP(p.profilo)}</b></td><td>${ora(p.inizio)}</td><td>${ora(p.fine)}</td><td>${p.azione.replace("_", " ").toLowerCase()}</td>
       <td>${fmt(num(p.soc_inizio), 0)} → ${fmt(num(p.soc_fine), 0)}</td><td>${fmt(num(p.carica_fv_kwh), 2)}</td><td>${fmt(num(p.carica_rete_kwh), 2)}</td><td>${fmt(num(p.scarica_kwh), 2)}</td>
       <td>${fmt(num(p.euro_netto))}</td><td class="testo">${p.motivo || ""}</td></tr>`).join("") + `</table></div>`);
 }
@@ -411,26 +442,27 @@ async function pPiano() {
   const P = csv(await scarica("pannello/piano.csv"));
   s.querySelector("h2").textContent = "Piano calcolato per il " + new Date(indice.piano + "T12:00:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
   s.insertAdjacentHTML("beforeend", `<p class="spiega">Quello che ogni scenario prevede di fare, con le previsioni e i prezzi noti al momento del calcolo. Il piano viene ricalcolato durante il giorno.</p>`);
-  const per = { A: [], B: [], C: [] };
-  for (const r of P) if (per[r.profilo]) per[r.profilo].push(r);
-  const x = per.A.map(r => Date.parse(r.inizio) / 1000);
-  const az = { A: per.A.map(r => r.azione), B: per.B.map(r => r.azione), C: per.C.map(r => r.azione) };
+  const per = {};
+  for (const r of P) (per[r.profilo] = per[r.profilo] || []).push(r);
+  const profili = Object.keys(per);
+  if (!profili.length) return;
+  const p0 = per[profili[0]];
+  const x = p0.map(r => Date.parse(r.inizio) / 1000);
+  const az = {};
+  for (const p of profili) az[p] = per[p].map(r => r.azione);
+  grafico(s, x, profili.map(p => ({ label: "SOC " + nomeP(p), stroke: coloreP(p), dati: per[p].map(r => num(r.soc)) })),
+    { unita: "%", scale: { y: { range: [0, 100] } } });
+  corsie(s, x, az, profili);
   grafico(s, x, [
-    { label: "SOC A", stroke: css("--A"), dati: per.A.map(r => num(r.soc)) },
-    { label: "SOC B", stroke: css("--B"), dati: per.B.map(r => num(r.soc)) },
-    { label: "SOC C", stroke: css("--C"), dati: per.C.map(r => num(r.soc)) },
-  ], { unita: "%", scale: { y: { range: [0, 100] } } });
-  corsie(s, x, az);
-  grafico(s, x, [
-    { label: "FV previsto", stroke: css("--fv"), dati: per.A.map(r => num(r.fv_w)) },
-    { label: "Consumo previsto", stroke: css("--carico"), dati: per.A.map(r => num(r.carico_w)) },
-  ], { unita: "W", altezza: 200 });
+    { label: "FV previsto", stroke: css("--fv"), dati: p0.map(r => num(r.fv_w)) },
+    { label: "Consumo previsto", stroke: css("--carico"), dati: p0.map(r => num(r.carico_w)) },
+  ], { unita: "W", altezza: 200, id: "prev" });
   s.insertAdjacentHTML("beforeend", legendaAzioni());
 }
 
 let giornaliero = [];
 function pGiornaliero() {
-  const s = sezione("giornaliero", "Giorno per giorno", "Energia di ogni giorno (anche prima dell'avvio della simulazione) e beneficio degli scenari rispetto all'automatico simulato.");
+  const s = sezione("giornaliero", "Giorno per giorno", "Energia di ogni giorno (anche prima dell'avvio della simulazione) e beneficio cumulato degli scenari.");
   const G = giornaliero; if (!G.length) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun dato.</p>`); return; }
   const x = G.map(r => Date.parse(r.giorno + "T12:00:00") / 1000);
   grafico(s, x, [
@@ -439,16 +471,23 @@ function pGiornaliero() {
     { label: "Prelievo kWh", stroke: css("--rete"), dati: G.map(r => num(r.prel_kwh)), dec: 1 },
   ], { unita: "kWh", altezza: 220, giorni: true });
   const sim = G.filter(r => r.tipo === "simulato");
-  if (sim.length) {
+  const profili = Object.keys(G[0] || {}).filter(k => k.endsWith("_beneficio_eur") && !k.endsWith("_vs_zero_eur")).map(k => k.slice(0, -14))
+    .filter(p => sim.some(r => r[p + "_beneficio_eur"] !== "" && r[p + "_beneficio_eur"] != null));
+  if (sim.length && profili.length) {
     const xs = sim.map(r => Date.parse(r.giorno + "T12:00:00") / 1000);
-    // beneficio cumulato: quanto avrebbe fatto risparmiare ogni scenario dall'avvio della simulazione
-    grafico(s, xs, ["A", "B", "C"].map(p => {
-      let somma = 0;
-      return { label: "Beneficio cumulato " + p, stroke: css("--" + p), width: 2, points: { show: true, size: 6 },
-               dati: sim.map(r => (somma += num(r[p + "_beneficio_eur"]) || 0)), dec: 2 };
-    }), { unita: "€", dec: 2, altezza: 220, giorni: true });
+    const vecchi = ["A", "B", "C"];
+    const col2 = p => vecchi.includes(p) ? css("--" + p) : coloreP(p);
+    const cum = (p, k) => { let somma = 0, visto = false;
+      return sim.map(r => { const v = num(r[p + k]); if (v != null) { visto = true; somma += v; } return visto ? somma : null; }); };
+    grafico(s, xs, profili.map(p => ({ label: "Su automatico: " + nomeP(p), stroke: col2(p), width: 2, points: { show: true, size: 6 },
+      dati: cum(p, "_beneficio_eur"), dec: 2 })), { unita: "€", dec: 2, altezza: 220, giorni: true, id: "ben" });
+    const conZero = profili.filter(p => sim.some(r => r[p + "_beneficio_vs_zero_eur"]));
+    if (conZero.length)
+      grafico(s, xs, conZero.map(p => ({ label: "Su senza batteria: " + nomeP(p), stroke: col2(p), width: 2, points: { show: true, size: 6 },
+        dati: cum(p, "_beneficio_vs_zero_eur"), dec: 2 })), { unita: "€", dec: 2, altezza: 220, giorni: true, id: "benz" });
     const tot = p => sim.reduce((a, r) => a + (num(r[p + "_beneficio_eur"]) || 0), 0);
-    s.insertAdjacentHTML("beforeend", `<p class="spiega">Beneficio totale su ${sim.length} giorni simulati: A ${fmt(tot("A"))} € · B ${fmt(tot("B"))} € · C ${fmt(tot("C"))} €.</p>`);
+    s.insertAdjacentHTML("beforeend", `<p class="spiega">Beneficio cumulato rispetto all'automatico: ` +
+      profili.map(p => `${nomeP(p)} ${fmt(tot(p))} €`).join(" · ") + `. I profili A, B, C sono quelli della versione precedente.</p>`);
   }
 }
 
@@ -474,6 +513,7 @@ async function mostra() {
   let d;
   try { d = await datiGiorno(g); } catch (e) { $("principale").innerHTML = `<section class="errore">Dati del giorno non leggibili: ${e.message}</section>`; return; }
   if (mia !== generazione) return;
+  PROF = d.info.tipo === "storico" ? [] : profiliDi(d.righe);
   const solo = info.tipo === "storico";
   const avviso = id => { const s = sezione(id, PANNELLI.find(p => p[0] === id)[1]); s.insertAdjacentHTML("beforeend", `<p class="vuoto">Non disponibile per i giorni prima dell'avvio della simulazione.</p>`); };
   for (const [id] of PANNELLI) {

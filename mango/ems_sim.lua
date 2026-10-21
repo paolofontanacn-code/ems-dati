@@ -85,7 +85,7 @@ end
 local hw = HW.nuovo(c, CARTELLA, stato, log)
 local gh = GH.nuovo(c, CARTELLA, stato, log)
 local reg = REG.nuovo(c, RAM, DATI)
-local usura = c.COSTO_BATTERIA_EUR / (c.CICLI_VITA * c.CAPACITA_KWH)
+local usura = c.USURA_EUR_KWH or (c.COSTO_BATTERIA_EUR / (c.CICLI_VITA * c.CAPACITA_KWH))
 
 -- ------------------------------------------------------------------ prezzi
 local cache_prezzi = {}
@@ -114,6 +114,26 @@ local function prezzo_ora(t)
   local h = d.ore[cal.ora_gme]
   local qq = d.quarti and d.quarti[cal.quarto_gme]
   return h, qq
+end
+
+-- prezzo NORD usato per la cessione: quello del quarto d'ora se disponibile (MGP a 15 minuti), altrimenti orario
+local function nord_cessione(h, qq)
+  if c.PREZZI_QUARTO_ORA and qq and qq.nord then return qq.nord end
+  return h and h.nord
+end
+
+-- scenario 0: impianto senza batteria (solo autoconsumo istantaneo), potenze medie in W
+local function senza_batteria(fv, car)
+  local fv_car = math.min(fv, car)
+  local imm = math.max(0, math.min(fv - fv_car, c.P_MAX_IMMISSIONE_W, c.P_MAX_AC_INVERTER_W - fv_car))
+  return car - fv_car, imm
+end
+
+-- accumulatore di un profilo (crea quelli mancanti, es. profili cambiati durante il giorno)
+local function acc_profilo(a, p)
+  a.prof[p] = a.prof[p] or { prel = 0, imm = 0, sca = 0, costo = 0, ricavo = 0, usura = 0, auto_costo = 0, auto_ricavo = 0,
+                             auto_usura = 0, reale_costo = 0, reale_ricavo = 0, sfor = 0, euro = 0, ore_alto = 0 }
+  return a.prof[p]
 end
 
 -- ------------------------------------------------------------------ meteo
@@ -174,7 +194,7 @@ local function costruisci_quarti(t0, serie, con_margine)
   local t = T.inizio_quarto(t0)
   while t < fine do
     local tm = t + 450
-    local h, _ = prezzo_ora(tm)
+    local h, qq = prezzo_ora(tm)
     if not h then break end
     local car, fv, _, cal = previsione(tm, serie)
     car = car or carico_ultimo
@@ -189,7 +209,7 @@ local function costruisci_quarti(t0, serie, con_margine)
     end
     local costi = PA.costi(c, stato, tm, h.pun)
     quarti[#quarti + 1] = { t = t, giorno = cal.giorno, fv = fv, carico = car, di_giorno = fv >= c.FV_MIN_GIORNO_W,
-      mezzanotte = (t == T.mezzanotte(cal.giorno)), vend = PA.valore_cessione(c, h.nord), costo = costi }
+      mezzanotte = (t == T.mezzanotte(cal.giorno)), vend = PA.valore_cessione(c, nord_cessione(h, qq)), costo = costi }
     t = t + 900
   end
   return quarti
@@ -224,6 +244,7 @@ end
 -- ------------------------------------------------------------------ accumulatori giornalieri
 local function nuovo_accumulo(g)
   local a = { giorno = g, letture = 0, ore = 0, fv = 0, carico = 0, reale = { prel = 0, imm = 0 },
+              zero = { prel = 0, imm = 0, costo = 0, ricavo = 0 },
               auto = { prel = 0, imm = 0, sca = 0 }, quarti = {}, comp = {}, err = { cs = 0, cn = 0, fs = 0, fn = 0, ms = 0, mn = 0, mfs = 0, mfn = 0 },
               soc_inizio = {}, prof = {}, chiamate = 0 }
   for _, p in ipairs(c.PROFILI) do
@@ -285,8 +306,9 @@ local function chiudi_giorno(g)
       if not qd or qd.n == 0 then quarti = nil; break end
       local tm = m0 + (k - 1) * 900 + 450
       local h = prezzi.ore[math.floor((k - 1) / 4) + 1]
+      local qq = prezzi.quarti and prezzi.quarti[k]
       quarti[k] = { t = m0 + (k - 1) * 900, giorno = g, fv = qd.fv / qd.n, carico = qd.car / qd.n,
-        di_giorno = qd.fv / qd.n >= c.FV_MIN_GIORNO_W, mezzanotte = (k == 1), vend = PA.valore_cessione(c, h.nord),
+        di_giorno = qd.fv / qd.n >= c.FV_MIN_GIORNO_W, mezzanotte = (k == 1), vend = PA.valore_cessione(c, nord_cessione(h, qq)),
         costo = PA.costi(c, stato, tm, h.pun) }
     end
   else
@@ -306,17 +328,23 @@ local function chiudi_giorno(g)
   if quarti and #quarti > 0 then
     local prof_in = {}
     for _, p in ipairs(c.PROFILI) do
-      prof_in[p] = { soc0 = a.soc_inizio[p] or 50, prev_azione = "AUTO", finestre_oggi = 0, giorno_oggi = g }
+      prof_in[p] = { soc0 = a.soc_inizio[p] or 50, prev_azione = "AUTO", finestre_oggi = 0, giorno_oggi = g,
+                     carica_rete = (c.PROFILI_CARICA_RETE or {})[p] }
     end
     local ok, res = pcall(O.pianifica, c, e, quarti, c.PROFILI, prof_in, usura, vf)
     if ok then ott = res else log("Ottimo a posteriori non calcolato: " .. tostring(res)) end
   else
     note[#note + 1] = "Ottimo a posteriori non calcolato: dati del giorno incompleti (letture mancanti in qualche quarto d'ora)."
   end
+  local z = a.zero or { prel = 0, imm = 0, costo = 0, ricavo = 0 }
+  r.zero_prel_kwh, r.zero_imm_kwh, r.zero_costo_eur, r.zero_ricavo_eur = z.prel, z.imm, z.costo, z.ricavo
   for _, p in ipairs(c.PROFILI) do
-    local x = a.prof[p]
+    local x = acc_profilo(a, p)
     local s = stato.sim[p] or {}
     r[p .. "_prel_kwh"], r[p .. "_imm_kwh"] = x.prel, x.imm
+    r[p .. "_beneficio_vs_zero_eur"] = (z.costo - z.ricavo) - (x.costo - x.ricavo + x.usura) - (x.interventi or 0)
+    r[p .. "_auto_vs_zero_eur"] = (z.costo - z.ricavo) - (x.auto_costo - x.auto_ricavo + x.auto_usura)
+    r[p .. "_scarica_forzata_kwh"] = s.scarica_forzata_oggi or 0
     r[p .. "_costo_eur"], r[p .. "_ricavo_eur"], r[p .. "_usura_eur"] = x.costo, x.ricavo, x.usura
     r[p .. "_auto_costo_eur"], r[p .. "_auto_ricavo_eur"], r[p .. "_auto_usura_eur"] = x.auto_costo, x.auto_ricavo, x.auto_usura
     r[p .. "_maggiore_acquisto_kwh"] = x.prel - a.auto.prel
@@ -416,14 +444,19 @@ local function chiudi_giorno(g)
       -- un periodo forzato che continua dopo mezzanotte conta come nuova finestra del nuovo giorno
       sp.finestre_oggi = (S.categoria(sp.azione or "AUTO") ~= "auto") and 1 or 0
       sp.comandi_oggi = 0
+      sp.scarica_forzata_oggi = 0
     end
   end
   if stato.prev_sera then
     for k in pairs(stato.prev_sera) do if k <= g then stato.prev_sera[k] = nil end end
   end
   stato.flash_modelli, stato.flash_modelli_sim = 0, 0      -- al prossimo salvataggio i modelli vanno in memoria interna
-  log(string.format("Giorno %s chiuso: profilo A beneficio %.2f EUR, B %.2f EUR, C %.2f EUR", g,
-    r.A_beneficio_eur or 0, r.B_beneficio_eur or 0, r.C_beneficio_eur or 0))
+  local parti = {}
+  for _, p in ipairs(c.PROFILI) do
+    parti[#parti + 1] = string.format("%s %.2f EUR (rispetto a senza batteria %.2f EUR)", p, r[p .. "_beneficio_eur"] or 0,
+      r[p .. "_beneficio_vs_zero_eur"] or 0)
+  end
+  log("Giorno " .. g .. " chiuso: beneficio rispetto all'automatico " .. table.concat(parti, ", "))
 end
 
 -- ------------------------------------------------------------------ istantanea della sera (piano e meteo del giorno dopo)
@@ -615,9 +648,9 @@ local function ciclo()
   local h, qq = prezzo_ora(adesso)
   if h then
     riga.nord, riga.pun = h.nord, h.pun
-    local costi, pf = PA.costi(c, stato, adesso, h.pun)
-    riga.costo_A, riga.costo_B, riga.costo_C, riga.pun_fascia_mese = costi.A, costi.B, costi.C, pf
-    riga.valore_cessione = PA.valore_cessione(c, h.nord)
+    local costi = PA.costi(c, stato, adesso, h.pun)
+    riga.costo_acquisto = costi[c.PROFILI[1]]
+    riga.valore_cessione = PA.valore_cessione(c, nord_cessione(h, qq))
   end
   if qq then riga.nord_15, riga.pun_15 = qq.nord, qq.pun end
   riga.usura = usura
@@ -654,9 +687,10 @@ local function ciclo()
       local fv = (l.fv_w + prec.fv_w) / 2
       local car = (l.carico_w + prec.carico_w) / 2
       local tm = prec.t + dt_s / 2
-      local hm = prezzo_ora(tm) or h
+      local hm, qm = prezzo_ora(tm)
+      if not hm then hm, qm = h, qq end
       local costi = hm and PA.costi(c, stato, tm, hm.pun) or nil
-      local vend = hm and PA.valore_cessione(c, hm.nord) or 0
+      local vend = hm and PA.valore_cessione(c, nord_cessione(hm, qm)) or 0
       local di_giorno = fv >= c.FV_MIN_GIORNO_W
       acc.letture, acc.ore, acc.fv, acc.carico = acc.letture + 1, acc.ore + dt, acc.fv + fv * dt / 1000, acc.carico + car * dt / 1000
       local cont = (l.contatore_w + prec.contatore_w) / 2
@@ -686,12 +720,21 @@ local function ciclo()
       riga.auto_tagliato_w, riga.auto_sforamento_w = fa.fv_tagliato_w, fa.sforamento_w
       riga.auto_prel_kwh, riga.auto_imm_kwh, riga.auto_scarica_kwh = fa.prelievo_w * dt / 1000, fa.immissione_w * dt / 1000, fa.scarica_w * dt / 1000
       acc.auto.prel, acc.auto.imm, acc.auto.sca = acc.auto.prel + riga.auto_prel_kwh, acc.auto.imm + riga.auto_imm_kwh, acc.auto.sca + riga.auto_scarica_kwh
+      -- scenario 0: senza batteria (stesso prezzo d'acquisto del primo profilo)
+      local zp, zi = senza_batteria(fv, car)
+      local zc = costi and costi[c.PROFILI[1]] or 0
+      acc.zero = acc.zero or { prel = 0, imm = 0, costo = 0, ricavo = 0 }
+      riga.zero_prel_kwh, riga.zero_imm_kwh = zp * dt / 1000, zi * dt / 1000
+      riga.zero_costo_eur, riga.zero_ricavo_eur = riga.zero_prel_kwh * zc, riga.zero_imm_kwh * vend
+      acc.zero.prel, acc.zero.imm = acc.zero.prel + riga.zero_prel_kwh, acc.zero.imm + riga.zero_imm_kwh
+      acc.zero.costo, acc.zero.ricavo = acc.zero.costo + riga.zero_costo_eur, acc.zero.ricavo + riga.zero_ricavo_eur
       -- profili
       for _, p in ipairs(c.PROFILI) do
         local s = stato.sim[p]
         local fp = S.passo(c, e, s.soc, s.azione, fv, car, dt, di_giorno)
         s.soc = fp.soc
-        local x = acc.prof[p]
+        if S.categoria(s.azione) == "scarica" then s.scarica_forzata_oggi = (s.scarica_forzata_oggi or 0) + fp.scarica_w * dt / 1000 end
+        local x = acc_profilo(acc, p)
         local e_prel, e_imm, e_sca = fp.prelievo_w * dt / 1000, fp.immissione_w * dt / 1000, fp.scarica_w * dt / 1000
         local cp = costi and costi[p] or 0
         local costo, ricavo, us = e_prel * cp, e_imm * vend, e_sca * usura
@@ -742,7 +785,8 @@ local function ciclo()
       local prof_in = {}
       for _, p in ipairs(c.PROFILI) do
         local s = stato.sim[p]
-        prof_in[p] = { soc0 = s.soc, prev_azione = s.azione, finestre_oggi = s.finestre_oggi or 0, giorno_oggi = oggi }
+        prof_in[p] = { soc0 = s.soc, prev_azione = s.azione, finestre_oggi = s.finestre_oggi or 0, giorno_oggi = oggi,
+                       carica_rete = (c.PROFILI_CARICA_RETE or {})[p], scarica_forzata_oggi = s.scarica_forzata_oggi or 0 }
       end
       local ok, ris = pcall(O.pianifica, c, e, quarti, c.PROFILI, prof_in, usura, valore_fine(quarti, serie))
       if ok then
@@ -754,7 +798,8 @@ local function ciclo()
           local v_auto = alt.AUTO
           local motivo = string.format("piano %.2f EUR fino a fine prezzi; %s", ris[p].valore_piano,
             v_auto and string.format("vantaggio su AUTO %.3f EUR", (alt[nuova] or 0) - v_auto) or "")
-          if ris[p].troncato then motivo = motivo .. " (finestre limitate a " .. c.MAX_FINESTRE_GIORNO .. ")" end
+          if ris[p].troncato then motivo = motivo .. " (limitato: max " .. c.MAX_FINESTRE_GIORNO .. " finestre e " ..
+            (c.MAX_CICLI_FORZATI_GIORNO or 1) .. " ciclo di scarica forzata al giorno)" end
           riga[p .. "_decisione"], riga[p .. "_motivo"] = nuova, motivo
           riga[p .. "_vantaggio_eur"] = v_auto and ((alt[nuova] or 0) - v_auto) or nil
           riga[p .. "_valore_piano_eur"] = ris[p].valore_piano
@@ -762,7 +807,7 @@ local function ciclo()
             local cat_n, cat_v = S.categoria(nuova), S.categoria(s.azione)
             if cat_n ~= "auto" and cat_n ~= cat_v then s.finestre_oggi = (s.finestre_oggi or 0) + 1 end
             s.comandi_oggi = (s.comandi_oggi or 0) + 1
-            acc.prof[p].interventi = (acc.prof[p].interventi or 0) + c.PENALITA_CAMBIO_EUR
+            acc_profilo(acc, p).interventi = (acc_profilo(acc, p).interventi or 0) + c.PENALITA_CAMBIO_EUR
             riga[p .. "_costo_interventi_eur"] = c.PENALITA_CAMBIO_EUR
             chiudi_periodo(p, T.inizio_quarto(adesso))
             apri_periodo(p, T.inizio_quarto(adesso), nuova, motivo)
@@ -968,11 +1013,12 @@ elseif comando == "prova" then
     local quarti = costruisci_quarti(T.adesso(), serie_meteo(), true)
     local prof_in = {}
     local soc0 = ok2 and l.soc or 50
-    for _, pp in ipairs(c.PROFILI) do prof_in[pp] = { soc0 = soc0, prev_azione = "AUTO", finestre_oggi = 0, giorno_oggi = T.giorno(nil) } end
+    for _, pp in ipairs(c.PROFILI) do prof_in[pp] = { soc0 = soc0, prev_azione = "AUTO", finestre_oggi = 0, giorno_oggi = T.giorno(nil),
+      carica_rete = (c.PROFILI_CARICA_RETE or {})[pp] } end
     local e = MOD.efficienze(modelli, c)
     local okr, ris = pcall(O.pianifica, c, e, quarti, c.PROFILI, prof_in, usura, valore_fine(quarti, serie_meteo()))
     print(string.format("Ottimizzatore: %d quarti d'ora in %.1f s (%s)", #quarti, os.clock() - t1,
-      okr and ("prima azione A " .. ris.A.primo.azione) or tostring(ris)))
+      okr and ("prima azione " .. c.PROFILI[1] .. " " .. ris[c.PROFILI[1]].primo.azione) or tostring(ris)))
   end
   print("Memoria interna libera: " .. tostring(F.spazio_libero_kb(DATI)) .. " kB")
   salva(true, true)

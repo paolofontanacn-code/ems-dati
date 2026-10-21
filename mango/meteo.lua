@@ -55,7 +55,13 @@ local function url(base, c, lat, lon, extra)
 end
 
 local function scarica(u)
-  local codice, testo = H.get(u, { "Accept: application/json" }, 60)
+  -- attesa breve e un secondo tentativo dopo 10 s solo per errori di rete (visti timeout da GitHub)
+  local ok0, codice, testo = pcall(H.get, u, { "Accept: application/json" }, 25)
+  if not ok0 and tostring(codice):match("^rete:") then
+    os.execute("sleep 10")
+    ok0, codice, testo = pcall(H.get, u, { "Accept: application/json" }, 25)
+  end
+  if not ok0 then error(codice, 0) end
   local ok, r = pcall(J.decode, testo)
   if codice ~= 200 or not ok then
     error(string.format("Open-Meteo HTTP %s: %s", tostring(codice), (testo or ""):sub(1, 200)), 0)

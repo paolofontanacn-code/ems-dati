@@ -4,22 +4,22 @@
 return {
   -- ================================================================ PREZZI E COSTI
   -- costo di un kWh prelevato = [energia x (1 + PERDITE) + DISPACCIAMENTO + TRASPORTO + ONERI + ACCISE] x (1 + IVA)
-  --   profilo A: energia = PREZZO_FISSO_A
-  --   profilo B: energia = PUN medio mensile della fascia (F1/F2/F3) + SPREAD_B
-  --   profilo C: energia = PUN orario + SPREAD_C
+  --   energia = PREZZO_FISSO_A: prezzo fisso monorario F0 (contratto a prezzo fisso, decisione del 21/10/2026)
   PREZZO_FISSO_A = 0.12,               -- EUR/kWh
-  SPREAD_B = 0.02,                      -- EUR/kWh
-  SPREAD_C = 0.02,                      -- EUR/kWh
   PERDITE = 0.10,                       -- 10 % bassa tensione (ARERA 117/2022/R/eel, TIS tab. 4), su energia e spread
   DISPACCIAMENTO = 0.0,                 -- EUR/kWh  >>> VALORE NON NOTO: inserirlo appena disponibile (bolletta) <<<
   TRASPORTO = 0.014730,                 -- EUR/kWh quota variabile, domestico non residente, IV trim. 2026
   ONERI = 0.033153,                     -- EUR/kWh quota variabile oneri di sistema, IV trim. 2026
   ACCISE = 0.0227,                      -- EUR/kWh, domestico non residente
   IVA = 0.10,                           -- uso domestico
-  -- cessioni (RID): valore = prezzo zonale orario NORD x (1 - IMPOSTA_CESSIONI)
-  IMPOSTA_CESSIONI = 0.40,              -- reddito diverso tassato al 40 % (indicazione dell'utente)
+  -- cessioni (RID): valore = prezzo zonale NORD (del quarto d'ora se disponibile) x (1 - IMPOSTA_CESSIONI)
+  IMPOSTA_CESSIONI = 0.0,               -- 21/10/2026: le imposte sulle cessioni non si considerano
+  PREZZI_QUARTO_ORA = true,             -- cessione valutata al prezzo NORD del quarto d'ora (MGP a 15 minuti)
   ZONA = "NORD",
-  PROFILI = { "A", "B", "C" },
+  -- profili simulati: stesso prezzo d'acquisto F0, con e senza carica della batteria dalla rete
+  PROFILI = { "F0", "F0R" },
+  PROFILI_CARICA_RETE = { F0R = true },
+  PROFILI_NOME = { F0 = "senza carica da rete", F0R = "con carica da rete" },
 
   -- ================================================================ BATTERIA (LUNA2000 15 kWh)
   CAPACITA_KWH = 15.0,
@@ -34,16 +34,15 @@ return {
   RENDIMENTO_CARICA = 0.95,             -- energia immagazzinata / energia entrante
   RENDIMENTO_SCARICA = 0.97,            -- energia DC in uscita / energia tolta (batteria)
   RENDIMENTO_INVERTER = 0.97,           -- energia AC / energia DC in scarica
-  -- usura (VALORI INDICATIVI): EUR per kWh scaricato = COSTO_BATTERIA_EUR / (CICLI_VITA x CAPACITA_KWH)
-  COSTO_BATTERIA_EUR = 6000,
-  CICLI_VITA = 6000,
+  -- costo attribuito a ogni kWh scaricato dalla batteria (usura); 21/10/2026: 0,02 EUR/kWh
+  USURA_EUR_KWH = 0.02,
 
   -- ================================================================ IMPIANTO E RETE
   P_NOMINALE_FV_W = 11000,              -- 11 kWp, sud, inclinazione 5 gradi
   P_MAX_AC_INVERTER_W = 10000,          -- SUN2000 10 kW
   P_MAX_PRELIEVO_W = 7000,              -- prelievo massimo imposto (contratto 6 kW)
   P_MAX_IMMISSIONE_W = 8000,            -- potenza in immissione del contratto di connessione
-  CARICA_DA_RETE_AMMESSA = true,        -- SOLO SIMULAZIONE: rete -> batteria di giorno
+  CARICA_DA_RETE_AMMESSA = true,        -- rete -> batteria di giorno, solo nei profili di PROFILI_CARICA_RETE
   P_MAX_CARICA_RETE_W = 1000,
   FV_MIN_GIORNO_W = 100,                -- "di giorno" = FV previsto/misurato almeno di questa potenza
   P_MAX_POMPA_CALORE_W = 3000,          -- potenza elettrica indicativa della pompa di calore
@@ -59,6 +58,8 @@ return {
   PENALITA_FINESTRA_EUR = 0.0,          -- costo aggiuntivo per periodo forzato: cresce da solo oltre le 14 finestre
   MARGINE_Z = 0.5,                      -- margine di sicurezza: deviazioni standard dell'errore di previsione
   ORE_SOC_ALTO = 90,                    -- soglia per registrare le ore a SOC alto (invecchiamento)
+  PENALITA_SOC_ALTO_EUR_ORA = 0.01,     -- piccolo costo per ogni ora con SOC sopra ORE_SOC_ALTO (evita lunghe soste)
+  MAX_CICLI_FORZATI_GIORNO = 1.0,       -- energia scaricata con comandi forzati al giorno, in capacita' (1 = 15 kWh)
 
   -- ================================================================ SERVIZI
   URL_OAUTH = "https://oauth2.fusionsolar.huawei.com",
