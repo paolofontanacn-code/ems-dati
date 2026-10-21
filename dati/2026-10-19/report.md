@@ -4,25 +4,27 @@
 
 ## Scenari
 
-| Scenario | Prezzo dell'energia acquistata | Descrizione |
-|---|---|---|
-| **A** - prezzo fisso | 0.12 EUR/kWh (con i costi aggiuntivi: 0.223 EUR/kWh) | Batteria gestita dall'ottimizzatore con un prezzo d'acquisto uguale in tutte le ore. |
-| **B** - PUN per fascia | PUN medio mensile della fascia F1/F2/F3 + spread 0.02 EUR/kWh | Come il contratto indicizzato a fasce. Durante il mese il PUN di fascia e' stimato con i giorni gia' pubblicati dal GME. |
-| **C** - PUN orario | PUN dell'ora + spread 0.02 EUR/kWh | Prezzo d'acquisto diverso ogni ora: l'ottimizzatore puo' spostare l'uso della batteria verso le ore piu' care. |
-| Solo autoconsumo | (valutato con i prezzi di ciascuno scenario) | Riferimento: la batteria lasciata in massimo autoconsumo, senza ottimizzatore. |
+Prezzo d'acquisto fisso F0: 0.12 EUR/kWh di energia, 0.2228 EUR/kWh con i costi aggiuntivi (perdite 10 % su energia e spread, dispacciamento NON NOTO (per ora 0), trasporto 0.0147, oneri di sistema 0.0332, accise 0.0227 EUR/kWh, IVA 10 %).
 
-In tutti gli scenari: ai prezzi dell'energia si aggiungono gli stessi costi (perdite 10 % su energia e spread, dispacciamento NON NOTO (per ora 0), trasporto 0.0147, oneri di sistema 0.0332, accise 0.0227 EUR/kWh, IVA 10 %). Le cessioni (RID) valgono il prezzo zonale orario NORD meno l'imposta del 40 %. Ogni scenario ha la sua batteria simulata (SOC proprio) e l'ottimizzatore sceglie ogni 15 minuti tra autoconsumo, carica ritardata, carica forzata (solo FV o FV + rete fino a 1000 W di giorno) e scarica forzata a potenze graduate, con al massimo 14 periodi forzati al giorno. Ogni cambiamento di funzionamento (compreso il ritorno all'autoconsumo) ha un costo attribuito di 0.10 EUR: si cambia solo se conviene anche pagandolo, e il costo e' sottratto dal beneficio.
+| Scenario | Descrizione |
+|---|---|
+| **Senza batteria** | Solo autoconsumo istantaneo del FV: il resto si compra, l'eccedenza si cede. |
+| **Automatico** | Batteria in massimo autoconsumo, senza ottimizzatore (come oggi). |
+| **F0** - senza carica da rete | Batteria gestita dall'ottimizzatore, senza carica dalla rete. |
+| **F0R** - con carica da rete | Batteria gestita dall'ottimizzatore, con carica dalla rete fino a 1000 W di giorno. |
 
-> Il dispacciamento non e' ancora noto ed e' calcolato a 0: i costi d'acquisto di A, B e C sono sottostimati della stessa quantita' per kWh. I kWh sono registrati nel dataset, quindi i costi si possono ricalcolare quando il valore sara' noto.
+Cessioni (RID): prezzo zonale NORD del quarto d'ora. Usura batteria: 0.020 EUR per kWh scaricato. Ogni scenario ha la sua batteria simulata e l'ottimizzatore sceglie ogni 15 minuti tra autoconsumo, carica ritardata, carica forzata e scarica forzata a potenze graduate, con al massimo 14 periodi forzati e 1 ciclo di scarica forzata al giorno. Ogni cambiamento di funzionamento costa 0.10 EUR: si cambia solo se conviene anche pagandolo.
+
+> Il dispacciamento non e' ancora noto ed e' calcolato a 0: i costi d'acquisto sono sottostimati della stessa quantita' per kWh. I kWh sono registrati nel dataset, quindi i costi si possono ricalcolare quando il valore sara' noto.
 
 Letture: 288, ore integrate: 24.00. FV 9.20 kWh, consumi casa 19.48 kWh.
 Reale: prelievo 10.56 kWh, immissione 0.13 kWh.  Solo autoconsumo simulato: prelievo 10.90 kWh, immissione 0.00 kWh.
+Senza batteria: prelievo 14.66 kWh (3.27 EUR), immissione 4.38 kWh (1.00 EUR).
 
-| Profilo | Prelievo kWh | Immissione kWh | Costo EUR | Ricavo netto EUR | Usura EUR | Cambiamenti (EUR) | Maggiore acquisto kWh (EUR) | Maggiore cessione kWh (EUR) | Beneficio EUR | Beneficio con SOC EUR | Rimpianto EUR | Finestre |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| A | 14.66 | 4.38 | 3.27 | 0.62 | 0.00 | 1 (0.10) | 3.76 (0.84) | 4.38 (0.62) | -0.06 | -0.06 | 0.08 | 1 |
-| B | 6.02 | 0.00 | 2.27 | 0.00 | 0.58 | 1 (0.10) | -4.88 (-2.00) | 0.00 (0.00) | 1.58 | 2.14 | -0.04 | 1 |
-| C | 3.81 | 0.00 | 1.46 | 0.00 | 0.72 | 2 (0.20) | -7.09 (-3.16) | 0.00 (0.00) | 2.49 | 4.11 | 0.14 | 2 |
+| Profilo | Prelievo kWh | Immissione kWh | Costo EUR | Ricavo EUR | Usura EUR | Cambiamenti (EUR) | Maggiore acquisto kWh (EUR) | Maggiore cessione kWh (EUR) | Beneficio su automatico EUR | Beneficio con SOC EUR | Beneficio su senza batteria EUR | Rimpianto EUR | Finestre |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| F0 | 13.61 | 6.45 | 3.03 | 2.19 | 0.15 | 1 (0.10) | 2.70 (0.60) | 6.45 (2.19) | 1.41 | 1.79 | 1.17 | 0.13 | 2 |
+| F0R | 13.61 | 6.45 | 3.03 | 2.19 | 0.15 | 1 (0.10) | 2.70 (0.60) | 6.45 (2.19) | 1.41 | 1.79 | 1.17 | 0.13 | 2 |
 
 Beneficio = costo netto dello scenario solo autoconsumo - costo netto del profilo (stessi prezzi) - costo dei cambiamenti. Con SOC: tiene conto del valore dell'energia rimasta in batteria a fine giornata. Rimpianto = distanza dall'ottimo calcolato a posteriori con i dati veri del giorno.
 
@@ -31,18 +33,18 @@ Errore medio consumi: sera prima 454.11 W, modello 454.11 W.  FV: sera prima 519
 Rendimenti usati: carica 0.987, scarica 0.890. Ore con SOC reale >= 90 %: -.
 
 ## Carico di lavoro del Mango
-Cicli: 288. CPU per ciclo: media 0.156 s, massimo 0.920 s (qui). Calcolo del piano: massimo 0.643 s (qui).
+Cicli: 288. CPU per ciclo: media 0.123 s, massimo 0.722 s (qui). Calcolo del piano: massimo 0.508 s (qui).
 Stima sul Mango: media da tarare, massimo da tarare, piano da tarare (lanciare benchmark_mango.lua sul Mango e scrivere FATTORE_MANGO in config.lua).
-Memoria Lua massima 15838.91 kB. Scritture nella memoria interna 1132.35 kB al giorno.
-Chiamate che il Mango farebbe in un giorno: Huawei 864 (limite 950), GME 3, meteo 26, GitHub 26; dati ricevuti circa 1261.12 kB.
+Memoria Lua massima 12991.76 kB. Scritture nella memoria interna 1081.84 kB al giorno.
+Chiamate che il Mango farebbe in un giorno: Huawei 864 (limite 950), GME 3, meteo 26, GitHub 22; dati ricevuti circa 1266.84 kB.
 
 ## Periodi di carica e scarica forzata (profili)
 | Profilo | Inizio | Fine | Azione | SOC | Energia kWh | Motivo |
 |---|---|---|---|---|---|---|
-| C | 00:00 | 03:00 | CARICA_FV | 94.56 -> 94.56 | carica 0.00, scarica 0.00 | piano -3.96 EUR fino a fine prezzi; vantaggio su AUTO 0.001 EUR |
-| B | 00:00 | 07:00 | CARICA_FV | 55.41 -> 55.41 | carica 0.00, scarica 0.00 | piano -10.97 EUR fino a fine prezzi; vantaggio su AUTO 0.003 EUR |
-| A | 05:15 | 00:00 | SCARICA_1000 | 6.00 -> 6.00 | carica 0.00, scarica 0.00 | piano -1.96 EUR fino a fine prezzi; vantaggio su AUTO 0.000 EUR |
-| C | 22:30 | 00:00 | CARICA_FV | 40.46 -> 40.46 | carica 0.00, scarica 0.00 | piano -9.66 EUR fino a fine prezzi; vantaggio su AUTO 0.000 EUR |
+| F0 | 00:00 | 19:15 | CARICA_FV | 48.47 -> 77.10 | carica 4.38, scarica 0.00 | piano -2.92 EUR fino a fine prezzi; vantaggio su AUTO 0.002 EUR |
+| F0R | 00:00 | 19:15 | CARICA_FV | 48.47 -> 77.10 | carica 4.38, scarica 0.00 | piano -2.92 EUR fino a fine prezzi; vantaggio su AUTO 0.002 EUR |
+| F0 | 19:15 | 00:00 | SCARICA_5000 | 77.10 -> 20.00 | carica 0.00, scarica 7.50 | piano -4.93 EUR fino a fine prezzi; vantaggio su AUTO 0.158 EUR |
+| F0R | 19:15 | 00:00 | SCARICA_5000 | 77.10 -> 20.00 | carica 0.00, scarica 7.50 | piano -4.93 EUR fino a fine prezzi; vantaggio su AUTO 0.158 EUR |
 
 ## Segnalazioni
 - Dispacciamento non noto (calcolato a 0): inserirlo in config.lua quando disponibile.
