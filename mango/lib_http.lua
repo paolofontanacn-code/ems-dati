@@ -37,9 +37,15 @@ local function servizio(url)
   return "altro"
 end
 
+-- indirizzi IP da usare quando il nome non si trova nel DNS: { ["nome.host"] = "1.2.3.4" }
+-- (curl --resolve: il certificato HTTPS resta controllato sul nome)
+M.indirizzi = {}
+
 function M.richiesta(metodo, url, corpo, intestazioni, timeout)
   local f_in, f_out, f_err = os.tmpname(), os.tmpname(), os.tmpname()
   local cmd = { "curl -sS --max-time", tostring(timeout or 60), "-o", q(f_out), "-w '%{http_code} %{time_total}' -X", metodo }
+  local host = url:match("^https://([^/:]+)")
+  if host and M.indirizzi[host] then cmd[#cmd + 1] = "--resolve " .. q(host .. ":443:" .. M.indirizzi[host]) end
   for _, h in ipairs(intestazioni or {}) do cmd[#cmd + 1] = "-H " .. q(h) end
   if corpo then
     local f = assert(io.open(f_in, "wb"))

@@ -62,6 +62,9 @@ return {
 
   -- ================================================================ SERVIZI
   URL_OAUTH = "https://oauth2.fusionsolar.huawei.com",
+  -- indirizzo IP del server dei token (nslookup dal PC in Italia, 19/10/2026): usato SOLO se il nome non si trova
+  -- nel DNS (succede da GitHub). Se Huawei lo cambia va aggiornato qui.
+  IP_OAUTH = "80.158.45.213",
   URL_API_HUAWEI = "https://eu5.fusionsolar.huawei.com",
   CLIENT_ID = "765569051",
   CLIENT_SECRET = os.getenv("HUAWEI_CLIENT_SECRET"),   -- RISERVATO: segreto di GitHub o config_locale.lua sul Mango

@@ -21,6 +21,8 @@ INDIRIZZI = ["oauth2.fusionsolar.huawei.com", "eu5.fusionsolar.huawei.com", "api
 PROVA_HTTPS = {"oauth2.fusionsolar.huawei.com": "/rest/dp/uidm/oauth2/v1/token",
                "eu5.fusionsolar.huawei.com": "/", "api.mercatoelettrico.org": "/"}
 OUT = "pannello"
+# indirizzi IP visti dal PC in Italia (nslookup del 19/10/2026), provati direttamente da GitHub
+IP_NOTI = {"oauth2.fusionsolar.huawei.com": "80.158.45.213"}
 
 
 def dns_sistema(nome, famiglia=socket.AF_INET):
@@ -142,7 +144,7 @@ def main():
             clo, e_clo = dns_diretto(nome, "1.1.1.1")
             doh, e_doh = dns_https(nome)
             h_sis = prova_https(nome, None) if sis else "-"
-            pubblico = (goo or clo or doh or [None])[0]
+            pubblico = (goo or clo or doh or [IP_NOTI.get(nome)])[0]
             h_pub = prova_https(nome, pubblico) if pubblico else "-"
             righe.append(f"{nome}")
             righe.append(f"  DNS di GitHub:    {', '.join(sis) or 'NON TROVATO ' + e_sis}")
@@ -156,7 +158,7 @@ def main():
             righe.append(f"  IPv6 DNS Google:    {', '.join(goo6) or 'NON TROVATO ' + e_goo6}")
             righe.append(f"  curl come la simulazione (codice, indirizzo usato): {cs}")
             righe.append(f"  HTTPS con DNS di GitHub: {h_sis}")
-            righe.append(f"  HTTPS con IP pubblico {pubblico or '-'}: {h_pub}")
+            righe.append(f"  HTTPS con IP {'noto dal PC ' if pubblico and pubblico == IP_NOTI.get(nome) and not (goo or clo or doh) else 'pubblico '}{pubblico or '-'}: {h_pub}")
             w.writerow([ora.isoformat(timespec="seconds"), nome, " ".join(sis) or "NO", " ".join(goo) or "NO",
                         " ".join(clo) or "NO", " ".join(doh) or "NO", h_sis, h_pub, " ".join(sis6) or "NO", cs])
     testo = "\n".join(righe) + "\n"

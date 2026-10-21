@@ -87,9 +87,15 @@ function M.nuovo(c, cartella, stato, log)
         grant_type = "refresh_token", refresh_token = t.refresh_token, client_id = c.CLIENT_ID, client_secret = c.CLIENT_SECRET })
       if ok then nuovo, codice = a, b; break end
       if not tostring(a):match("^rete:") then error(a, 0) end
-      if tentativo == 4 then self.rinnovo_fallito = os.time(); error(a, 0) end
-      log("Rinnovo token Huawei: tentativo " .. tentativo .. " non riuscito (" .. tostring(a):sub(1, 90) .. "), riprovo tra 20 s")
-      os.execute("sleep 20")
+      local host = c.URL_OAUTH:match("^https://([^/:]+)")
+      if tostring(a):match("Could not resolve host") and c.IP_OAUTH and host and not H.indirizzi[host] then
+        H.indirizzi[host] = c.IP_OAUTH
+        log("Rinnovo token Huawei: " .. host .. " non trovato nel DNS, provo subito con l'indirizzo " .. c.IP_OAUTH)
+      elseif tentativo == 4 then self.rinnovo_fallito = os.time(); error(a, 0)
+      else
+        log("Rinnovo token Huawei: tentativo " .. tentativo .. " non riuscito (" .. tostring(a):sub(1, 90) .. "), riprovo tra 20 s")
+        os.execute("sleep 20")
+      end
     end
     if not nuovo.access_token then
       error("rinnovo token Huawei non riuscito (HTTP " .. tostring(codice) .. "): rifare  lua ems_sim.lua autorizza", 0)
