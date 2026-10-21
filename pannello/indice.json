@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-21T06:37:28+02:00",
+ "aggiornato": "2026-10-21T11:38:14+02:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -135,13 +135,25 @@
   },
   {
    "g": "2026-10-18",
+   "tipo": "simulato"
+  },
+  {
+   "g": "2026-10-19",
+   "tipo": "simulato"
+  },
+  {
+   "g": "2026-10-20",
+   "tipo": "simulato"
+  },
+  {
+   "g": "2026-10-21",
    "tipo": "oggi"
   }
  ],
- "oggi": "2026-10-18",
- "piano": "2026-10-18",
+ "oggi": "2026-10-21",
+ "piano": "2026-10-21",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 21/10/2026 04:36:16 UTC",
+  "Controllo di rete del giro su GitHub - 21/10/2026 09:31:48 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -151,7 +163,7 @@
   "  IPv6 DNS Google:    NON TROVATO ",
   "  curl come la simulazione (codice, indirizzo usato): 000 curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com",
   "  HTTPS con DNS di GitHub: -",
-  "  HTTPS con IP pubblico -: -",
+  "  HTTPS con IP noto dal PC 80.158.45.213: 404",
   "eu5.fusionsolar.huawei.com",
   "  DNS di GitHub:    80.158.6.36",
   "  DNS Google:       80.158.6.36",
@@ -178,24 +190,6 @@
   "202610"
  ],
  "registro": [
-  "2026-10-18 16:18:50  Riepilogo recuperato dal repository",
-  "2026-10-18 16:19:07  GitHub: rigioco 2026-10-17 12:20:00 -> 2026-10-18 15:55:00 (331 letture dallo storico)",
-  "2026-10-17 12:40:00  Prezzi GME del 20261017 salvati: 24 ore, NORD da 0.1883 a 0.2769 EUR/kWh, con quarti d'ora",
-  "2026-10-17 13:30:00  Prezzi GME del 20261018 salvati: 24 ore, NORD da 0.1880 a 0.2650 EUR/kWh, con quarti d'ora",
-  "2026-10-17 13:30:00  Richiesta delle previsioni di 20261018 inviata a GitHub",
-  "2026-10-17 13:30:00  Previsioni di GitHub per 20261018 non accettate (servono almeno 10 giorni di addestramento e 1 giorno con previsioni del Mango per il confronto): uso le mie",
-  "2026-10-17 13:45:00  Piano della sera per 20261018 salvato",
-  "2026-10-17 14:00:00  GitHub: inviati 2 file",
-  "2026-10-18 00:00:00  Giorno 20261017 chiuso: profilo A beneficio 0.00 EUR, B 0.00 EUR, C 0.00 EUR",
-  "2026-10-18 00:00:00  GitHub: inviati 9 file",
-  "2026-10-18 04:00:00  Coefficienti da GitHub: non applicati: non accettato",
-  "2026-10-18 13:30:00  Prezzi GME del 20261019 salvati: 24 ore, NORD da 0.2189 a 0.3446 EUR/kWh, con quarti d'ora",
-  "2026-10-18 13:30:00  Richiesta delle previsioni di 20261019 inviata a GitHub",
-  "2026-10-18 14:00:00  GitHub: inviati 2 file",
-  "2026-10-18 16:21:43  GitHub: rigioco 2026-10-18 15:55:00 -> 2026-10-18 16:00:00 (1 letture dallo storico)",
-  "2026-10-18 16:00:00  Previsioni di GitHub per 20261019 non accettate (servono almeno 10 giorni di addestramento e 1 giorno con previsioni del Mango per il confronto): uso le mie",
-  "2026-10-18 19:32:23  Rinnovo token Huawei: tentativo 1 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
-  "2026-10-18 19:32:43  Rinnovo token Huawei: tentativo 2 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
   "2026-10-18 19:33:04  Rinnovo token Huawei: tentativo 3 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
   "2026-10-18 19:33:24  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token",
   "2026-10-18 21:39:50  Rinnovo token Huawei: tentativo 1 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
@@ -253,6 +247,28 @@
   "2026-10-21 06:36:23  Rinnovo token Huawei: tentativo 1 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
   "2026-10-21 06:36:44  Rinnovo token Huawei: tentativo 2 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
   "2026-10-21 06:37:04  Rinnovo token Huawei: tentativo 3 non riuscito (rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2), riprovo tra 20 s",
-  "2026-10-21 06:37:25  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token"
+  "2026-10-21 06:37:25  Storico Huawei non disponibile: rete: curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com verso https://oauth2.fusionsolar.huawei.com/rest/dp/uidm/oauth2/v1/token",
+  "2026-10-21 11:31:53  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-10-21 11:31:53  Token Huawei rinnovato.",
+  "2026-10-21 11:32:22  GitHub: rigioco 2026-10-18 16:00:00 -> 2026-10-21 11:10:00 (806 letture dallo storico)",
+  "2026-10-18 16:15:00  Piano della sera per 20261019 salvato",
+  "2026-10-19 00:00:00  Giorno 20261018 chiuso: profilo A beneficio 0.00 EUR, B -2.12 EUR, C -4.00 EUR",
+  "2026-10-19 00:00:00  GitHub: inviati 11 file",
+  "2026-10-19 01:15:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 60002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
+  "2026-10-19 04:00:00  Coefficienti da GitHub: non applicati: non accettato",
+  "2026-10-19 13:30:00  Prezzi GME del 20261020 salvati: 24 ore, NORD da 0.2189 a 0.3100 EUR/kWh, con quarti d'ora",
+  "2026-10-19 13:30:00  Richiesta delle previsioni di 20261020 inviata a GitHub",
+  "2026-10-19 14:00:00  GitHub: inviati 2 file",
+  "2026-10-19 21:00:00  Piano della sera per 20261020 salvato",
+  "2026-10-20 00:00:00  Giorno 20261019 chiuso: profilo A beneficio -0.06 EUR, B 1.58 EUR, C 2.49 EUR",
+  "2026-10-20 00:00:00  GitHub: inviati 11 file",
+  "2026-10-20 12:05:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 60002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
+  "2026-10-20 13:30:00  Prezzi GME del 20261021 salvati: 24 ore, NORD da 0.2094 a 0.3179 EUR/kWh, con quarti d'ora",
+  "2026-10-20 13:30:00  Richiesta delle previsioni di 20261021 inviata a GitHub",
+  "2026-10-20 14:00:00  GitHub: inviati 2 file",
+  "2026-10-20 21:00:00  Piano della sera per 20261021 salvato",
+  "2026-10-21 00:00:00  Giorno 20261020 chiuso: profilo A beneficio 0.00 EUR, B 0.52 EUR, C 1.71 EUR",
+  "2026-10-21 00:00:00  GitHub: inviati 11 file",
+  "2026-10-21 06:25:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 60001 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito"
  ]
 }

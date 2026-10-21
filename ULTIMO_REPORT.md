@@ -1,4 +1,4 @@
-# Report EMS Cismondi - 17/10/2026 (sabato)
+# Report EMS Cismondi - 20/10/2026 (feriale)
 
 **SOLO SIMULAZIONE**: nessun comando inviato all'inverter.
 
@@ -15,30 +15,32 @@ In tutti gli scenari: ai prezzi dell'energia si aggiungono gli stessi costi (per
 
 > Il dispacciamento non e' ancora noto ed e' calcolato a 0: i costi d'acquisto di A, B e C sono sottostimati della stessa quantita' per kWh. I kWh sono registrati nel dataset, quindi i costi si possono ricalcolare quando il valore sara' noto.
 
-Letture: 171, ore integrate: 14.25. FV 20.38 kWh, consumi casa 11.50 kWh.
-Reale: prelievo 0.47 kWh, immissione 0.61 kWh.  Solo autoconsumo simulato: prelievo 0.11 kWh, immissione 0.00 kWh.
+Letture: 288, ore integrate: 24.00. FV 1.24 kWh, consumi casa 22.35 kWh.
+Reale: prelievo 21.11 kWh, immissione 0.00 kWh.  Solo autoconsumo simulato: prelievo 21.11 kWh, immissione 0.00 kWh.
 
 | Profilo | Prelievo kWh | Immissione kWh | Costo EUR | Ricavo netto EUR | Usura EUR | Cambiamenti (EUR) | Maggiore acquisto kWh (EUR) | Maggiore cessione kWh (EUR) | Beneficio EUR | Beneficio con SOC EUR | Rimpianto EUR | Finestre |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| A | 0.11 | 0.00 | 0.00 | 0.00 | 0.33 | 0 (0.00) | 0.00 (0.00) | 0.00 (0.00) | 0.00 | 0.00 | - | 0 |
-| B | 0.11 | 0.00 | 0.00 | 0.00 | 0.33 | 0 (0.00) | 0.00 (0.00) | 0.00 (0.00) | 0.00 | 0.00 | - | 0 |
-| C | 0.11 | 0.00 | 0.00 | 0.00 | 0.33 | 0 (0.00) | 0.00 (0.00) | 0.00 (0.00) | 0.00 | 0.00 | - | 0 |
+| A | 21.11 | 0.00 | 4.70 | 0.00 | 0.00 | 0 (0.00) | 0.00 (0.00) | 0.00 (0.00) | 0.00 | 0.00 | 0.00 | 1 |
+| B | 19.46 | 0.00 | 7.96 | 0.00 | 0.11 | 0 (0.00) | -1.65 (-0.63) | 0.00 (0.00) | 0.52 | 0.52 | -0.01 | 0 |
+| C | 16.51 | 0.00 | 6.84 | 0.00 | 0.31 | 1 (0.10) | -4.60 (-2.12) | 0.00 (0.00) | 1.71 | 1.71 | 0.10 | 1 |
 
 Beneficio = costo netto dello scenario solo autoconsumo - costo netto del profilo (stessi prezzi) - costo dei cambiamenti. Con SOC: tiene conto del valore dell'energia rimasta in batteria a fine giornata. Rimpianto = distanza dall'ottimo calcolato a posteriori con i dati veri del giorno.
 
 ## Previsioni
-Errore medio consumi: sera prima - W, modello 489.45 W.  FV: sera prima - W, modello 287.08 W.
-Rendimenti usati: carica 0.974, scarica 0.970. Ore con SOC reale >= 90 %: 3.00.
+Errore medio consumi: sera prima 485.65 W, modello 485.73 W.  FV: sera prima 59.21 W, modello 56.72 W.
+Rendimenti usati: carica 0.987, scarica 0.890. Ore con SOC reale >= 90 %: -.
 
 ## Carico di lavoro del Mango
-Cicli: 172. CPU per ciclo: media 0.153 s, massimo 0.740 s (qui). Calcolo del piano: massimo 0.650 s (qui).
+Cicli: 288. CPU per ciclo: media 0.155 s, massimo 0.920 s (qui). Calcolo del piano: massimo 0.639 s (qui).
 Stima sul Mango: media da tarare, massimo da tarare, piano da tarare (lanciare benchmark_mango.lua sul Mango e scrivere FATTORE_MANGO in config.lua).
-Memoria Lua massima 15327.88 kB. Scritture nella memoria interna 1349.94 kB al giorno.
-Chiamate che il Mango farebbe in un giorno: Huawei 516 (limite 950), GME 18, meteo 17, GitHub 4; dati ricevuti circa 825.75 kB.
+Memoria Lua massima 16349.17 kB. Scritture nella memoria interna 1136.67 kB al giorno.
+Chiamate che il Mango farebbe in un giorno: Huawei 864 (limite 950), GME 3, meteo 26, GitHub 26; dati ricevuti circa 1261.36 kB.
 
 ## Periodi di carica e scarica forzata (profili)
-Nessun periodo forzato: tutti i profili sono rimasti in autoconsumo.
+| Profilo | Inizio | Fine | Azione | SOC | Energia kWh | Motivo |
+|---|---|---|---|---|---|---|
+| C | 00:00 | 06:00 | CARICA_FV | 40.46 -> 40.46 | carica 0.00, scarica 0.00 | piano -9.66 EUR fino a fine prezzi; vantaggio su AUTO 0.000 EUR |
+| A | 00:00 | 00:00 | SCARICA_1000 | 6.00 -> 6.00 | carica 0.00, scarica 0.00 | piano -1.96 EUR fino a fine prezzi; vantaggio su AUTO 0.000 EUR |
 
 ## Segnalazioni
-- Ottimo a posteriori non calcolato: dati del giorno incompleti (letture mancanti in qualche quarto d'ora).
 - Dispacciamento non noto (calcolato a 0): inserirlo in config.lua quando disponibile.
