@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-22T14:23:44+02:00",
+ "aggiornato": "2026-10-22T19:36:58+02:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -155,9 +155,9 @@
   }
  ],
  "oggi": "2026-10-22",
- "piano": "2026-10-22",
+ "piano": "2026-10-23",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 22/10/2026 12:23:12 UTC",
+  "Controllo di rete del giro su GitHub - 22/10/2026 17:36:27 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -244,6 +244,11 @@
   "2026-10-22 14:23:27  GitHub: rigioco 2026-10-22 08:10:00 -> 2026-10-22 14:00:00 (70 letture dallo storico)",
   "2026-10-22 13:30:00  Prezzi GME del 20261023 salvati: 24 ore, NORD da 0.2088 a 0.2931 EUR/kWh, con quarti d'ora",
   "2026-10-22 13:30:00  Richiesta delle previsioni di 20261023 inviata a GitHub",
-  "2026-10-22 14:00:00  GitHub: inviati 2 file"
+  "2026-10-22 14:00:00  GitHub: inviati 2 file",
+  "2026-10-22 19:36:32  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-10-22 19:36:32  Token Huawei rinnovato.",
+  "2026-10-22 19:36:40  GitHub: rigioco 2026-10-22 14:00:00 -> 2026-10-22 19:15:00 (63 letture dallo storico)",
+  "2026-10-22 14:15:00  Previsioni di GitHub per 20261023 non accettate (non migliore del Mango): uso le mie",
+  "2026-10-22 14:30:00  Piano della sera per 20261023 salvato"
  ]
 }
