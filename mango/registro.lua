@@ -26,7 +26,7 @@ local function colonne_dataset(profili)
     -- rendimenti
     "eta_carica", "eta_scarica", "eta_inv_500", "eta_inv_1000", "eta_inv_2000", "eta_inv_oltre", "fonte_rendimenti",
     -- energia reale nell'intervallo
-    "reale_prel_kwh", "reale_imm_kwh", "reale_ricavo_eur",
+    "reale_prel_kwh", "reale_imm_kwh", "reale_ricavo_eur", "reale_scarica_kwh", "reale_costo_eur",
     -- scenario 0: senza batteria
     "zero_prel_kwh", "zero_imm_kwh", "zero_costo_eur", "zero_ricavo_eur",
     -- scenario solo autoconsumo (simulato)
@@ -59,13 +59,14 @@ local function colonne_riepilogo(profili)
     "mae_fv_modello_w", "eta_carica", "eta_scarica", "ore_soc_alto_reale", "chiamate_huawei", "dispacciamento_eur_kwh",
     "cicli", "cpu_medio_s", "cpu_max_s", "piano_max_s", "memoria_max_kb", "scritti_kb", "huawei_chiamate_mango",
     "gme_chiamate", "meteo_chiamate", "github_chiamate_mango", "rete_kb", "rete_s", "fattore_mango",
-    "zero_prel_kwh", "zero_imm_kwh", "zero_costo_eur", "zero_ricavo_eur" }
+    "zero_prel_kwh", "zero_imm_kwh", "zero_costo_eur", "zero_ricavo_eur",
+    "reale_scarica_kwh", "reale_costo_eur", "reale_ricavo_eur", "c0_netto_eur", "c1_netto_eur" }
   for _, p in ipairs(profili) do
     for _, x in ipairs({ "prel_kwh", "imm_kwh", "costo_eur", "ricavo_eur", "usura_eur", "auto_costo_eur", "auto_ricavo_eur",
       "auto_usura_eur", "maggiore_acquisto_kwh", "maggiore_acquisto_eur", "maggiore_cessione_kwh", "maggiore_cessione_eur",
       "costo_interventi_eur", "beneficio_eur", "beneficio_con_soc_eur", "soc_fine", "finestre", "comandi", "ottimo_eur", "ottenuto_eur",
       "rimpianto_eur", "reale_costo_eur", "reale_ricavo_eur", "sforamenti_kwh", "ore_soc_alto",
-      "beneficio_vs_zero_eur", "auto_vs_zero_eur", "scarica_forzata_kwh" }) do
+      "beneficio_vs_zero_eur", "auto_vs_zero_eur", "scarica_forzata_kwh", "beneficio_vs_c1_eur" }) do
       c[#c + 1] = p .. "_" .. x
     end
   end
@@ -121,8 +122,8 @@ function M.nuovo(c, cartella_ram, cartella_dati)
       return
     end
     if testo:match("^([^\n]*)") ~= F.intestazione_csv(self.col_riepilogo):gsub("\n$", "") then
-      -- colonne cambiate (aggiornamento del programma): il vecchio riepilogo resta in riepilogo_v1.csv
-      os.rename(dest, self.dati .. "/riepilogo_v1.csv")
+      -- colonne cambiate (aggiornamento del programma): il vecchio riepilogo resta in riepilogo_v<data>.csv
+      os.rename(dest, self.dati .. "/riepilogo_v" .. os.time() .. ".csv")
       F.scrivi(dest, F.intestazione_csv(self.col_riepilogo) .. F.riga_csv(self.col_riepilogo, valori))
       return
     end
@@ -158,15 +159,16 @@ function M.report(c, r, periodi, note)
   L[#L + 1] = string.format("Prezzo d'acquisto fisso F0: %.2f EUR/kWh di energia, %.4f EUR/kWh con i costi aggiuntivi (%s).",
     c.PREZZO_FISSO_A, PA.costo_da_energia(c, c.PREZZO_FISSO_A), agg)
   L[#L + 1] = ""
-  L[#L + 1] = "| Scenario | Descrizione |"
+  L[#L + 1] = "| Condizione | Descrizione |"
   L[#L + 1] = "|---|---|"
-  L[#L + 1] = "| **Senza batteria** | Solo autoconsumo istantaneo del FV: il resto si compra, l'eccedenza si cede. |"
-  L[#L + 1] = "| **Automatico** | Batteria in massimo autoconsumo, senza ottimizzatore (come oggi). |"
+  L[#L + 1] = "| **0** | Impianto senza batteria: solo autoconsumo istantaneo del FV, il resto si compra, l'eccedenza si cede. |"
+  L[#L + 1] = "| **1** | Impianto con batteria senza ottimizzazione (come oggi): dati REALI misurati da Huawei. |"
   for _, p in ipairs(c.PROFILI) do
-    L[#L + 1] = string.format("| **%s** - %s | Batteria gestita dall'ottimizzatore%s. |", p, (c.PROFILI_NOME or {})[p] or p,
-      ((c.PROFILI_CARICA_RETE or {})[p]) and string.format(", con carica dalla rete fino a %d W di giorno", c.P_MAX_CARICA_RETE_W)
-        or ", senza carica dalla rete")
+    local w = (c.PROFILI_CARICA_RETE_W or {})[p] or 0
+    L[#L + 1] = string.format("| **%s** | Batteria con ottimizzazione di carica e scarica%s. |", ((c.PROFILI_NOME or {})[p] or p):gsub("^condizione ", ""),
+      w > 0 and string.format(", carica AC dalla rete fino a %d kW a qualsiasi ora", w / 1000) or ", senza carica AC dalla rete")
   end
+  L[#L + 1] = "| controllo | Automatico simulato: la condizione 1 rifatta dal simulatore, per misurarne la precisione. |"
   L[#L + 1] = ""
   L[#L + 1] = string.format("Cessioni (RID): prezzo zonale %s%s%s. ", c.ZONA, c.PREZZI_QUARTO_ORA and " del quarto d'ora" or " orario",
       (c.IMPOSTA_CESSIONI or 0) > 0 and string.format(" meno l'imposta del %.0f %%", c.IMPOSTA_CESSIONI * 100) or "") ..
@@ -185,21 +187,26 @@ function M.report(c, r, periodi, note)
     e2(r.ore_integrate), e2(r.fv_kwh), e2(r.carico_kwh))
   L[#L + 1] = string.format("Reale: prelievo %s kWh, immissione %s kWh.  Solo autoconsumo simulato: prelievo %s kWh, immissione %s kWh.",
     e2(r.reale_prel_kwh), e2(r.reale_imm_kwh), e2(r.auto_prel_kwh), e2(r.auto_imm_kwh))
-  L[#L + 1] = string.format("Senza batteria: prelievo %s kWh (%s EUR), immissione %s kWh (%s EUR).",
-    e2(r.zero_prel_kwh), e2(r.zero_costo_eur), e2(r.zero_imm_kwh), e2(r.zero_ricavo_eur))
+  L[#L + 1] = string.format("Condizione 0 (senza batteria): prelievo %s kWh (%s EUR), immissione %s kWh (%s EUR), netto %s EUR.",
+    e2(r.zero_prel_kwh), e2(r.zero_costo_eur), e2(r.zero_imm_kwh), e2(r.zero_ricavo_eur), e2(r.c0_netto_eur))
+  L[#L + 1] = string.format("Condizione 1 (reale): acquisti %s EUR, cessioni %s EUR, usura batteria (%s kWh scaricati) inclusa: netto %s EUR.",
+    e2(r.reale_costo_eur), e2(r.reale_ricavo_eur), e2(r.reale_scarica_kwh), e2(r.c1_netto_eur))
   L[#L + 1] = ""
-  L[#L + 1] = "| Profilo | Prelievo kWh | Immissione kWh | Costo EUR | Ricavo EUR | Usura EUR | Cambiamenti (EUR) | Maggiore acquisto kWh (EUR) | Maggiore cessione kWh (EUR) | Beneficio su automatico EUR | Beneficio con SOC EUR | Beneficio su senza batteria EUR | Rimpianto EUR | Finestre |"
-  L[#L + 1] = "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
+  L[#L + 1] = "| Profilo | Prelievo kWh | Immissione kWh | Costo EUR | Ricavo EUR | Usura EUR | Cambiamenti (EUR) | Maggiore acquisto kWh (EUR) | Maggiore cessione kWh (EUR) | Beneficio sulla condizione 1 EUR | Beneficio su automatico simulato EUR | Beneficio con SOC EUR | Beneficio su condizione 0 EUR | Rimpianto EUR | Finestre |"
+  L[#L + 1] = "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
   for _, p in ipairs(c.PROFILI) do
-    L[#L + 1] = string.format("| %s | %s | %s | %s | %s | %s | %s (%s) | %s (%s) | %s (%s) | %s | %s | %s | %s | %s |", p,
+    L[#L + 1] = string.format("| %s | %s | %s | %s | %s | %s | %s (%s) | %s (%s) | %s (%s) | %s | %s | %s | %s | %s | %s |", p,
       e2(r[p .. "_prel_kwh"]), e2(r[p .. "_imm_kwh"]), e2(r[p .. "_costo_eur"]), e2(r[p .. "_ricavo_eur"]), e2(r[p .. "_usura_eur"]),
       tostring(r[p .. "_comandi"] or 0), e2(r[p .. "_costo_interventi_eur"]),
       e2(r[p .. "_maggiore_acquisto_kwh"]), e2(r[p .. "_maggiore_acquisto_eur"]), e2(r[p .. "_maggiore_cessione_kwh"]),
-      e2(r[p .. "_maggiore_cessione_eur"]), e2(r[p .. "_beneficio_eur"]), e2(r[p .. "_beneficio_con_soc_eur"]),
+      e2(r[p .. "_maggiore_cessione_eur"]), e2(r[p .. "_beneficio_vs_c1_eur"]), e2(r[p .. "_beneficio_eur"]), e2(r[p .. "_beneficio_con_soc_eur"]),
       e2(r[p .. "_beneficio_vs_zero_eur"]), e2(r[p .. "_rimpianto_eur"]), tostring(r[p .. "_finestre"] or 0))
   end
   L[#L + 1] = ""
-  L[#L + 1] = "Beneficio = costo netto dello scenario solo autoconsumo - costo netto del profilo (stessi prezzi) - costo dei cambiamenti. " ..
+  L[#L + 1] = "Costo netto = acquisto (prezzo fisso F0) - vendita (prezzo NORD al quarto d'ora) + usura batteria (0,02 EUR/kWh scaricato). " ..
+    "Beneficio sulla condizione 1 = costo netto della condizione 1 (dati reali) - costo netto della condizione. " ..
+    "Beneficio su automatico simulato = stesso confronto con l'automatico rifatto dal simulatore (controllo del simulatore). " ..
+    "Beneficio su condizione 0 = confronto con l'impianto senza batteria. " ..
     "Con SOC: tiene conto del valore dell'energia rimasta in batteria a fine giornata. " ..
     "Rimpianto = distanza dall'ottimo calcolato a posteriori con i dati veri del giorno."
   L[#L + 1] = ""

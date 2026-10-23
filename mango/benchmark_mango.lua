@@ -28,18 +28,20 @@ end
 local t1 = orologio()
 risultati.batteria_s = t1 - t0
 
--- 2) ottimizzatore: 136 quarti d'ora, 3 profili
+-- 2) ottimizzatore: 136 quarti d'ora, tutti i profili di config.lua
 local quarti = {}
+local COSTI = {}
+for _, p in ipairs(c.PROFILI) do COSTI[p] = 0.2228 end
 for k = 1, 136 do
   local h = ((14 * 60 + (k - 1) * 15) % 1440) / 60
   local fv = (h > 7 and h < 18) and 6000 * math.sin(math.pi * (h - 7) / 11) or 0
   local car = 600 + ((h >= 18 and h < 23) and 1500 or 0) + ((h < 7) and 900 or 0)
   local nord = 0.11 + ((h >= 18 and h < 21) and 0.10 or 0)
   quarti[k] = { t = k * 900, giorno = (k <= 40) and "20990101" or "20990102", fv = fv, carico = car, di_giorno = fv >= 100,
-    mezzanotte = (k == 41), vend = nord, costo = { F0 = 0.2228, F0R = 0.2228 } }
+    mezzanotte = (k == 41), vend = nord, costo = COSTI }
 end
 local prof = {}
-for _, p in ipairs(c.PROFILI) do prof[p] = { soc0 = 40, prev_azione = "AUTO", finestre_oggi = 0, giorno_oggi = "20990101", carica_rete = (c.PROFILI_CARICA_RETE or {})[p] } end
+for _, p in ipairs(c.PROFILI) do prof[p] = { soc0 = 40, prev_azione = "AUTO", finestre_oggi = 0, giorno_oggi = "20990101", carica_rete_w = (c.PROFILI_CARICA_RETE_W or {})[p] } end
 local vf = {}
 for _, p in ipairs(c.PROFILI) do vf[p] = { costo = 0.22, vend = 0.10, e_notte = 8 } end
 O.pianifica(c, e, quarti, c.PROFILI, prof, c.USURA_EUR_KWH, vf)

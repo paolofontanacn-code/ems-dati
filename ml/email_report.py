@@ -15,7 +15,9 @@ import sys
 from email.message import EmailMessage
 
 PAGINA = "https://paolofontanacn-code.github.io/ems-dati/"
-NOMI = {"F0": "senza carica da rete", "F0R": "con carica da rete"}
+NOMI = {"F0": "senza carica da rete (vecchia)", "F0R": "con carica da rete (vecchia)",
+        "C2": "condizione 2 (senza carica AC)", "C2a": "condizione 2a (AC 1 kW)", "C2b": "condizione 2b (AC 2 kW)",
+        "C2c": "condizione 2c (AC 3 kW)", "C2d": "condizione 2d (AC 4 kW)", "C2e": "condizione 2e (AC 5 kW)"}
 
 
 def num(v):
@@ -64,19 +66,24 @@ def main():
     L = [f"EMS Cismondi - resoconto di {r.get('tipo_giorno') or ''} {data} (SOLO SIMULAZIONE)", "",
          f"Produzione FV {e(num(r.get('fv_kwh')), 1)} kWh, consumo casa {e(num(r.get('carico_kwh')), 1)} kWh.",
          f"Reale: prelievo {e(num(r.get('reale_prel_kwh')), 1)} kWh, immissione {e(num(r.get('reale_imm_kwh')), 1)} kWh.", "",
-         "Costo netto del giorno (acquisti - cessioni, + usura batteria e costo dei cambiamenti negli scenari):",
-         f"  senza batteria:        {e(zero)} EUR"]
+         "Costo netto del giorno: acquisti a prezzo fisso F0 - cessioni a prezzo NORD, + usura batteria 0,02 EUR/kWh scaricato:",
+         f"  {'condizione 0 (senza batteria):':34} {e(zero)} EUR"]
+    c1 = num(r.get("c1_netto_eur"))
     p0 = profili[0] if profili else None
     if p0:
         rc, rr = num(r.get(f"{p0}_reale_costo_eur")), num(r.get(f"{p0}_reale_ricavo_eur"))
         ac, ar, au = (num(r.get(f"{p0}_{k}")) for k in ("auto_costo_eur", "auto_ricavo_eur", "auto_usura_eur"))
-        L.append(f"  reale (impianto oggi): {e(None if rc is None else rc - (rr or 0))} EUR")
-        L.append(f"  automatico simulato:   {e(None if ac is None else ac - (ar or 0) + (au or 0))} EUR")
+        if c1 is not None:
+            L.append(f"  {'condizione 1 (reale, con usura):':34} {e(c1)} EUR")
+        else:
+            L.append(f"  {'reale (impianto oggi):':34} {e(None if rc is None else rc - (rr or 0))} EUR")
+        L.append(f"  {'automatico simulato (controllo):':34} {e(None if ac is None else ac - (ar or 0) + (au or 0))} EUR")
     for p in profili:
         sc, sr, su, si = (num(r.get(f"{p}_{k}")) for k in ("costo_eur", "ricavo_eur", "usura_eur", "costo_interventi_eur"))
         netto = None if sc is None else sc - (sr or 0) + (su or 0) + (si or 0)
-        L.append(f"  {NOMI.get(p, p) + ':':22} {e(netto)} EUR  (beneficio sull'automatico {e(num(r.get(p + '_beneficio_eur')))} EUR, "
-                 f"su senza batteria {e(num(r.get(p + '_beneficio_vs_zero_eur')))} EUR, cambiamenti {r.get(p + '_comandi') or 0})")
+        L.append(f"  {NOMI.get(p, p) + ':':34} {e(netto)} EUR  (beneficio sulla condizione 1 {e(num(r.get(p + '_beneficio_vs_c1_eur')))} EUR, "
+                 f"sull'automatico simulato {e(num(r.get(p + '_beneficio_eur')))} EUR, "
+                 f"sulla condizione 0 {e(num(r.get(p + '_beneficio_vs_zero_eur')))} EUR, cambiamenti {r.get(p + '_comandi') or 0})")
     L += ["", f"Pagina con i grafici del giorno: {PAGINA}?giorno={iso}",
           "Per cambiare i destinatari: file impostazioni/email_destinatari.txt nel repository ems-dati."]
     msg = EmailMessage()

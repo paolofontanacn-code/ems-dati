@@ -10,7 +10,8 @@
 --   RITARDATA     come AUTO ma con potenza di carica limitata (P_CARICA_RITARDATA_W): l'eccedenza va in rete
 --   CARICA_FV     carica forzata (finestra TOU senza carica da rete): la batteria non scarica,
 --                 si carica con l'eccedenza FV
---   CARICA_RETE   come CARICA_FV piu' rete -> batteria fino a P_MAX_CARICA_RETE_W (solo di giorno)
+--   CARICA_RETE_<W> come CARICA_FV piu' rete -> batteria fino a <W> watt (carica AC; solo di giorno se
+--                 CARICA_RETE_SOLO_GIORNO). CARICA_RETE senza livello = P_MAX_CARICA_RETE_W (versioni precedenti)
 --   SCARICA_<W>   scarica forzata a <W> watt: copre i carichi, il resto va in rete; si ferma a SOC_MIN_VENDITA
 -- Limiti: prelievo <= P_MAX_PRELIEVO_W (la batteria interviene anche fuori da AUTO), immissione
 -- <= P_MAX_IMMISSIONE_W e uscita AC dell'inverter <= P_MAX_AC_INVERTER_W (oltre: FV tagliato).
@@ -20,13 +21,15 @@ local min, max = math.min, math.max
 -- categoria per il conteggio delle finestre: auto, carica, scarica
 function M.categoria(azione)
   if azione == "AUTO" or azione == "RITARDATA" then return "auto" end
-  if azione == "CARICA_FV" or azione == "CARICA_RETE" then return "carica" end
+  if azione == "CARICA_FV" or azione:sub(1, 11) == "CARICA_RETE" then return "carica" end
   return "scarica"
 end
 
 function M.azioni(c)
   local a = { "AUTO", "RITARDATA", "CARICA_FV" }
-  if c.CARICA_DA_RETE_AMMESSA then a[#a + 1] = "CARICA_RETE" end
+  if c.CARICA_DA_RETE_AMMESSA then
+    for _, w in ipairs(c.LIVELLI_CARICA_RETE_W or { c.P_MAX_CARICA_RETE_W }) do a[#a + 1] = "CARICA_RETE_" .. w end
+  end
   for _, w in ipairs(c.LIVELLI_SCARICA_W) do a[#a + 1] = "SCARICA_" .. w end
   return a
 end
@@ -72,8 +75,9 @@ function M.passo_num(c, e, soc, azione, fv, carico, dt, di_giorno)
     if azione == "RITARDATA" then lim_car = min(lim_car, c.P_CARICA_RITARDATA_W) end
     fv_batt = min(ecc, lim_car)
     fv_rete = ecc - fv_batt
-    if azione == "CARICA_RETE" and di_giorno then
-      rete_batt = max(0, min(c.P_MAX_CARICA_RETE_W, p_car_max - fv_batt))
+    if azione:sub(1, 11) == "CARICA_RETE" and (di_giorno or not c.CARICA_RETE_SOLO_GIORNO) then
+      local liv = tonumber(azione:match("_(%d+)$")) or c.P_MAX_CARICA_RETE_W
+      rete_batt = max(0, min(liv, p_car_max - fv_batt))
     end
     if cat == "auto" then batt_car = min(manca, p_sca_max(c, e, soc, dt, c.SOC_MIN, manca)) end
     rete_car = manca - batt_car

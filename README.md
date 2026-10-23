@@ -2,7 +2,7 @@
 
 **SOLO SIMULAZIONE**: nessun comando viene inviato all'inverter Huawei.
 
-**Pagina con i grafici**: https://paolofontanacn-code.github.io/ems-dati/ (giorno per giorno: reale, senza batteria, automatico, F0, F0R;
+**Pagina con i grafici**: https://paolofontanacn-code.github.io/ems-dati/ (giorno per giorno: condizioni 0, 1 reale, 2, 2a-2e e controllo automatico simulato; pulsante Aiuto con le descrizioni;
 si aggiorna a ogni giro). I file che legge sono nella cartella `pannello/`, preparati da `ml/pannello.py`.
 
 Ogni 30 minuti (programmati; GitHub ne ritarda o salta alcuni) GitHub esegue **lo stesso programma che girerà sul Mango** (cartella `mango/`, in Lua) e misura il
@@ -10,22 +10,28 @@ carico di lavoro che il Mango avrebbe. I dati dell'impianto arrivano dallo **sto
 vengono "rigiocate" una per una, come se il Mango le leggesse in tempo reale ogni 5 minuti. Il machine learning
 gira in Python (cartella `ml/`).
 
-## Scenari simulati (dal 21/10/2026)
+## Condizioni simulate (dal 22/10/2026)
 
-| Scenario | Descrizione |
+| Condizione | Descrizione |
 |---|---|
-| Senza batteria | solo autoconsumo istantaneo del FV: il resto si compra, l'eccedenza si cede |
-| Automatico | batteria in massimo autoconsumo, senza ottimizzatore (come funziona oggi) |
-| **F0** - senza carica da rete | batteria gestita dall'ottimizzatore, carica solo da FV |
-| **F0R** - con carica da rete | come F0, piu' carica dalla rete fino a 1 kW di giorno |
+| **0** - senza batteria | solo autoconsumo istantaneo del FV: il resto si compra, l'eccedenza si cede |
+| **1** - batteria senza ottimizzazione (oggi) | DATI REALI misurati da Huawei finche' l'inverter e' in automatico, piu' l'usura sui kWh scaricati; con i comandi attivi (fase 2) torna simulata |
+| **2** - ottimizzazione, senza carica AC | batteria gestita dall'ottimizzatore, carica solo da FV |
+| **2a / 2b / 2c / 2d / 2e** | come 2, piu' carica AC dalla rete fino a 1 / 2 / 3 / 4 / 5 kW (livelli graduati), a qualsiasi ora |
+| controllo: automatico simulato | l'automatico rifatto dal simulatore, per verificare che il simulatore stia vicino alla condizione 1 |
+
+Nei file le condizioni 2...2e si chiamano C2, C2a, C2b, C2c, C2d, C2e. Se una condizione con piu' potenza AC
+trova un piano peggiore di una con meno potenza, adotta quel piano (puo' sempre usare meno potenza).
+Prelievo massimo 7 kW: se si supera, si riduce prima la carica AC.
 
 Acquisto: prezzo fisso monorario F0 0,12 EUR/kWh + perdite 10 %, dispacciamento (non ancora noto, per ora 0),
 trasporto 0,014730, oneri di sistema 0,033153, accise 0,0227 EUR/kWh, IVA 10 % = 0,2228 EUR/kWh.
 Cessioni (RID): prezzo zonale NORD del quarto d'ora, senza imposte. Usura batteria: 0,02 EUR per kWh scaricato.
-Ogni scenario ha la sua batteria simulata (SOC proprio). Ogni 15 minuti l'ottimizzatore sceglie tra autoconsumo,
+Ogni condizione 2...2e ha la sua batteria simulata (SOC proprio). Ogni 15 minuti l'ottimizzatore sceglie tra autoconsumo,
 carica ritardata, carica forzata e scarica forzata (1, 2, 3 o 5 kW), con al massimo 14 periodi forzati e 1 ciclo
 (15 kWh) di scarica forzata al giorno; ogni ora sopra il 90 % di SOC ha un piccolo costo (0,01 EUR). Ogni cambiamento
-di funzionamento ha un costo attribuito di 0,10 EUR. I giorni fino al 21/10/2026 hanno i vecchi scenari A, B, C.
+di funzionamento ha un costo attribuito di 0,10 EUR. I giorni precedenti hanno i vecchi scenari (A, B, C fino al
+21/10/2026, poi F0 e F0R): nella pagina compaiono come "Vecchia".
 Ogni giorno GitHub manda il resoconto via email (Gmail) ai destinatari di `impostazioni/email_destinatari.txt`.
 
 Tutti i valori sono in `mango/config.lua`.
@@ -130,3 +136,35 @@ per SOC alto, meteo con secondo tentativo, email giornaliera. Restano per la fas
   dati compressi, versione del formato del piano). NIENTE riserva di backup (impianto senza backup).
 - **Email giornaliera**: GitHub invia ogni giorno il resoconto a un indirizzo impostabile (file nel repository), tramite
   Gmail (smtp.gmail.com, password per le app nei segreti di GitHub; mittente e destinatario: paolo.fontana.cn@gmail.com).
+- **Pagina - colori accessibili (21/10/2026)**: niente colori simili tra le curve; tavolozza adatta a daltonici
+  (es. Okabe-Ito) e a ipovedenti: oltre al colore, curve distinte anche per tratteggio/spessore e marcatori,
+  contrasto alto su sfondo chiaro e scuro.
+- **Pagina - testi piu' grandi** per gli ipovedenti (numeri, etichette degli assi e legende).
+- **Pagina - produzione attesa (21/10/2026)**: curva della produzione FV prevista con il meteo atteso, dall'ora
+  attuale fino alla fine dell'orizzonte del piano (oggi e domani), a quarti d'ora, insieme a consumo previsto e
+  radiazione prevista; il giorno dopo la curva prevista resta confrontata con la produzione reale.
+- **Fascia di incertezza** sulla produzione attesa: confermata (21/10/2026).
+- **Tavolozza proposta (Okabe-Ito)**: scenari - reale nero (chiaro nel tema scuro) pieno spesso; senza batteria
+  azzurro #56B4E9 a puntini; automatico porpora #CC79A7 a trattini; F0 blu #0072B2 pieno; F0R vermiglio #D55E00
+  pieno con triangoli. Flussi - FV arancio #E69F00; consumo verde-blu #009E73; rete azzurro #56B4E9; batteria porpora
+  #CC79A7; previsto = stesso colore a trattini, sera prima a puntini. Prezzi - acquisto blu; NORD nero (orario a
+  puntini, quarto d'ora pieno); cessione verde-blu spesso. Meteo - temperatura vermiglio, radiazione arancio.
+  Azioni - carica FV verde-blu a righe, carica rete arancio a quadretti, scarica vermiglio pieno, ritardata azzurro
+  a puntini. Giallo non usato per le linee (poco contrasto).
+- **Pagina - solo F0 e F0R (21/10/2026)**: togliere dalla pagina anche i vecchi profili A, B, C dei giorni passati.
+- **Nomi delle simulazioni (22/10/2026)**: condizione 0 = impianto senza batteria; condizione 1 = batteria senza
+  ottimizzazione (come oggi, "automatico"); condizione 2 = batteria con ottimizzazione di carica/scarica, acquisto a
+  prezzo fisso F0. Usare questi nomi in pagina, resoconti ed email.
+- **Condizioni 2, 2a-2e (22/10/2026)**: 2 = ottimizzazione senza carica AC; 2a/2b/2c/2d/2e = carica AC dalla rete
+  fino a 1/2/3/4/5 kW (livelli graduati fino al massimo), a QUALSIASI ORA (tolto il vincolo "solo di giorno": l'energia
+  costa uguale giorno e notte). Limiti: batteria 5 kW, prelievo 7 kW (si riduce prima la carica AC). Il pulsante
+  "abilita carica da rete" diventa la scelta della potenza massima di carica AC (0-5 kW) = condizione inviata.
+- **Condizione 1 = reale misurato (22/10/2026)**: finche' l'inverter e' in automatico la condizione 1 si calcola con i
+  dati Huawei misurati del giorno; con i comandi attivi torna simulata. Descrizioni delle condizioni nell'aiuto della pagina.
+- **Scelta automatica della condizione da inviare (22/10/2026)**: l'automatismo valuta le condizioni 0, 1, 2, 2a-2e e
+  invia all'inverter la piu' conveniente tra quelle eseguibili (1 = automatico, 2-2e = programma con carica AC fino a
+  0-5 kW); la 0 e' solo riferimento (la batteria non si puo' togliere). Il pulsante protetto resta solo per
+  attivare/disattivare i comandi (da confermare: niente scelta manuale della potenza AC).
+- **Simulazione su richiesta (22/10/2026)**: dalla pagina si impostano i parametri di una simulazione e la si avvia
+  subito (avvio di un giro dedicato su GitHub con il token salvato nel browser); risultati mostrati nella pagina a
+  parte, senza toccare le simulazioni normali ne' i comandi all'inverter. Parametri e periodo: da definire.

@@ -6,7 +6,8 @@
 -- forzati al giorno (vincolo gestito con un costo per finestra aumentato finche' il limite e' rispettato).
 -- Le azioni cambiano solo ogni 15 minuti, quindi ogni modo dura almeno un quarto d'ora.
 -- Ogni cambiamento di funzionamento (compreso il ritorno all'autoconsumo) costa PENALITA_CAMBIO_EUR.
--- La carica da rete e' ammessa solo nei profili con profili[p].carica_rete.
+-- La carica AC dalla rete e' ammessa fino a profili[p].carica_rete_w watt (0 = mai); solo di giorno se
+-- c.CARICA_RETE_SOLO_GIORNO.
 -- L'energia scaricata con comandi forzati non supera MAX_CICLI_FORZATI_GIORNO capacita' al giorno (costo per kWh
 -- aumentato finche' il limite e' rispettato) e ogni ora sopra ORE_SOC_ALTO costa PENALITA_SOC_ALTO_EUR_ORA.
 local S = require "simulatore"
@@ -34,6 +35,20 @@ local function un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_f
   local cat_az = {}
   for a, nome in ipairs(azioni) do cat_az[a] = CAT_IDX[S.categoria(nome)] end
   local eta_fin = S.eta_scarica(e, 1000)
+  -- azioni ammesse per ogni profilo: tutte (di giorno) e senza carica AC (di notte, se vietata)
+  local amm_giorno, amm_notte = {}, {}
+  for _, p in ipairs(nomi) do
+    local maxw = profili[p].carica_rete_w or (profili[p].carica_rete and c.P_MAX_CARICA_RETE_W) or 0
+    amm_giorno[p], amm_notte[p] = {}, {}
+    for a, nome in ipairs(azioni) do
+      local rete = nome:sub(1, 11) == "CARICA_RETE"
+      local liv = rete and (tonumber(nome:match("_(%d+)$")) or c.P_MAX_CARICA_RETE_W) or 0
+      if not rete or liv <= maxw then
+        amm_giorno[p][#amm_giorno[p] + 1] = a
+        if not rete or not c.CARICA_RETE_SOLO_GIORNO then amm_notte[p][#amm_notte[p] + 1] = a end
+      end
+    end
+  end
 
   -- valore dell'energia rimasta a fine orizzonte: i kWh che serviranno alla casa nella notte successiva
   -- (fino al ritorno del FV) valgono l'acquisto evitato; quelli in piu' valgono solo come cessione
@@ -69,13 +84,7 @@ local function un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_f
 
   for k = N, 1, -1 do
     local q = quarti[k]
-    local ammesse, senza_rete = {}, {}
-    for a, nome in ipairs(azioni) do
-      if nome ~= "CARICA_RETE" or q.di_giorno then ammesse[#ammesse + 1] = a end
-      if nome ~= "CARICA_RETE" then senza_rete[#senza_rete + 1] = a end
-    end
-    local tutte = ammesse
-    for _, a in ipairs(tutte) do
+    for a = 1, NA do
       local nome = azioni[a]
       local S2, PR, IM, SC, SF = s2[a], pr[a], im[a], sc[a], sf[a]
       for i = 1, n do
@@ -83,7 +92,9 @@ local function un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_f
       end
     end
     for _, p in ipairs(nomi) do
-      local ammesse = profili[p].carica_rete and tutte or senza_rete
+      local ammesse = q.di_giorno and amm_giorno[p] or amm_notte[p]
+      local amm_set = {}
+      for _, a in ipairs(ammesse) do amm_set[a] = true end
       local costo = q.costo[p]
       local vend = q.vend
       local lam = lambda[p]
@@ -102,22 +113,31 @@ local function un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_f
           if s2[a][i] > soglia_alta then r = r - pen_alta end
           val[a] = r + interp(Vnp[a], s2[a][i])
         end
-        for prev = 1, NA do
-          local cp = cat_az[prev]
-          local best, ba = -1e18, 1
+        -- migliore azione per ogni azione precedente: per ogni categoria della precedente si tengono le due
+        -- migliori azioni "con cambio", poi si confronta con il restare nella stessa azione (O(NA) invece di O(NA^2))
+        local mz = q.mezzanotte
+        local top = {}
+        for cp = 1, 3 do
+          local v1, a1, v2, a2 = -1e18, nil, -1e18, nil
           for _, a in ipairs(ammesse) do
-            local v = val[a]
-            if a ~= prev then
-              v = v - pen_c                                -- ogni cambio di funzionamento costa PENALITA_CAMBIO_EUR
-              local ca = cat_az[a]
-              if ca ~= 1 and (ca ~= cp or q.mezzanotte) then v = v - lam end
-            elseif cat_az[a] ~= 1 and q.mezzanotte then
-              v = v - lam
-            end
-            if v > best then best, ba = v, a end
+            local ca = cat_az[a]
+            local v = val[a] - pen_c
+            if ca ~= 1 and (ca ~= cp or mz) then v = v - lam end
+            if v > v1 then v2, a2, v1, a1 = v1, a1, v, a elseif v > v2 then v2, a2 = v, a end
+          end
+          top[cp] = { v1, a1, v2, a2 }
+        end
+        for prev = 1, NA do
+          local t = top[cat_az[prev]]
+          local best, ba
+          if t[2] ~= prev then best, ba = t[1], t[2] else best, ba = t[3], t[4] end
+          if amm_set[prev] then
+            local v = val[prev]
+            if cat_az[prev] ~= 1 and mz then v = v - lam end
+            if v > best or not ba then best, ba = v, prev end
           end
           Vc[prev][i] = best
-          polk[(prev - 1) * n + i] = ba
+          polk[(prev - 1) * n + i] = ba or 1
         end
       end
       pol[p][k] = polk
@@ -217,40 +237,46 @@ local function tronca(c, e, quarti, r, pf, usura, p)
   r.soc_fine = soc
 end
 
--- interfaccia: ritorna per ogni profilo il piano e la prima azione
+-- interfaccia: ritorna per ogni profilo il piano e la prima azione.
+-- I limiti (finestre al giorno, energia di scarica forzata al giorno) sono rispettati con costi aggiuntivi cercati
+-- per tentativi; si ripete il calcolo solo per i profili che ne hanno bisogno. profili[p].lambda_e (facoltativo) e'
+-- il costo per kWh trovato al calcolo precedente: si riparte da li' (di solito basta 1-2 passaggi).
 function M.pianifica(c, e, quarti, nomi, profili, usura, valore_fine)
-  local lambda, lambda_e = {}, {}
-  local lo_e, hi_e, migliore = {}, {}, {}
-  for _, p in ipairs(nomi) do lambda[p] = c.PENALITA_FINESTRA_EUR or 0; lambda_e[p] = 0 end
+  local lambda, lambda_e, lo_e, hi_e, migliore, ris = {}, {}, {}, {}, {}, {}
   local function valore(r) local v = 0; for _, x in ipairs(r.piano) do v = v + x.euro end; return v end
-  local ris
+  for _, p in ipairs(nomi) do
+    lambda[p] = c.PENALITA_FINESTRA_EUR or 0
+    lambda_e[p] = profili[p].lambda_e or 0
+  end
+  local da_fare = nomi
   for giro = 1, 8 do
-    ris = un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_fine, lambda_e)
-    local altro = false
-    for _, p in ipairs(nomi) do
-      local r = ris[p]
+    local r_giro = un_passaggio(c, e, quarti, da_fare, profili, usura, lambda, valore_fine, lambda_e)
+    local ancora = {}
+    for _, p in ipairs(da_fare) do
+      local r = r_giro[p]
+      ris[p] = r
+      r.lambda_e = lambda_e[p]
+      local altro = false
       if not r.violazione and not r.violazione_e then
         local v = valore(r)
         if not migliore[p] or v > migliore[p].v then migliore[p] = { r = r, v = v } end
       end
-      if r.violazione then
-        lambda[p] = math.max(0.05, lambda[p] * 3)
-        altro = true
-      end
-      -- limite di energia forzata: costo per kWh cercato per bisezione (il piu' basso che rispetta il limite)
+      if r.violazione then lambda[p] = math.max(0.05, lambda[p] * 3); altro = true end
       if r.violazione_e then
         lo_e[p] = lambda_e[p]
-        lambda_e[p] = hi_e[p] and (lo_e[p] + hi_e[p]) / 2 or math.max(0.02, lambda_e[p] * 3)
+        lambda_e[p] = hi_e[p] and (lo_e[p] + hi_e[p]) / 2 or math.max(0.02, lambda_e[p] * 2)
         altro = true
       elseif lambda_e[p] > 0 then
         hi_e[p] = lambda_e[p]
-        if hi_e[p] - (lo_e[p] or 0) > 0.01 then
+        if hi_e[p] - (lo_e[p] or 0) > 0.01 and giro < 4 then
           lambda_e[p] = ((lo_e[p] or 0) + hi_e[p]) / 2
           altro = true
         end
       end
+      if altro then ancora[#ancora + 1] = p end
     end
-    if not altro then break end
+    if #ancora == 0 then break end
+    da_fare = ancora
   end
   for _, p in ipairs(nomi) do
     if migliore[p] and (ris[p].violazione or ris[p].violazione_e or migliore[p].v > valore(ris[p])) then ris[p] = migliore[p].r end
@@ -260,6 +286,21 @@ function M.pianifica(c, e, quarti, nomi, profili, usura, valore_fine)
     local v = 0
     for _, x in ipairs(ris[p].piano) do v = v + x.euro end
     ris[p].valore_piano = v
+  end
+  -- coerenza: un profilo che puo' caricare dalla rete con piu' potenza puo' sempre fare il piano di uno con meno
+  -- potenza (stessi prezzi e limiti); se quello rende di piu', lo si adotta
+  local function maxw(p) return profili[p].carica_rete_w or (profili[p].carica_rete and c.P_MAX_CARICA_RETE_W) or 0 end
+  for _, p in ipairs(nomi) do
+    for _, q in ipairs(nomi) do
+      if q ~= p and maxw(q) < maxw(p) and ris[q].valore_piano > ris[p].valore_piano + 1e-9 and
+         profili[q].soc0 == profili[p].soc0 and profili[q].prev_azione == profili[p].prev_azione and
+         (profili[q].scarica_forzata_oggi or 0) == (profili[p].scarica_forzata_oggi or 0) then
+        local r = ris[q]
+        ris[p] = { piano = r.piano, finestre = r.finestre, comandi = r.comandi, primo = r.primo, violazione = false,
+                   violazione_e = false, forzata = r.forzata, lambda = r.lambda, lambda_e = ris[p].lambda_e,
+                   soc_fine = r.soc_fine, troncato = r.troncato, valore_piano = r.valore_piano, adottato_da = q }
+      end
+    end
   end
   return ris
 end

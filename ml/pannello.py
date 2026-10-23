@@ -85,7 +85,10 @@ def main():
 
     # totali giorno per giorno (riepilogo attuale + quello delle versioni precedenti, se c'e')
     riep, profili = {}, []
-    for f in (os.path.join(DATI, "riepilogo_v1.csv"), "riepilogo.csv"):
+    # versioni precedenti (riepilogo_v1.csv, riepilogo_v<ora>.csv) in ordine di tempo, poi il riepilogo attuale
+    vecchi = glob.glob(os.path.join(DATI, "riepilogo_v*.csv"))
+    vecchi.sort(key=lambda f: (0, 0) if f.endswith("_v1.csv") else (1, int("".join(ch for ch in os.path.basename(f) if ch.isdigit()) or 0)))
+    for f in vecchi + ["riepilogo.csv"]:
         if not os.path.isfile(f):
             continue
         with open(f, encoding="utf-8") as fh:
@@ -99,10 +102,11 @@ def main():
                 g = r.get("giorno") or ""
                 if len(g) == 8:
                     riep[f"{g[:4]}-{g[4:6]}-{g[6:]}"] = r
-    col = ["giorno", "tipo", "tipo_giorno", "fv_kwh", "carico_kwh", "prel_kwh", "imm_kwh", "zero_netto_eur"]
+    col = ["giorno", "tipo", "tipo_giorno", "fv_kwh", "carico_kwh", "prel_kwh", "imm_kwh", "zero_netto_eur", "c0_netto_eur", "c1_netto_eur",
+           "reale_scarica_kwh"]
     for p in profili:
         col += [f"{p}_reale_netto_eur", f"{p}_auto_netto_eur", f"{p}_scenario_netto_eur", f"{p}_beneficio_eur",
-                f"{p}_beneficio_vs_zero_eur"]
+                f"{p}_beneficio_vs_zero_eur", f"{p}_beneficio_vs_c1_eur", f"{p}_scarica_forzata_kwh"]
     righe = []
     for g in sorted(set(sto) | set(riep)):
         if g in riep:
@@ -111,11 +115,15 @@ def main():
                  "carico_kwh": r.get("carico_kwh"), "prel_kwh": r.get("reale_prel_kwh"), "imm_kwh": r.get("reale_imm_kwh")}
             zc, zr = num(r.get("zero_costo_eur")), num(r.get("zero_ricavo_eur"))
             x["zero_netto_eur"] = None if zc is None else round(zc - (zr or 0), 4)
+            for k in ("c0_netto_eur", "c1_netto_eur", "reale_scarica_kwh"):
+                x[k] = r.get(k)
             for p in profili:
                 if r.get(f"{p}_costo_eur") in (None, ""):
                     continue
                 x[f"{p}_beneficio_eur"] = r.get(f"{p}_beneficio_eur")
                 x[f"{p}_beneficio_vs_zero_eur"] = r.get(f"{p}_beneficio_vs_zero_eur")
+                x[f"{p}_beneficio_vs_c1_eur"] = r.get(f"{p}_beneficio_vs_c1_eur")
+                x[f"{p}_scarica_forzata_kwh"] = r.get(f"{p}_scarica_forzata_kwh")
                 rc, rr = num(r.get(f"{p}_reale_costo_eur")), num(r.get(f"{p}_reale_ricavo_eur"))
                 x[f"{p}_reale_netto_eur"] = None if rc is None else round(rc - (rr or 0), 4)
                 ac, ar, au = (num(r.get(f"{p}_{k}")) for k in ("auto_costo_eur", "auto_ricavo_eur", "auto_usura_eur"))

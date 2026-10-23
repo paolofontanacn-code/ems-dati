@@ -56,6 +56,10 @@ pre { font-size: 12px; overflow-x: auto; margin: 0; white-space: pre; }
 .uplot { font-family: inherit; }
 .u-legend { font-size: 12px; }
 .u-legend .u-series th { cursor: pointer; }
+.aiuto { margin: 10px 16px 0; font-size: 14px; }
+.aiuto dt { font-weight: 700; margin-top: 8px; }
+.aiuto dd { margin: 2px 0 0 0; }
+.aiuto ul { padding-left: 18px; }
 </style>
 </head>
 <body>
@@ -70,9 +74,35 @@ pre { font-size: 12px; overflow-x: auto; margin: 0; white-space: pre; }
   <button id="succ" title="Giorno successivo">▶</button>
   <button id="ultimo">Ultimo</button>
   <button id="aggiorna">Aggiorna</button>
+  <button id="bottone_aiuto" aria-expanded="false" aria-controls="aiuto">Aiuto</button>
   <span class="nota" id="tipo"></span>
 </div>
 <div class="scelte" id="scelte"></div>
+<section id="aiuto" class="aiuto" hidden>
+  <h2>Aiuto – le condizioni simulate</h2>
+  <p class="spiega">SOLO SIMULAZIONE: nessun comando viene inviato all'inverter. Tutte le condizioni usano gli stessi dati reali di produzione FV e consumo della casa.</p>
+  <dl>
+    <dt>Condizione 0 – impianto senza batteria</dt>
+    <dd>Come se la batteria non ci fosse: il consumo non coperto dal FV si preleva dalla rete, l'eccedenza del FV si cede alla rete.</dd>
+    <dt>Condizione 1 – impianto con batteria senza ottimizzazione dei profili (condizione attuale)</dt>
+    <dd>Dati reali misurati da Huawei, finché l'inverter lavora in automatico. Al costo si aggiunge l'usura della batteria sui kWh scaricati misurati. Quando saranno attivi i comandi verso l'inverter (fase 2), la condizione 1 tornerà a essere calcolata dal simulatore.</dd>
+    <dt>Condizione 2 – ottimizzazione dei profili di carica/scarica, senza carica AC</dt>
+    <dd>Il programma decide ogni quarto d'ora se lasciare l'automatico, ritardare la carica, caricare dal FV o scaricare la batteria, guardando prezzi, previsioni meteo e consumi. La batteria non si carica mai dalla rete.</dd>
+    <dt>Condizioni 2a, 2b, 2c, 2d, 2e – come la 2, con carica AC dalla rete</dt>
+    <dd>Carica della batteria dalla rete fino a 1 kW (2a), 2 kW (2b), 3 kW (2c), 4 kW (2d), 5 kW (2e), a qualsiasi ora: l'energia acquistata costa uguale di giorno e di notte. Il programma può usare anche potenze più basse di quella massima.</dd>
+    <dt>Controllo: automatico simulato</dt>
+    <dd>La modalità automatica dell'inverter rifatta dal simulatore. Serve a controllare il simulatore: deve restare vicina alla condizione 1 (reale).</dd>
+  </dl>
+  <h2>Prezzi e costi usati</h2>
+  <ul class="spiega">
+    <li>Acquisto (tutte le condizioni): prezzo fisso F0 = [0,12 × (1 + perdite 10 %) + dispacciamento (0, non noto) + trasporto 0,014730 + oneri di sistema 0,033153 + accise 0,0227] × (1 + IVA 10 %) ≈ 0,2228 €/kWh.</li>
+    <li>Vendita: prezzo zonale NORD del quarto d'ora (GME), senza imposta.</li>
+    <li>Usura della batteria: 0,02 € per kWh scaricato.</li>
+    <li>Condizioni 2…2e: 0,10 € per ogni cambiamento di comando; al massimo 14 periodi forzati al giorno e scarica forzata al massimo 1 ciclo (15 kWh) al giorno.</li>
+  </ul>
+  <h2>Come leggere i benefici</h2>
+  <p class="spiega">Costo netto = acquisti − vendite + usura (+ cambiamenti). Beneficio = costo netto della condizione di confronto − costo netto della condizione della riga: positivo vuol dire che la condizione della riga costa meno. Nella fase 2 l'automatismo sceglierà, tra le condizioni, la più conveniente da inviare all'inverter (non ancora attivo).</p>
+</section>
 <main id="principale"></main>
 
 <script>
@@ -156,12 +186,20 @@ function sezione(id, titolo, spiega) {
 }
 function larghezza(el) { const cs = getComputedStyle(el); return Math.max(260, Math.floor(el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight))); }
 
-// ---------------------------------------------------------------- profili simulati (letti dai dati: F0, F0R; A, B, C nei giorni vecchi)
-const NOMI_PROFILI = { F0: "Senza carica da rete", F0R: "Con carica da rete", A: "A (prezzo fisso)", B: "B (PUN per fascia)", C: "C (PUN orario)" };
-const COLORI = ["--A", "--B", "--C"];
+// ---------------------------------------------------------------- condizioni simulate (lette dai dati: C2…C2e; F0, F0R, A, B, C nei giorni vecchi)
+const USURA = 0.02;   // €/kWh scaricato
+const NOMI_PROFILI = { C2: "Condizione 2 – senza carica AC", C2a: "Condizione 2a – carica AC 1 kW", C2b: "Condizione 2b – carica AC 2 kW",
+  C2c: "Condizione 2c – carica AC 3 kW", C2d: "Condizione 2d – carica AC 4 kW", C2e: "Condizione 2e – carica AC 5 kW",
+  F0: "Vecchia: senza carica da rete", F0R: "Vecchia: con carica da rete", A: "Vecchia A (prezzo fisso)", B: "Vecchia B (PUN per fascia)", C: "Vecchia C (PUN orario)" };
+const NOMI_BREVI = { C2: "2", C2a: "2a", C2b: "2b", C2c: "2c", C2d: "2d", C2e: "2e" };
+// colori Okabe-Ito (distinguibili anche da chi non vede bene i colori) + tratteggio diverso per ogni condizione
+const COLORE_FISSO = { C2: "#0072B2", C2a: "#D55E00", C2b: "#009E73", C2c: "#CC79A7", C2d: "#E69F00", C2e: "#56B4E9",
+  F0: "#0072B2", F0R: "#D55E00", A: "#0072B2", B: "#D55E00", C: "#009E73" };
+const TRATTO_FISSO = { C2: null, C2a: [8, 3], C2b: [2, 3], C2c: [8, 3, 2, 3], C2d: [12, 4], C2e: [4, 4] };
 let PROF = [];
 const nomeP = p => NOMI_PROFILI[p] || p;
-const coloreP = p => css(COLORI[Math.max(0, PROF.indexOf(p)) % COLORI.length]);
+const coloreP = p => COLORE_FISSO[p] || "#0072B2";
+const trattoP = p => TRATTO_FISSO[p] || undefined;
 function profiliDi(righe) {
   const r = righe[0] || {};
   return Object.keys(r).filter(k => /^[A-Za-z0-9]+_azione$/.test(k)).map(k => k.slice(0, -7));
@@ -214,12 +252,17 @@ function coloreAzione(a) {
   if (!a || a === "AUTO") return null;
   if (a === "RITARDATA") return css("--rit");
   if (a === "CARICA_FV") return css("--carica");
-  if (a === "CARICA_RETE") return css("--rete_c");
+  if (a.startsWith("CARICA_RETE")) return css("--rete_c");
   return css("--scarica");
+}
+function nomeAzione(a) {
+  const m = /^(CARICA_RETE|SCARICA)_(\d+)$/.exec(a || "");
+  if (m) return (m[1] === "SCARICA" ? "scarica " : "carica da rete ") + fmt(m[2] / 1000, 0) + " kW";
+  return (a || "").replace(/_/g, " ").toLowerCase();
 }
 function legendaAzioni() {
   return `<div class="legenda-azioni"><span><i style="background:${css("--carica")}"></i>carica da FV</span>
-    <span><i style="background:${css("--rete_c")}"></i>carica da rete (max 1 kW)</span><span><i style="background:${css("--scarica")}"></i>scarica forzata</span>
+    <span><i style="background:${css("--rete_c")}"></i>carica da rete (AC, fino alla potenza della condizione)</span><span><i style="background:${css("--scarica")}"></i>scarica forzata</span>
     <span><i style="background:${css("--rit")}"></i>carica ritardata</span><span>(vuoto = automatico)</span></div>`;
 }
 // strisce delle azioni dei profili: grafico sottile sotto quello principale, stesso asse dei tempi
@@ -295,7 +338,7 @@ const col = (righe, k, f = 1) => righe.map(r => { const v = num(r[k]); return v 
 function pTabella(d, g) {
   const s = sezione("tabella", "Euro e kWh del giorno", d.info.tipo === "oggi" ? "Giorno in corso: totali parziali fino all'ultima lettura." :
     d.info.tipo === "storico" ? "Giorno prima dell'avvio della simulazione: solo energia reale." :
-    "Netto = acquisti − cessioni (+ usura batteria e 0,10 € per ogni cambiamento negli scenari). Beneficio = differenza di netto (positivo = lo scenario costa meno).");
+    "Netto = acquisti − cessioni + usura batteria (+ 0,10 € per ogni cambiamento nelle condizioni 2…2e). Beneficio = differenza di netto (positivo = la condizione della riga costa meno).");
   const R = d.righe, k = 300 / 3.6e6;
   const kwh = n => R.reduce((a, r) => a + (num(r[n]) || 0), 0) * k;
   const somma = n => R.reduce((a, r) => a + (num(r[n]) || 0), 0);
@@ -310,26 +353,29 @@ function pTabella(d, g) {
   if (d.info.tipo !== "storico") {
     const zero = gg && gg.zero_netto_eur !== "" && gg.zero_netto_eur != null ? num(gg.zero_netto_eur)
       : (R.some(r => r.zero_costo_eur !== undefined) ? somma("zero_costo_eur") - somma("zero_ricavo_eur") : null);
-    h += `<div class="tab"><table><tr><th>Scenario</th><th>Netto €</th><th>Beneficio sull'automatico €</th><th>Beneficio su senza batteria €</th><th>Prelievo kWh</th><th>Immissione kWh</th><th>Cambiamenti</th></tr>`;
-    const riga = (nome, colore, netto, ben, benz, prel, imm, cambi) => `<tr><td><b style="color:${colore}">${nome}</b></td><td>${fmt(netto)}</td>
-      <td class="${ben > 0.005 ? "pos" : ben < -0.005 ? "neg" : ""}">${fmt(ben)}</td><td class="${benz > 0.005 ? "pos" : benz < -0.005 ? "neg" : ""}">${fmt(benz)}</td>
+    h += `<div class="tab"><table><tr><th>Condizione</th><th>Netto €</th><th>Beneficio sulla condizione 1 €</th><th>Beneficio sull'automatico simulato €</th><th>Beneficio sulla condizione 0 €</th><th>Prelievo kWh</th><th>Immissione kWh</th><th>Cambiamenti</th></tr>`;
+    const cl = v => v > 0.005 ? "pos" : v < -0.005 ? "neg" : "";
+    const dif = (a, b) => a != null && b != null ? a - b : null;
+    const riga = (nome, colore, netto, b1, ba, b0, prel, imm, cambi) => `<tr><td><b style="color:${colore}">${nome}</b></td><td>${fmt(netto)}</td>
+      <td class="${cl(b1)}">${fmt(b1)}</td><td class="${cl(ba)}">${fmt(ba)}</td><td class="${cl(b0)}">${fmt(b0)}</td>
       <td>${fmt(prel, 1)}</td><td>${fmt(imm, 1)}</td><td>${cambi ?? "–"}</td></tr>`;
     const p0 = PROF[0];
-    if (zero != null) h += riga("Senza batteria", css("--tenue"), zero, null, null, gg ? null : somma("zero_prel_kwh"), gg ? null : somma("zero_imm_kwh"));
-    if (p0) {
-      const reale = gg ? num(gg[p0 + "_reale_netto_eur"]) : somma(p0 + "_reale_costo_eur") - somma("reale_ricavo_eur");
-      const auto = gg ? num(gg[p0 + "_auto_netto_eur"]) : somma(p0 + "_auto_costo_eur") - somma(p0 + "_auto_ricavo_eur") + somma(p0 + "_auto_usura_eur");
-      h += riga("Reale (oggi l'impianto)", css("--reale"), reale, null, zero != null && reale != null ? zero - reale : null, pr, im);
-      h += riga("Automatico simulato", css("--auto"), auto, null, zero != null && auto != null ? zero - auto : null, somma("auto_prel_kwh"), somma("auto_imm_kwh"));
-      for (const p of PROF) {
-        const a = gg ? num(gg[p + "_auto_netto_eur"]) : somma(p + "_auto_costo_eur") - somma(p + "_auto_ricavo_eur") + somma(p + "_auto_usura_eur");
-        const sc = gg ? num(gg[p + "_scenario_netto_eur"]) : somma(p + "_costo_eur") - somma(p + "_ricavo_eur") + somma(p + "_usura_eur") + somma(p + "_costo_interventi_eur");
-        const ult = [...R].reverse().find(r => r[p + "_comandi_oggi"] !== "" && r[p + "_comandi_oggi"] != null);
-        h += riga(nomeP(p), coloreP(p), sc, a != null && sc != null ? a - sc : null, zero != null && sc != null ? zero - sc : null,
-                  somma(p + "_prel_kwh"), somma(p + "_imm_kwh"), ult ? ult[p + "_comandi_oggi"] : null);
-      }
+    // condizione 1 = dati reali misurati + usura della batteria (colonne presenti dalla versione con le condizioni)
+    const nuova = gg ? (gg.c1_netto_eur !== "" && gg.c1_netto_eur != null) : R.some(r => r.reale_costo_eur !== undefined && r.reale_costo_eur !== "");
+    const c1 = nuova ? (gg ? num(gg.c1_netto_eur) : somma("reale_costo_eur") - somma("reale_ricavo_eur") + somma("reale_scarica_kwh") * USURA)
+      : (p0 ? (gg ? num(gg[p0 + "_reale_netto_eur"]) : somma(p0 + "_reale_costo_eur") - somma("reale_ricavo_eur")) : null);
+    const auto = p0 ? (gg ? num(gg[p0 + "_auto_netto_eur"]) : somma(p0 + "_auto_costo_eur") - somma(p0 + "_auto_ricavo_eur") + somma(p0 + "_auto_usura_eur")) : null;
+    if (zero != null) h += riga("Condizione 0 – senza batteria", css("--tenue"), zero, dif(c1, zero), dif(auto, zero), null,
+                                gg ? null : somma("zero_prel_kwh"), gg ? null : somma("zero_imm_kwh"));
+    if (c1 != null) h += riga(nuova ? "Condizione 1 – reale (con usura)" : "Reale (senza usura, versione precedente)", css("--reale"), c1, null, dif(auto, c1), dif(zero, c1), pr, im);
+    if (auto != null) h += riga("Controllo: automatico simulato", css("--auto"), auto, dif(c1, auto), null, dif(zero, auto), somma("auto_prel_kwh"), somma("auto_imm_kwh"));
+    for (const p of PROF) {
+      const sc = gg ? num(gg[p + "_scenario_netto_eur"]) : somma(p + "_costo_eur") - somma(p + "_ricavo_eur") + somma(p + "_usura_eur") + somma(p + "_costo_interventi_eur");
+      const ult = [...R].reverse().find(r => r[p + "_comandi_oggi"] !== "" && r[p + "_comandi_oggi"] != null);
+      h += riga(nomeP(p), coloreP(p), sc, dif(c1, sc), dif(auto, sc), dif(zero, sc),
+                somma(p + "_prel_kwh"), somma(p + "_imm_kwh"), ult ? ult[p + "_comandi_oggi"] : null);
     }
-    h += `</table></div><p class="spiega">Acquisto: prezzo fisso F0 0,12 €/kWh + perdite, trasporto, oneri, accise, IVA (dispacciamento non noto: 0) = ${fmt(num((R.find(r => r.costo_acquisto) || {}).costo_acquisto), 4)} €/kWh. Cessione: prezzo zonale NORD del quarto d'ora. Usura batteria: 0,02 €/kWh scaricato. Il reale non comprende l'usura.</p>`;
+    h += `</table></div><p class="spiega">Acquisto: prezzo fisso F0 0,12 €/kWh + perdite, trasporto, oneri, accise, IVA (dispacciamento non noto: 0) = ${fmt(num((R.find(r => r.costo_acquisto) || {}).costo_acquisto), 4)} €/kWh. Cessione: prezzo zonale NORD del quarto d'ora. Usura batteria: 0,02 €/kWh scaricato. La condizione 1 comprende l'usura sui kWh scaricati misurati. Beneficio positivo = la condizione della riga costa meno di quella della colonna. Descrizione delle condizioni: pannello «Aiuto».</p>`;
   }
   s.insertAdjacentHTML("beforeend", h);
 }
@@ -352,7 +398,7 @@ function pSoc(d) {
   grafico(s, x, [
     { label: "Reale", stroke: css("--reale"), width: 2.2, dati: col(R, "soc") },
     { label: "Automatico sim.", stroke: css("--auto"), dash: [6, 4], dati: col(R, "auto_soc") },
-    ...PROF.map(p => ({ label: nomeP(p), stroke: coloreP(p), dati: col(R, p + "_soc") })),
+    ...PROF.map(p => ({ label: nomeP(p), stroke: coloreP(p), dash: trattoP(p), dati: col(R, p + "_soc") })),
   ], { unita: "%", scale: { y: { range: [0, 100] } } });
 }
 
@@ -362,7 +408,7 @@ function pBatteria(d) {
   grafico(s, x, [
     { label: "Reale", stroke: css("--reale"), width: 2, dati: col(R, "batteria_w") },
     { label: "Automatico sim.", stroke: css("--auto"), dash: [6, 4], dati: col(R, "auto_batteria_w") },
-    ...PROF.map(p => ({ label: nomeP(p), stroke: coloreP(p), dati: col(R, p + "_batteria_w") })),
+    ...PROF.map(p => ({ label: nomeP(p), stroke: coloreP(p), dash: trattoP(p), dati: col(R, p + "_batteria_w") })),
   ], { unita: "W" });
 }
 
@@ -391,7 +437,7 @@ function pRete(d) {
     { label: "Reale", stroke: css("--reale"), width: 2, dati: col(R, "prelievo_w") },
     { label: "Senza batteria", stroke: css("--tenue"), dash: [2, 3], dati: col(R, "zero_prel_kwh", k) },
     { label: "Automatico sim.", stroke: css("--auto"), dash: [6, 4], dati: col(R, "auto_prel_kwh", k) },
-    ...PROF.map(p => ({ label: nomeP(p), stroke: coloreP(p), dati: col(R, p + "_prel_kwh", k) })),
+    ...PROF.map(p => ({ label: nomeP(p), stroke: coloreP(p), dash: trattoP(p), dati: col(R, p + "_prel_kwh", k) })),
   ], { unita: "W" });
 }
 
@@ -430,8 +476,8 @@ function pPeriodi(d) {
   const P = (d.periodi || []).filter(p => p.azione && p.azione !== "AUTO");
   if (!P.length) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun periodo diverso dall'automatico.</p>`); return; }
   const ora = v => v ? v.slice(11, 16) : "";
-  s.insertAdjacentHTML("beforeend", `<div class="tab"><table><tr><th>Scenario</th><th>Dalle</th><th>Alle</th><th>Azione</th><th>SOC %</th><th>Carica FV kWh</th><th>Carica rete kWh</th><th>Scarica kWh</th><th>€ netto</th><th>Motivo</th></tr>` +
-    P.map(p => `<tr><td><b style="color:${coloreP(p.profilo)}">${nomeP(p.profilo)}</b></td><td>${ora(p.inizio)}</td><td>${ora(p.fine)}</td><td>${p.azione.replace("_", " ").toLowerCase()}</td>
+  s.insertAdjacentHTML("beforeend", `<div class="tab"><table><tr><th>Condizione</th><th>Dalle</th><th>Alle</th><th>Azione</th><th>SOC %</th><th>Carica FV kWh</th><th>Carica rete kWh</th><th>Scarica kWh</th><th>€ netto</th><th>Motivo</th></tr>` +
+    P.map(p => `<tr><td><b style="color:${coloreP(p.profilo)}">${nomeP(p.profilo)}</b></td><td>${ora(p.inizio)}</td><td>${ora(p.fine)}</td><td>${nomeAzione(p.azione)}</td>
       <td>${fmt(num(p.soc_inizio), 0)} → ${fmt(num(p.soc_fine), 0)}</td><td>${fmt(num(p.carica_fv_kwh), 2)}</td><td>${fmt(num(p.carica_rete_kwh), 2)}</td><td>${fmt(num(p.scarica_kwh), 2)}</td>
       <td>${fmt(num(p.euro_netto))}</td><td class="testo">${p.motivo || ""}</td></tr>`).join("") + `</table></div>`);
 }
@@ -441,7 +487,7 @@ async function pPiano() {
   if (!indice.piano) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun piano ancora calcolato (i prezzi del giorno dopo arrivano dalle 13:30).</p>`); return; }
   const P = csv(await scarica("pannello/piano.csv"));
   s.querySelector("h2").textContent = "Piano calcolato per il " + new Date(indice.piano + "T12:00:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
-  s.insertAdjacentHTML("beforeend", `<p class="spiega">Quello che ogni scenario prevede di fare, con le previsioni e i prezzi noti al momento del calcolo. Il piano viene ricalcolato durante il giorno.</p>`);
+  s.insertAdjacentHTML("beforeend", `<p class="spiega">Quello che ogni condizione (2…2e) prevede di fare, con le previsioni e i prezzi noti al momento del calcolo. Il piano viene ricalcolato durante il giorno.</p>`);
   const per = {};
   for (const r of P) (per[r.profilo] = per[r.profilo] || []).push(r);
   const profili = Object.keys(per);
@@ -450,7 +496,7 @@ async function pPiano() {
   const x = p0.map(r => Date.parse(r.inizio) / 1000);
   const az = {};
   for (const p of profili) az[p] = per[p].map(r => r.azione);
-  grafico(s, x, profili.map(p => ({ label: "SOC " + nomeP(p), stroke: coloreP(p), dati: per[p].map(r => num(r.soc)) })),
+  grafico(s, x, profili.map(p => ({ label: "SOC " + nomeP(p), stroke: coloreP(p), dash: trattoP(p), dati: per[p].map(r => num(r.soc)) })),
     { unita: "%", scale: { y: { range: [0, 100] } } });
   corsie(s, x, az, profili);
   grafico(s, x, [
@@ -462,7 +508,7 @@ async function pPiano() {
 
 let giornaliero = [];
 function pGiornaliero() {
-  const s = sezione("giornaliero", "Giorno per giorno", "Energia di ogni giorno (anche prima dell'avvio della simulazione) e beneficio cumulato degli scenari.");
+  const s = sezione("giornaliero", "Giorno per giorno", "Energia di ogni giorno (anche prima dell'avvio della simulazione) e beneficio cumulato delle condizioni 2…2e sulla condizione 1 (reale), sul controllo automatico simulato e sulla condizione 0.");
   const G = giornaliero; if (!G.length) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun dato.</p>`); return; }
   const x = G.map(r => Date.parse(r.giorno + "T12:00:00") / 1000);
   grafico(s, x, [
@@ -475,19 +521,24 @@ function pGiornaliero() {
     .filter(p => sim.some(r => r[p + "_beneficio_eur"] !== "" && r[p + "_beneficio_eur"] != null));
   if (sim.length && profili.length) {
     const xs = sim.map(r => Date.parse(r.giorno + "T12:00:00") / 1000);
-    const vecchi = ["A", "B", "C"];
-    const col2 = p => vecchi.includes(p) ? css("--" + p) : coloreP(p);
     const cum = (p, k) => { let somma = 0, visto = false;
-      return sim.map(r => { const v = num(r[p + k]); if (v != null) { visto = true; somma += v; } return visto ? somma : null; }); };
-    grafico(s, xs, profili.map(p => ({ label: "Su automatico: " + nomeP(p), stroke: col2(p), width: 2, points: { show: true, size: 6 },
-      dati: cum(p, "_beneficio_eur"), dec: 2 })), { unita: "€", dec: 2, altezza: 220, giorni: true, id: "ben" });
-    const conZero = profili.filter(p => sim.some(r => r[p + "_beneficio_vs_zero_eur"]));
-    if (conZero.length)
-      grafico(s, xs, conZero.map(p => ({ label: "Su senza batteria: " + nomeP(p), stroke: col2(p), width: 2, points: { show: true, size: 6 },
-        dati: cum(p, "_beneficio_vs_zero_eur"), dec: 2 })), { unita: "€", dec: 2, altezza: 220, giorni: true, id: "benz" });
-    const tot = p => sim.reduce((a, r) => a + (num(r[p + "_beneficio_eur"]) || 0), 0);
-    s.insertAdjacentHTML("beforeend", `<p class="spiega">Beneficio cumulato rispetto all'automatico: ` +
-      profili.map(p => `${nomeP(p)} ${fmt(tot(p))} €`).join(" · ") + `. I profili A, B, C sono quelli della versione precedente.</p>`);
+      return sim.map(r => { const v = num(r[p + k]); if (v != null && r[p + k] !== "") { visto = true; somma += v; } return visto ? somma : null; }); };
+    const curva = (pref, k, id) => {
+      const ps = profili.filter(p => sim.some(r => r[p + k] !== "" && r[p + k] != null));
+      if (!ps.length) return;
+      s.insertAdjacentHTML("beforeend", `<p class="spiega" style="margin-top:8px"><b>Beneficio cumulato ${pref}</b></p>`);
+      grafico(s, xs, ps.map(p => ({ label: nomeP(p), stroke: coloreP(p), dash: trattoP(p), width: 2, points: { show: true, size: 6 },
+        dati: cum(p, k), dec: 2 })), { unita: "€", dec: 2, altezza: 220, giorni: true, id });
+    };
+    curva("sulla condizione 1 (reale)", "_beneficio_vs_c1_eur", "benc1");
+    curva("sull'automatico simulato (controllo)", "_beneficio_eur", "ben");
+    curva("sulla condizione 0 (senza batteria)", "_beneficio_vs_zero_eur", "benz");
+    const tot = (p, k) => sim.reduce((a, r) => a + (num(r[p + k]) || 0), 0);
+    const conC1 = profili.filter(p => sim.some(r => r[p + "_beneficio_vs_c1_eur"] !== "" && r[p + "_beneficio_vs_c1_eur"] != null));
+    if (conC1.length)
+      s.insertAdjacentHTML("beforeend", `<p class="spiega">Totale beneficio sulla condizione 1: ` +
+        conC1.map(p => `${NOMI_BREVI[p] ? "condizione " + NOMI_BREVI[p] : nomeP(p)} ${fmt(tot(p, "_beneficio_vs_c1_eur"))} €`).join(" · ") + `.</p>`);
+    s.insertAdjacentHTML("beforeend", `<p class="spiega">Le voci «Vecchia» sono le simulazioni delle versioni precedenti (F0/F0R, A/B/C), con regole diverse: non confrontabili con le condizioni 2…2e.</p>`);
   }
 }
 
@@ -555,6 +606,7 @@ $("prec").addEventListener("click", () => { const s = $("giorno"); if (s.selecte
 $("succ").addEventListener("click", () => { const s = $("giorno"); if (s.selectedIndex < s.options.length - 1) { s.selectedIndex++; mostra(); } });
 $("ultimo").addEventListener("click", () => { const s = $("giorno"); s.selectedIndex = s.options.length - 1; mostra(); });
 $("aggiorna").addEventListener("click", () => avvio(true));
+$("bottone_aiuto").addEventListener("click", () => { const a = $("aiuto"); a.hidden = !a.hidden; $("bottone_aiuto").setAttribute("aria-expanded", String(!a.hidden)); });
 disegnaScelte();
 avvio(false);
 </script>

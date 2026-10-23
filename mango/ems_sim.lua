@@ -329,7 +329,7 @@ local function chiudi_giorno(g)
     local prof_in = {}
     for _, p in ipairs(c.PROFILI) do
       prof_in[p] = { soc0 = a.soc_inizio[p] or 50, prev_azione = "AUTO", finestre_oggi = 0, giorno_oggi = g,
-                     carica_rete = (c.PROFILI_CARICA_RETE or {})[p] }
+                     carica_rete_w = (c.PROFILI_CARICA_RETE_W or {})[p] }
     end
     local ok, res = pcall(O.pianifica, c, e, quarti, c.PROFILI, prof_in, usura, vf)
     if ok then ott = res else log("Ottimo a posteriori non calcolato: " .. tostring(res)) end
@@ -338,12 +338,18 @@ local function chiudi_giorno(g)
   end
   local z = a.zero or { prel = 0, imm = 0, costo = 0, ricavo = 0 }
   r.zero_prel_kwh, r.zero_imm_kwh, r.zero_costo_eur, r.zero_ricavo_eur = z.prel, z.imm, z.costo, z.ricavo
+  -- condizione 1: reale misurato (acquisti - cessioni + usura della batteria vera)
+  local rr = a.reale or {}
+  r.reale_scarica_kwh, r.reale_costo_eur, r.reale_ricavo_eur = rr.sca or 0, rr.costo or 0, rr.ricavo or 0
+  local c1 = (rr.costo or 0) - (rr.ricavo or 0) + (rr.sca or 0) * usura
+  r.c1_netto_eur, r.c0_netto_eur = c1, z.costo - z.ricavo
   for _, p in ipairs(c.PROFILI) do
     local x = acc_profilo(a, p)
     local s = stato.sim[p] or {}
     r[p .. "_prel_kwh"], r[p .. "_imm_kwh"] = x.prel, x.imm
     r[p .. "_beneficio_vs_zero_eur"] = (z.costo - z.ricavo) - (x.costo - x.ricavo + x.usura) - (x.interventi or 0)
     r[p .. "_auto_vs_zero_eur"] = (z.costo - z.ricavo) - (x.auto_costo - x.auto_ricavo + x.auto_usura)
+    r[p .. "_beneficio_vs_c1_eur"] = c1 - (x.costo - x.ricavo + x.usura) - (x.interventi or 0)
     r[p .. "_scarica_forzata_kwh"] = s.scarica_forzata_oggi or 0
     r[p .. "_costo_eur"], r[p .. "_ricavo_eur"], r[p .. "_usura_eur"] = x.costo, x.ricavo, x.usura
     r[p .. "_auto_costo_eur"], r[p .. "_auto_ricavo_eur"], r[p .. "_auto_usura_eur"] = x.auto_costo, x.auto_ricavo, x.auto_usura
@@ -453,10 +459,10 @@ local function chiudi_giorno(g)
   stato.flash_modelli, stato.flash_modelli_sim = 0, 0      -- al prossimo salvataggio i modelli vanno in memoria interna
   local parti = {}
   for _, p in ipairs(c.PROFILI) do
-    parti[#parti + 1] = string.format("%s %.2f EUR (rispetto a senza batteria %.2f EUR)", p, r[p .. "_beneficio_eur"] or 0,
-      r[p .. "_beneficio_vs_zero_eur"] or 0)
+    parti[#parti + 1] = string.format("%s %.2f", p, r[p .. "_beneficio_vs_c1_eur"] or 0)
   end
-  log("Giorno " .. g .. " chiuso: beneficio rispetto all'automatico " .. table.concat(parti, ", "))
+  log(string.format("Giorno %s chiuso: costo netto condizione 0 %.2f EUR, condizione 1 (reale) %.2f EUR; beneficio sulla 1: %s EUR",
+    g, r.c0_netto_eur or 0, r.c1_netto_eur or 0, table.concat(parti, ", ")))
 end
 
 -- ------------------------------------------------------------------ istantanea della sera (piano e meteo del giorno dopo)
@@ -697,6 +703,13 @@ local function ciclo()
       local rp, ri = math.max(0, -cont) * dt / 1000, math.max(0, cont) * dt / 1000
       acc.reale.prel, acc.reale.imm = acc.reale.prel + rp, acc.reale.imm + ri
       riga.reale_prel_kwh, riga.reale_imm_kwh, riga.reale_ricavo_eur = rp, ri, ri * vend
+      -- condizione 1 (reale misurato): energia scaricata dalla batteria vera, per l'usura
+      local bat = ((l.batteria_w or 0) + (prec.batteria_w or 0)) / 2
+      riga.reale_scarica_kwh = math.max(0, -bat) * dt / 1000
+      riga.reale_costo_eur = rp * (costi and costi[c.PROFILI[1]] or 0)
+      acc.reale.sca = (acc.reale.sca or 0) + riga.reale_scarica_kwh
+      acc.reale.costo = (acc.reale.costo or 0) + riga.reale_costo_eur
+      acc.reale.ricavo = (acc.reale.ricavo or 0) + ri * vend
       if l.soc >= c.ORE_SOC_ALTO then acc.ore_alto_reale = (acc.ore_alto_reale or 0) + dt end
       -- quarti d'ora reali (per l'ottimo a posteriori) e comportamento per i giorni simili
       local cm = T.calendario(tm)
@@ -786,7 +799,8 @@ local function ciclo()
       for _, p in ipairs(c.PROFILI) do
         local s = stato.sim[p]
         prof_in[p] = { soc0 = s.soc, prev_azione = s.azione, finestre_oggi = s.finestre_oggi or 0, giorno_oggi = oggi,
-                       carica_rete = (c.PROFILI_CARICA_RETE or {})[p], scarica_forzata_oggi = s.scarica_forzata_oggi or 0 }
+                       carica_rete_w = (c.PROFILI_CARICA_RETE_W or {})[p], scarica_forzata_oggi = s.scarica_forzata_oggi or 0,
+                       lambda_e = s.lambda_e }
       end
       local ok, ris = pcall(O.pianifica, c, e, quarti, c.PROFILI, prof_in, usura, valore_fine(quarti, serie))
       if ok then
@@ -800,6 +814,8 @@ local function ciclo()
             v_auto and string.format("vantaggio su AUTO %.3f EUR", (alt[nuova] or 0) - v_auto) or "")
           if ris[p].troncato then motivo = motivo .. " (limitato: max " .. c.MAX_FINESTRE_GIORNO .. " finestre e " ..
             (c.MAX_CICLI_FORZATI_GIORNO or 1) .. " ciclo di scarica forzata al giorno)" end
+          s.lambda_e = ris[p].lambda_e
+          if ris[p].adottato_da then motivo = motivo .. " (stesso piano di " .. ris[p].adottato_da .. ")" end
           riga[p .. "_decisione"], riga[p .. "_motivo"] = nuova, motivo
           riga[p .. "_vantaggio_eur"] = v_auto and ((alt[nuova] or 0) - v_auto) or nil
           riga[p .. "_valore_piano_eur"] = ris[p].valore_piano
@@ -1014,7 +1030,7 @@ elseif comando == "prova" then
     local prof_in = {}
     local soc0 = ok2 and l.soc or 50
     for _, pp in ipairs(c.PROFILI) do prof_in[pp] = { soc0 = soc0, prev_azione = "AUTO", finestre_oggi = 0, giorno_oggi = T.giorno(nil),
-      carica_rete = (c.PROFILI_CARICA_RETE or {})[pp] } end
+      carica_rete_w = (c.PROFILI_CARICA_RETE_W or {})[pp] } end
     local e = MOD.efficienze(modelli, c)
     local okr, ris = pcall(O.pianifica, c, e, quarti, c.PROFILI, prof_in, usura, valore_fine(quarti, serie_meteo()))
     print(string.format("Ottimizzatore: %d quarti d'ora in %.1f s (%s)", #quarti, os.clock() - t1,
