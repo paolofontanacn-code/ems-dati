@@ -1,4 +1,4 @@
-# Cessione totale 20 kW - ultimo calcolo 23/10/2026 19:38 (R01)
+# Cessione totale 20 kW - ultimo calcolo 23/10/2026 21:09 (R01)
 
 Giorni calcolati: 40 (validi 36). Giorni senza prezzi o con errori: 0.
 
