@@ -1,0 +1,29 @@
+{
+ "aggiornato": "2026-10-23T22:22:40+02:00",
+ "revisione": "R03",
+ "inizio": "2026-10-23T22:00+02:00",
+ "eseguito_fino_a": "2026-10-23T22:00+02:00",
+ "soc_kwh": 0.0,
+ "modo_attuale": "terzi",
+ "errore_modelli": {},
+ "scarto_modi": {
+  "fully": {
+   "v": 0.0,
+   "n": 0
+  },
+  "tou": {
+   "v": 0.0,
+   "n": 0
+  },
+  "terzi": {
+   "v": 0.0,
+   "n": 0
+  }
+ },
+ "modelli": [
+  "italia_meteo_arpae_icon_2i",
+  "meteofrance_seamless",
+  "icon_seamless",
+  "ecmwf_ifs025"
+ ]
+}
