@@ -1,17 +1,8 @@
-# Cessione totale 20 kW - ultimo calcolo 23/10/2026 17:01
+# Cessione totale 20 kW - ultimo calcolo 23/10/2026 19:38 (R01)
 
-Giorni calcolati: 31 (validi 27). Giorni senza prezzi o con errori: 9.
+Giorni calcolati: 40 (validi 36). Giorni senza prezzi o con errori: 0.
 
-Profilo 0 (senza batteria): 1093.4 kWh ceduti, 203.82 EUR
-Profilo 1 (batteria 30 kWh / 10 kW): 1057.8 kWh ceduti, 261.29 EUR
-Beneficio della batteria: 57.47 EUR
+Profilo 0 (senza batteria): 1423.4 kWh ceduti, 263.86 EUR
+Profilo 1 (batteria 15 kWh / 10 kW, senza carica AC): 1399.1 kWh ceduti, 305.92 EUR, beneficio 42.06 EUR
+Profilo 1AC (con carica AC dall'inverter B, mai dalla rete): 1397.0 kWh ceduti, 312.80 EUR, beneficio 48.94 EUR (carica AC 395.6 kWh)
 
-- 2026-09-29: prezzi GME non scaricati: HTTP Error 429: Too Many Requests
-- 2026-09-30: prezzi GME non scaricati: HTTP Error 429: Too Many Requests
-- 2026-10-01: prezzi GME non scaricati: HTTP Error 429: Too Many Requests
-- 2026-10-02: prezzi GME non scaricati: HTTP Error 429: Too Many Requests
-- 2026-10-03: prezzi GME non scaricati: HTTP Error 429: Too Many Requests
-- 2026-10-04: prezzi GME non scaricati: HTTP Error 429: Too Many Requests
-- 2026-10-14: prezzi GME non scaricati: HTTP Error 429: Too Many Requests
-- 2026-10-15: prezzi GME non scaricati: HTTP Error 429: Too Many Requests
-- 2026-10-16: prezzi GME non scaricati: HTTP Error 429: Too Many Requests

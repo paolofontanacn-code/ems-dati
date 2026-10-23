@@ -1,25 +1,18 @@
 {
- "aggiornato": "2026-10-23T17:01:22+02:00",
+ "aggiornato": "2026-10-23T19:38:36+02:00",
+ "revisione": "R01",
  "parametri": {
   "p_cismondi_kw": 11.48,
   "p_impianto_kw": 20.0,
   "scala": 1.74216,
   "limite_rete_kw": 15.0,
-  "capacita_kwh": 30.0,
+  "capacita_kwh": 15.0,
   "potenza_batteria_kw": 10.0,
+  "p_inverter_kw": 10.0,
+  "quota_fv_a": 0.5,
   "perdita_ciclo": 0.05,
   "copertura_minima": 0.9
  },
- "giorni": 31,
- "note": [
-  "2026-09-29: prezzi GME non scaricati: HTTP Error 429: Too Many Requests",
-  "2026-09-30: prezzi GME non scaricati: HTTP Error 429: Too Many Requests",
-  "2026-10-01: prezzi GME non scaricati: HTTP Error 429: Too Many Requests",
-  "2026-10-02: prezzi GME non scaricati: HTTP Error 429: Too Many Requests",
-  "2026-10-03: prezzi GME non scaricati: HTTP Error 429: Too Many Requests",
-  "2026-10-04: prezzi GME non scaricati: HTTP Error 429: Too Many Requests",
-  "2026-10-14: prezzi GME non scaricati: HTTP Error 429: Too Many Requests",
-  "2026-10-15: prezzi GME non scaricati: HTTP Error 429: Too Many Requests",
-  "2026-10-16: prezzi GME non scaricati: HTTP Error 429: Too Many Requests"
- ]
+ "giorni": 40,
+ "note": []
 }
