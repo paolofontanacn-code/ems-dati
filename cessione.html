@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cessione totale 20 kW</title>
+<style>
+:root {
+  --sfondo: #f6f7f9; --carta: #ffffff; --testo: #1d2330; --tenue: #5b6475; --bordo: #d5dae3; --accento: #0072B2;
+  /* Okabe-Ito: distinguibili anche da chi non vede bene i colori */
+  --p0: #E69F00; --p1: #0072B2; --ben: #009E73; --fv: #E69F00; --prezzo: #D55E00; --soc: #0072B2; --neg: #D55E00;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --sfondo: #11151c; --carta: #1a2029; --testo: #eef1f6; --tenue: #a9b2c2; --bordo: #323b48; --accento: #56B4E9;
+          --p1: #56B4E9; --soc: #56B4E9; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--sfondo); color: var(--testo); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { padding: 14px 16px 4px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+h1 { font-size: 22px; margin: 0; }
+a { color: var(--accento); }
+.nota { color: var(--tenue); font-size: 14px; }
+.etichetta { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--accento); color: #fff; }
+.barra { position: sticky; top: 0; z-index: 5; background: var(--sfondo); padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-bottom: 1px solid var(--bordo); }
+button, select { font: inherit; color: var(--testo); background: var(--carta); border: 1px solid var(--bordo); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+button:hover, select:hover { border-color: var(--accento); }
+main { padding: 12px 16px 40px; display: grid; gap: 14px; }
+section { background: var(--carta); border: 1px solid var(--bordo); border-radius: 10px; padding: 14px; min-width: 0; }
+h2 { font-size: 17px; margin: 0 0 4px; }
+.spiega { color: var(--tenue); font-size: 14px; margin: 0 0 10px; }
+.tessere { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.tessera { border: 1px solid var(--bordo); border-radius: 8px; padding: 8px 10px; }
+.tessera b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+.tessera span { color: var(--tenue); font-size: 13px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--tenue); font-size: 12px; font-family: inherit; }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; margin-top: 6px; }
+.legenda i { display: inline-block; width: 22px; height: 12px; vertical-align: -1px; margin-right: 6px; border: 1px solid var(--testo); }
+.tab { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 5px 8px; border-bottom: 1px solid var(--bordo); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+tr.escluso td { color: var(--tenue); font-style: italic; }
+.pos { color: var(--ben); font-weight: 600; } .negv { color: var(--neg); font-weight: 600; }
+.aiuto dt { font-weight: 700; margin-top: 8px; } .aiuto dd { margin: 2px 0 0; } .aiuto ul { padding-left: 18px; margin: 4px 0; }
+.errore { color: var(--neg); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Cessione totale 20 kW</h1>
+  <span class="etichetta">SOLO SIMULAZIONE</span>
+  <span class="nota" id="aggiornato">caricamento…</span>
+  <a class="nota" href="./">← pagina EMS Cismondi</a>
+</header>
+<div class="barra">
+  <label class="nota" for="mese">Mese</label>
+  <select id="mese"></select>
+  <label class="nota" for="giorno">Giorno</label>
+  <select id="giorno"></select>
+  <button id="bottone_aiuto" aria-expanded="false" aria-controls="aiuto">Aiuto</button>
+</div>
+<main>
+  <section id="aiuto" class="aiuto" hidden>
+    <h2>Aiuto – che cosa è simulato</h2>
+    <p class="spiega">Impianto ipotetico da 20 kW in cessione totale: tutta l'energia prodotta va in rete, venduta in RID al prezzo orario zonale NORD (PO NORD) del GME. Nessun comando viene inviato a nessun impianto.</p>
+    <dl>
+      <dt>Produzione</dt>
+      <dd>Letture Huawei a 5 minuti dell'impianto di Cismondi (11,48 kW, inclinazione simile) moltiplicate per 20 / 11,48. Uscita verso la rete al massimo 15 kW: oltre, la produzione si perde (profilo 0) o va in batteria (profilo 1).</dd>
+      <dt>Profilo 0 – senza batteria (situazione di oggi)</dt>
+      <dd>Ceduto = prodotto (fino a 15 kW), pagato al prezzo orario NORD dell'ora.</dd>
+      <dt>Profilo 1 – con batteria da 30 kWh / 10 kW</dt>
+      <dd>La batteria si carica solo dal FV (nessuna carica dalla rete): immagazzina nelle ore a prezzo di cessione più basso e restituisce in quelle a prezzo più alto. Perdita tra carica e scarica: 5 %. Ogni giorno il programma usa i prezzi del giorno e del giorno dopo (pubblicati dal GME il giorno prima) e tiene solo le decisioni del giorno.</dd>
+    </dl>
+    <h2>Limiti da tenere presenti</h2>
+    <ul class="spiega">
+      <li>La produzione del giorno e del giorno dopo è considerata nota (previsione perfetta): il beneficio del profilo 1 è il massimo ottenibile, nella realtà sarà un po' più basso.</li>
+      <li>L'energia rimasta in batteria a mezzanotte, venduta il giorno dopo, è attribuita al giorno in cui è stata prodotta (colonna «riporto»).</li>
+      <li>Non sono conteggiati: usura della batteria, costo dell'impianto, corrispettivi del GSE, consumi propri dell'impianto. Il costo dell'impianto e il payback si aggiungeranno dopo.</li>
+      <li>I giorni con meno del 90 % delle letture sono mostrati in corsivo ed esclusi dai totali.</li>
+    </ul>
+  </section>
+  <section id="s_totali"><h2>Totali del mese</h2><div id="totali"></div></section>
+  <section><h2>Euro al giorno</h2><p class="spiega">Ricavo di ogni giorno: profilo 0 (senza batteria) e profilo 1 (con batteria).</p><div id="g_euro"></div></section>
+  <section><h2>Beneficio della batteria al giorno</h2><p class="spiega">Profilo 1 − profilo 0, in euro.</p><div id="g_ben"></div></section>
+  <section><h2>Energia al giorno</h2><p class="spiega">kWh prodotti e ceduti, energia restituita dalla batteria.</p><div id="g_kwh"></div></section>
+  <section><h2>Mese per mese</h2><p class="spiega">Totali dei giorni validi di ogni mese.</p><div id="g_mesi"></div></section>
+  <section><h2 id="t_giorno">Dettaglio del giorno</h2><p class="spiega">Prezzo orario NORD, produzione e energia in batteria (profilo 1), per quarto d'ora.</p><div id="g_giorno"></div></section>
+  <section><h2>Giorni del mese</h2><div class="tab" id="tabella"></div></section>
+</main>
+
+<script>
+"use strict";
+const H = location.hostname;
+const BASE = H.endsWith(".github.io")
+  ? `https://raw.githubusercontent.com/${H.split(".")[0]}/${location.pathname.split("/")[1] || "ems-dati"}/main/`
+  : "./";
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const num = v => { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; };
+const fmt = (v, d = 2) => (v == null || isNaN(v)) ? "–" : Number(v).toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
+const NS = "http://www.w3.org/2000/svg";
+
+function csv(t) {
+  const r = t.trim().split(/\r?\n/).map(l => l.split(","));
+  const h = r.shift() || [];
+  return r.map(x => Object.fromEntries(h.map((k, i) => [k, x[i]])));
+}
+async function scarica(p, json) {
+  const r = await fetch(BASE + p + "?t=" + Math.floor(Date.now() / 60000), { cache: "no-store" });
+  if (!r.ok) throw new Error(`${p}: HTTP ${r.status}`);
+  return json ? r.json() : r.text();
+}
+function el(tag, att, padre) { const e = document.createElementNS(NS, tag); for (const k in att) e.setAttribute(k, att[k]); if (padre) padre.appendChild(e); return e; }
+
+// motivi (tratteggi) per distinguere le barre anche senza colore
+function motivi(svg) {
+  const defs = el("defs", {}, svg);
+  const m = el("pattern", { id: "righe", width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+  el("rect", { width: 6, height: 6, fill: css("--p1") }, m);
+  el("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: css("--carta"), "stroke-width": 2 }, m);
+  const p = el("pattern", { id: "punti", width: 5, height: 5, patternUnits: "userSpaceOnUse" }, defs);
+  el("rect", { width: 5, height: 5, fill: css("--ben") }, p);
+  el("circle", { cx: 2.5, cy: 2.5, r: 1, fill: css("--carta") }, p);
+}
+function scala(min, max) {
+  if (min === max) { max = min + 1; }
+  const passo0 = (max - min) / 5, e = Math.pow(10, Math.floor(Math.log10(passo0)));
+  const passo = [1, 2, 2.5, 5, 10].map(k => k * e).find(k => k >= passo0);
+  const a = Math.floor(min / passo) * passo, b = Math.ceil(max / passo) * passo;
+  const tacche = []; for (let v = a; v <= b + passo / 2; v += passo) tacche.push(+v.toFixed(10));
+  return { a, b, tacche };
+}
+// grafico a barre raggruppate: etichette x, serie [{nome, valori, riempi}]
+function barre(cont, etichette, serie, unita, dec = 2) {
+  cont.innerHTML = "";
+  const W = Math.max(320, cont.clientWidth), Hh = 280, ml = 58, mr = 10, mt = 10, mb = 40;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${Hh}`, role: "img", "aria-label": serie.map(s => s.nome).join(", ") }, cont);
+  motivi(svg);
+  const tutti = serie.flatMap(s => s.valori).filter(v => v != null);
+  const sc = scala(Math.min(0, ...tutti), Math.max(0, ...tutti));
+  const y = v => mt + (sc.b - v) / (sc.b - sc.a) * (Hh - mt - mb);
+  for (const t of sc.tacche) {
+    el("line", { x1: ml, x2: W - mr, y1: y(t), y2: y(t), stroke: css("--bordo"), "stroke-width": t === 0 ? 1.5 : 1 }, svg);
+    el("text", { x: ml - 6, y: y(t) + 4, "text-anchor": "end" }, svg).textContent = fmt(t, Math.abs(t) < 10 && t % 1 ? 2 : 0);
+  }
+  el("text", { x: 4, y: mt + 10 }, svg).textContent = unita;
+  const n = etichette.length, larg = (W - ml - mr) / Math.max(1, n), gb = larg * 0.8 / serie.length;
+  const ogni = Math.ceil(n / Math.max(1, Math.floor((W - ml - mr) / 34)));
+  etichette.forEach((et, i) => {
+    const x0 = ml + i * larg + larg * 0.1;
+    serie.forEach((s, k) => {
+      const v = s.valori[i]; if (v == null) return;
+      const r = el("rect", { x: x0 + k * gb, y: Math.min(y(v), y(0)), width: Math.max(1, gb - 1), height: Math.max(0.5, Math.abs(y(v) - y(0))),
+        fill: typeof s.riempi === "function" ? s.riempi(v) : s.riempi, stroke: css("--testo"), "stroke-width": 0.4, opacity: s.opaco && s.opaco[i] ? 0.35 : 1 }, svg);
+      el("title", {}, r).textContent = `${et} – ${s.nome}: ${fmt(v, dec)} ${unita}`;
+    });
+    if (i % ogni === 0) el("text", { x: ml + i * larg + larg / 2, y: Hh - mb + 16, "text-anchor": "middle" }, svg).textContent = et;
+  });
+  const leg = document.createElement("div"); leg.className = "legenda";
+  const campione = r => r === "url(#righe)" ? `repeating-linear-gradient(45deg, ${css("--p1")} 0 4px, ${css("--carta")} 4px 6px)`
+    : r === "url(#punti)" ? `radial-gradient(${css("--carta")} 1px, ${css("--ben")} 1.5px) 0 0 / 5px 5px` : r;
+  leg.innerHTML = serie.map(s => `<span><i style="background:${campione(s.riempi)}"></i>${s.nome}</span>`).join("");
+  cont.appendChild(leg);
+}
+// grafico del giorno: linee su due assi (sinistra kWh, destra €/kWh)
+function linee(cont, q, inizio) {
+  cont.innerHTML = "";
+  const W = Math.max(320, cont.clientWidth), Hh = 300, ml = 52, mr = 58, mt = 26, mb = 36, n = q.length;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${Hh}`, role: "img", "aria-label": "prezzo, produzione e batteria del giorno" }, cont);
+  const x = k => ml + k / Math.max(1, n) * (W - ml - mr);       // asse dei tempi: tutto il giorno
+  const sk = scala(0, Math.max(1, ...q.map(r => r.soc), ...q.map(r => r.fv * 4)));
+  const sp = scala(Math.min(0, ...q.map(r => r.prezzo)), Math.max(...q.map(r => r.prezzo)));
+  const yk = v => mt + (sk.b - v) / (sk.b - sk.a) * (Hh - mt - mb), yp = v => mt + (sp.b - v) / (sp.b - sp.a) * (Hh - mt - mb);
+  for (const t of sk.tacche) { el("line", { x1: ml, x2: W - mr, y1: yk(t), y2: yk(t), stroke: css("--bordo") }, svg);
+    el("text", { x: ml - 6, y: yk(t) + 4, "text-anchor": "end" }, svg).textContent = fmt(t, 0); }
+  for (const t of sp.tacche) el("text", { x: W - mr + 6, y: yp(t) + 4 }, svg).textContent = fmt(t, 2);
+  el("text", { x: 2, y: mt + 10 }, svg).textContent = "kWh / kW";
+  el("text", { x: W - 2, y: mt + 10, "text-anchor": "end" }, svg).textContent = "€/kWh";
+  for (let h = 0; h <= n / 4; h += 3) el("text", { x: x(h * 4), y: Hh - mb + 16, "text-anchor": "middle" }, svg).textContent =
+    new Date((inizio + h * 3600) * 1000).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
+  const traccia = (val, y, colore, tratto, larg) => el("path", { d: val.map((v, k) => `${k ? "L" : "M"}${x(k).toFixed(1)},${y(v).toFixed(1)}L${x(k + 1).toFixed(1)},${y(v).toFixed(1)}`).join(""),
+    fill: "none", stroke: colore, "stroke-width": larg, "stroke-dasharray": tratto || "" }, svg);
+  traccia(q.map(r => r.fv * 4), yk, css("--fv"), "", 2);
+  traccia(q.map(r => r.soc), yk, css("--soc"), "7 4", 2.5);
+  traccia(q.map(r => r.prezzo), yp, css("--prezzo"), "2 3", 2.5);
+  const leg = document.createElement("div"); leg.className = "legenda";
+  leg.innerHTML = `<span><i style="background:${css("--fv")}"></i>produzione 20 kW (kW, asse sinistro, linea piena)</span>
+    <span><i style="background:${css("--soc")}"></i>energia in batteria (kWh, asse sinistro, tratteggio lungo)</span>
+    <span><i style="background:${css("--prezzo")}"></i>prezzo orario NORD (€/kWh, asse destro, puntini)</span>`;
+  cont.appendChild(leg);
+}
+
+let G = [], M = [], indice = null;
+const giornoBreve = g => g.slice(8, 10) + "/" + g.slice(5, 7);
+const nomeMese = m => new Date(m + "-15T12:00:00").toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+
+async function mostraGiorno() {
+  const g = $("giorno").value; if (!g) return;
+  $("t_giorno").textContent = "Dettaglio del " + new Date(g + "T12:00:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+  try { const d = await scarica(`cessione/giorni/${g}.json`, true); linee($("g_giorno"), d.quarti, d.inizio); }
+  catch (e) { $("g_giorno").innerHTML = `<p class="errore">${e.message}</p>`; }
+}
+
+function mostraMese() {
+  const m = $("mese").value;
+  const R = G.filter(r => r.mese === m), V = R.filter(r => r.valido === "1");
+  const t = k => V.reduce((a, r) => a + (num(r[k]) || 0), 0);
+  $("totali").innerHTML = `<div class="tessere">
+    <div class="tessera"><span>Produzione 20 kW</span><b>${fmt(t("fv_kwh"), 0)}</b><span>kWh</span></div>
+    <div class="tessera"><span>Profilo 0 – senza batteria</span><b>${fmt(t("p0_eur"))}</b><span>€</span></div>
+    <div class="tessera"><span>Profilo 1 – con batteria</span><b>${fmt(t("p1_eur"))}</b><span>€</span></div>
+    <div class="tessera"><span>Beneficio della batteria</span><b class="${t("beneficio_eur") >= 0 ? "pos" : "negv"}">${fmt(t("beneficio_eur"))}</b><span>€ (${V.length} giorni validi su ${R.length})</span></div>
+    <div class="tessera"><span>Prezzo medio ottenuto</span><b>${fmt(t("p0_eur") / Math.max(1e-9, t("p0_ceduti_kwh")), 3)} / ${fmt(t("p1_eur") / Math.max(1e-9, t("p1_ceduti_kwh")), 3)}</b><span>€/kWh profilo 0 / 1</span></div></div>`;
+  const et = R.map(r => giornoBreve(r.giorno)), opaco = R.map(r => r.valido !== "1");
+  barre($("g_euro"), et, [{ nome: "Profilo 0 – senza batteria", valori: R.map(r => num(r.p0_eur)), riempi: css("--p0"), opaco },
+                          { nome: "Profilo 1 – con batteria", valori: R.map(r => num(r.p1_eur)), riempi: "url(#righe)", opaco }], "€");
+  barre($("g_ben"), et, [{ nome: "Beneficio della batteria", valori: R.map(r => num(r.beneficio_eur)), riempi: "url(#punti)", opaco }], "€");
+  barre($("g_kwh"), et, [{ nome: "Prodotti (= ceduti profilo 0)", valori: R.map(r => num(r.fv_kwh)), riempi: css("--p0"), opaco },
+                         { nome: "Ceduti profilo 1", valori: R.map(r => num(r.p1_ceduti_kwh)), riempi: "url(#righe)", opaco },
+                         { nome: "Restituiti dalla batteria", valori: R.map(r => num(r.p1_scarica_kwh)), riempi: "url(#punti)", opaco }], "kWh", 1);
+  barre($("g_mesi"), M.map(x => nomeMese(x.mese)), [{ nome: "Profilo 0 – senza batteria", valori: M.map(x => num(x.p0_eur)), riempi: css("--p0") },
+    { nome: "Profilo 1 – con batteria", valori: M.map(x => num(x.p1_eur)), riempi: "url(#righe)" },
+    { nome: "Beneficio della batteria", valori: M.map(x => num(x.beneficio_eur)), riempi: "url(#punti)" }], "€");
+  $("tabella").innerHTML = `<table><tr><th>Giorno</th><th>Prodotti kWh</th><th>Profilo 0 €</th><th>Profilo 1 €</th><th>Beneficio €</th><th>di cui riporto €</th>
+    <th>Carica kWh</th><th>Restituiti kWh</th><th>Prezzo carica €/kWh</th><th>Prezzo scarica €/kWh</th><th>NORD min–max €/kWh</th><th>Letture</th></tr>` +
+    R.map(r => `<tr class="${r.valido === "1" ? "" : "escluso"}"><td>${giornoBreve(r.giorno)}</td><td>${fmt(num(r.fv_kwh), 1)}</td><td>${fmt(num(r.p0_eur))}</td>
+      <td>${fmt(num(r.p1_eur))}</td><td class="${num(r.beneficio_eur) >= 0 ? "pos" : "negv"}">${fmt(num(r.beneficio_eur))}</td><td>${fmt(num(r.p1_riporto_eur))}</td>
+      <td>${fmt(num(r.p1_carica_kwh), 1)}</td><td>${fmt(num(r.p1_scarica_kwh), 1)}</td><td>${fmt(num(r.p1_prezzo_carica), 3)}</td><td>${fmt(num(r.p1_prezzo_scarica), 3)}</td>
+      <td>${fmt(num(r.prezzo_min_eur_kwh), 3)}–${fmt(num(r.prezzo_max_eur_kwh), 3)}</td><td>${fmt(num(r.copertura) * 100, 0)} %</td></tr>`).join("") + `</table>`;
+  const prima = $("giorno").value;
+  $("giorno").innerHTML = R.map(r => `<option value="${r.giorno}">${giornoBreve(r.giorno)}</option>`).join("");
+  $("giorno").value = R.some(r => r.giorno === prima) ? prima : (R.length ? R[R.length - 1].giorno : "");
+  mostraGiorno();
+}
+
+async function avvio() {
+  try {
+    [indice, G, M] = await Promise.all([scarica("cessione/indice.json", true), scarica("cessione/giornaliero.csv").then(csv), scarica("cessione/mensile.csv").then(csv)]);
+  } catch (e) {
+    $("aggiornato").textContent = "";
+    document.querySelector("main").insertAdjacentHTML("afterbegin", `<section class="errore">Dati non ancora disponibili (${e.message}): si preparano al prossimo giro di GitHub.</section>`);
+    return;
+  }
+  $("aggiornato").textContent = "aggiornato al " + new Date(indice.aggiornato).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const mesi = [...new Set(G.map(r => r.mese))];
+  $("mese").innerHTML = mesi.map(m => `<option value="${m}">${nomeMese(m)}</option>`).join("");
+  $("mese").value = mesi[mesi.length - 1] || "";
+  mostraMese();
+}
+$("mese").addEventListener("change", mostraMese);
+$("giorno").addEventListener("change", mostraGiorno);
+$("bottone_aiuto").addEventListener("click", () => { const a = $("aiuto"); a.hidden = !a.hidden; $("bottone_aiuto").setAttribute("aria-expanded", String(!a.hidden)); });
+let attesa; window.addEventListener("resize", () => { clearTimeout(attesa); attesa = setTimeout(() => G.length && mostraMese(), 200); });
+avvio();
+</script>
+</body>
+</html>

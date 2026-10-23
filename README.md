@@ -36,6 +36,19 @@ Ogni giorno GitHub manda il resoconto via email (Gmail) ai destinatari di `impos
 
 Tutti i valori sono in `mango/config.lua`.
 
+## Cessione totale 20 kW (dal 23/10/2026, pagina `cessione.html`)
+
+Simulazione a parte, solo calcolo: impianto ipotetico da 20 kW in cessione totale (prodotto = ceduto), venduto in RID
+al prezzo orario zonale NORD (PO NORD). Produzione = letture Huawei di Cismondi (11,48 kW, inclinazione simile)
+x 20 / 11,48; uscita verso la rete al massimo 15 kW.
+- **Profilo 0** - senza batteria (situazione di oggi): ceduto = prodotto.
+- **Profilo 1** - batteria 30 kWh / 10 kW, carica solo dal FV (nessuna carica da AC): immagazzina nelle ore a prezzo
+  piu' basso e restituisce in quelle a prezzo piu' alto; perdita 5 % tra carica e scarica; prezzi del giorno e del
+  giorno dopo (orizzonte mobile), produzione considerata nota (beneficio massimo ottenibile). Usura non conteggiata.
+Calcolo: `ml/cessione_totale.py` a ogni giro; risultati in `cessione/` (giornaliero.csv, mensile.csv, giorni/,
+prezzi/ = prezzi orari GME dei giorni prima della simulazione, scaricati una volta sola, al massimo 15 per giro).
+Da fare: costo dell'impianto e payback.
+
 ## Dove guardare
 
 | File / cartella | Contenuto |
@@ -165,6 +178,16 @@ per SOC alto, meteo con secondo tentativo, email giornaliera. Restano per la fas
   invia all'inverter la piu' conveniente tra quelle eseguibili (1 = automatico, 2-2e = programma con carica AC fino a
   0-5 kW); la 0 e' solo riferimento (la batteria non si puo' togliere). Il pulsante protetto resta solo per
   attivare/disattivare i comandi (da confermare: niente scelta manuale della potenza AC).
+- **Scala dei tempi sempre di 24 ore (23/10/2026)**: nei grafici del giorno l'asse dei tempi deve restare fisso da 00:00
+  a 24:00 anche quando i dati coprono solo una parte del giorno (giorno in corso, giorno dell'aggiornamento, letture
+  mancanti); oggi la scala si adatta ai soli dati presenti (con una sola lettura il grafico resta vuoto).
+- **Grafico unico con piu' grandezze (23/10/2026)**: potenze, SOC, meteo e prezzi devono poter essere attivati
+  insieme sullo stesso grafico (scelta di quali curve mostrare), ognuno con la sua scala sull'asse y (W, %, gradi /
+  W/m2, EUR/kWh). Colori adatti a ipovedenti e daltonici (tavolozza Okabe-Ito, gia' annotata) piu' tratteggi diversi,
+  cosi' le curve si distinguono anche senza colore. Asse dei tempi sempre 00:00-24:00 (vedi sopra).
+- **Energie come grafico a barre (23/10/2026)**: le energie (kWh: FV, consumo, prelievo, immissione, carica/scarica
+  batteria, per condizione) vanno disegnate a barre, non a linee; le potenze (W), il SOC e i prezzi restano a linee.
+  Intervallo delle barre e quali energie: da definire.
 - **Simulazione su richiesta (22/10/2026)**: dalla pagina si impostano i parametri di una simulazione e la si avvia
   subito (avvio di un giro dedicato su GitHub con il token salvato nel browser); risultati mostrati nella pagina a
   parte, senza toccare le simulazioni normali ne' i comandi all'inverter. Parametri e periodo: da definire.
