@@ -89,3 +89,6 @@ quando,indirizzo,dns_github,dns_google,dns_cloudflare,dns_https,https_dns_github
 2026-10-23T06:16:49+00:00,oauth2.fusionsolar.huawei.com,NO,NO,NO,NO,-,404,NO,000 curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com
 2026-10-23T06:16:49+00:00,eu5.fusionsolar.huawei.com,80.158.6.36,80.158.6.36,80.158.6.36,80.158.6.36,302,302,NO,302 80.158.6.36
 2026-10-23T06:16:49+00:00,api.mercatoelettrico.org,192.188.248.52,192.188.248.52,192.188.248.52,192.188.248.52,403,403,NO,403 192.188.248.52
+2026-10-23T07:14:19+00:00,oauth2.fusionsolar.huawei.com,NO,NO,NO,NO,-,404,NO,000 curl: (6) Could not resolve host: oauth2.fusionsolar.huawei.com
+2026-10-23T07:14:19+00:00,eu5.fusionsolar.huawei.com,80.158.6.36,80.158.6.36,80.158.6.36,80.158.6.36,302,302,NO,302 80.158.6.36
+2026-10-23T07:14:19+00:00,api.mercatoelettrico.org,192.188.248.52,192.188.248.52,192.188.248.52,192.188.248.52,403,403,NO,403 192.188.248.52
