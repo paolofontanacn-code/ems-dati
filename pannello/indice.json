@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-23T22:22:37+02:00",
+ "aggiornato": "2026-10-24T00:37:37+02:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -155,13 +155,17 @@
   },
   {
    "g": "2026-10-23",
+   "tipo": "simulato"
+  },
+  {
+   "g": "2026-10-24",
    "tipo": "oggi"
   }
  ],
- "oggi": "2026-10-23",
+ "oggi": "2026-10-24",
  "piano": "2026-10-24",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 23/10/2026 20:20:09 UTC",
+  "Controllo di rete del giro su GitHub - 23/10/2026 22:36:54 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -206,6 +210,11 @@
   "2026-10-23 13:30:00  Richiesta delle previsioni di 20261024 inviata a GitHub",
   "2026-10-23 13:30:00  Previsioni di GitHub per 20261024 non accettate (non migliore del Mango): uso le mie",
   "2026-10-23 13:45:00  Piano della sera per 20261024 salvato",
-  "2026-10-23 14:00:00  GitHub: inviati 2 file"
+  "2026-10-23 14:00:00  GitHub: inviati 2 file",
+  "2026-10-24 00:37:05  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-10-24 00:37:05  Token Huawei rinnovato.",
+  "2026-10-24 00:37:17  GitHub: rigioco 2026-10-23 22:00:00 -> 2026-10-24 00:15:00 (27 letture dallo storico)",
+  "2026-10-24 00:00:00  Giorno 20261023 chiuso: costo netto condizione 0 1.68 EUR, condizione 1 (reale) 1.34 EUR; beneficio sulla 1: C2 0.44, C2a 0.44, C2b 0.44, C2c 0.44, C2d 0.44, C2e 0.44 EUR",
+  "2026-10-24 00:00:00  GitHub: inviati 9 file"
  ]
 }

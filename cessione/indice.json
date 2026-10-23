@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-23T22:23:27+02:00",
+ "aggiornato": "2026-10-24T00:38:28+02:00",
  "revisione": "R03",
  "parametri": {
   "p_cismondi_kw": 11.0,
@@ -20,15 +20,8 @@
   44.397454,
   7.477188
  ],
- "giorni": 40,
+ "giorni": 41,
  "note": [
-  "2026-09-26: produzione Ovest con cielo sereno (radiazione non disponibile)",
-  "2026-09-27: produzione Ovest con cielo sereno (radiazione non disponibile)",
-  "2026-09-28: produzione Ovest con cielo sereno (radiazione non disponibile)",
-  "2026-09-29: produzione Ovest con cielo sereno (radiazione non disponibile)",
-  "2026-09-30: produzione Ovest con cielo sereno (radiazione non disponibile)",
-  "2026-10-01: produzione Ovest con cielo sereno (radiazione non disponibile)",
-  "2026-10-02: produzione Ovest con cielo sereno (radiazione non disponibile)",
   "2026-10-03: produzione Ovest con cielo sereno (radiazione non disponibile)",
   "2026-10-04: produzione Ovest con cielo sereno (radiazione non disponibile)",
   "2026-10-05: produzione Ovest con cielo sereno (radiazione non disponibile)",
@@ -48,7 +41,8 @@
   "2026-10-19: produzione Ovest con cielo sereno (radiazione non disponibile)",
   "2026-10-20: produzione Ovest con cielo sereno (radiazione non disponibile)",
   "2026-10-21: produzione Ovest con cielo sereno (radiazione non disponibile)",
-  "2026-10-22: produzione Ovest con cielo sereno (radiazione non disponibile)"
+  "2026-10-22: produzione Ovest con cielo sereno (radiazione non disponibile)",
+  "2026-10-23: produzione Ovest con cielo sereno (radiazione non disponibile)"
  ],
  "meteo_errore": "<urlopen error _ssl.c:993: The handshake operation timed out>"
 }
