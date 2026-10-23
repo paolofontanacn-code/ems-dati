@@ -1,6 +1,6 @@
 # EMS Cismondi - simulazione su GitHub
 
-Revisione R01 - 23/10/2026 (elenco delle revisioni: REVISIONI.txt)
+Revisione R03 - 23/10/2026 (elenco delle revisioni: REVISIONI.txt)
 
 **SOLO SIMULAZIONE**: nessun comando viene inviato all'inverter Huawei.
 
@@ -38,20 +38,23 @@ Ogni giorno GitHub manda il resoconto via email (Gmail) ai destinatari di `impos
 
 Tutti i valori sono in `mango/config.lua`.
 
-## Cessione totale 20 kW (dal 23/10/2026, pagina `cessione.html`)
+## Cessione totale 20 kW (dal 23/10/2026, pagina `cessione.html`) - revisione R03
 
 Simulazione a parte, solo calcolo: impianto ipotetico da 20 kW in cessione totale (prodotto = ceduto), venduto in RID
-al prezzo orario zonale NORD (PO NORD). Produzione = letture Huawei di Cismondi (11,48 kW, inclinazione simile)
-x 20 / 11,48. Due inverter da 10 kW (pannelli meta' e meta'), una sola batteria sull'inverter A; uscita verso la rete
-al massimo 15 kW; prelievo dalla rete 0 (la carica dalla rete non e' ammessa).
-- **Profilo 0** - senza batteria (situazione di oggi): ceduto = prodotto.
-- **Profilo 1** - batteria 15 kWh / 10 kW (R01), caricata solo dai pannelli dell'inverter A.
-- **Profilo 1AC** - come 1, piu' carica AC con l'energia dell'inverter B (mai dalla rete).
-Per 1 e 1AC: si immagazzina nelle ore a prezzo piu' basso e si restituisce in quelle a prezzo piu' alto; perdita 5 %
-tra carica e scarica; prezzi del giorno e del giorno dopo (orizzonte mobile), produzione considerata nota (beneficio
-massimo ottenibile). Usura non conteggiata.
-Calcolo: `ml/cessione_totale.py` a ogni giro; risultati in `cessione/` (giornaliero.csv, mensile.csv, giorni/,
-prezzi/ = prezzi orari GME dei giorni prima della simulazione, scaricati una volta sola, al massimo 15 per giro).
+al prezzo orario zonale NORD (PO NORD).
+- **Impianto**: 20 kW di pannelli a Ovest, inclinazione 2 gradi; 2 x SUN2000-10KTL-M1 e 2 batterie da 15 kWh, calcolati
+  come un inverter da 20 kW con una batteria da 30 kWh (carica e scarica max 10 kW, perdita 5 %); verso la rete max
+  17 kW; nessun prelievo dalla rete, nessuna carica da AC.
+- **Produzione**: Cismondi (11 kW, Sud, 2 gradi; i dati piu' freschi) x 20 / 11 x rapporto irraggiamento Ovest / Sud
+  (radiazione diretta e diffusa Open-Meteo, modello isotropo).
+- **Simulazione ogni 2 ore, da oggi in avanti** (`ml/cessione_live.py`, risultati in `cessione/live/`): a ogni fascia
+  di 2 ore rivaluta tutto (previsione della produzione con piu' modelli meteo - il migliore per orizzonte secondo
+  l'errore misurato - correzione imparata per ora del giorno, correzione con le ultime letture; prezzi noti;
+  energia in batteria) e sceglie la modalita' Huawei con il ricavo atteso piu' alto: Fully fed to grid, TOU (max 14
+  fasce al giorno), Third-party dispatch. Poi i quarti d'ora vengono "vissuti" con la produzione vera. Impara anche
+  lo scarto atteso/ottenuto di ogni modalita' (provata in parallelo anche quando non e' scelta).
+- **Ottimo teorico dei giorni passati** (`ml/cessione_totale.py`): produzione e prezzi noti in anticipo (limite
+  massimo); senza batteria e con batteria.
 Da fare: costo dell'impianto e payback.
 
 ## Dove guardare
@@ -198,6 +201,81 @@ per SOC alto, meteo con secondo tentativo, email giornaliera. Restano per la fas
 - **Energie come grafico a barre (23/10/2026)**: le energie (kWh: FV, consumo, prelievo, immissione, carica/scarica
   batteria, per condizione) vanno disegnate a barre, non a linee; le potenze (W), il SOC e i prezzi restano a linee.
   Intervallo delle barre e quali energie: da definire.
+- **Cessione totale - scarica batteria (23/10/2026, dopo R02, da chiarire prima del codice)**: scarica della batteria
+  al massimo 5 kW; uscita dell'inverter A al massimo 10 kW. Chiarito: i pannelli di A hanno la precedenza e possono
+  dare fino a 10 kW; la batteria scarica solo nello spazio che resta (scarica <= min(5 kW, 10 kW - potenza dei
+  pannelli di A in uscita)); non si taglia mai produzione dei pannelli per scaricare la batteria. Nell'inverter reale
+  questo controllo forse lo fa l'inverter stesso (da verificare sui dati del costruttore).
+- **Cessione totale - inverter (23/10/2026)**: 2 x Huawei SUN2000-10KTL-M1 (scheda Huawei: uscita 10.000 W, 11.000 VA
+  massimi; FV consigliato max 15.000 Wp; batteria max 10.000 W in carica e in scarica lato inverter; batterie
+  compatibili LUNA2000-5/10/15-S0 e 7/14/21-S1). La LUNA2000-15-S0 da scheda: 15 kWh utili, uscita max 5 kW
+  (picco 7 kW per 10 s). La precedenza dei pannelli sulla scarica non e' indicata nelle schede: da verificare.
+  Manuale d'uso SUN2000-(3KTL-10KTL)-M1, Issue 28 del 30/03/2026: 10KTL-M1 potenza nominale 10.000 W, potenza
+  attiva massima 11.000 W (cos phi = 1), 11.000 VA; 2 MPPT, max 8,8 kW per MPPT (oltre, l'inverter limita la potenza
+  dei pannelli); batteria 600-1100 Vdc, max 16,7 A; con batteria al massimo 3 inverter in cascata, la batteria sta
+  sull'inverter collegato allo Smart Dongle. Il manuale NON descrive le modalita' della batteria ne' la precedenza
+  pannelli/scarica: rimanda ai manuali di messa in servizio (Smart Dongle Networking and Inverter Direct
+  Connection Commissioning Manual / SmartAssistant / Smart Guard).
+  Manuale "Residential Smart PV Solution (Smart Dongle Networking & Inverter Direct Connection)" V05 25/07/2025,
+  par. 6.2: modalita' Maximum self-consumption, TOU, Fully fed to grid, Third-party dispatch; potenza massima di
+  carica e di scarica impostabili; "Charge from AC" disattivata di serie; in Fully fed to grid il FV va prima in rete
+  e "When the maximum output power of the inverter is reached, the surplus energy is used to charge the batteries".
+  Nessuna frase sulla riduzione della scarica quando i pannelli producono molto: ancora da verificare.
+  "FusionSolar App and SUN2000 App Device Commissioning Guide" Issue 09 del 22/10/2026, tab. 4-20 Battery control:
+  - Fully fed to grid: massimizza l'immissione; il FV oltre la capacita' di uscita dell'inverter carica la batteria;
+    quando il FV e' sotto la capacita' di uscita, la batteria scarica per portare l'uscita al massimo. La rete non
+    puo' caricare la batteria. (Non segue i prezzi.)
+  - TOU: fino a 14 fasce orarie di carica/scarica impostate a mano, ciclo settimanale; fuori dalle fasce la batteria
+    non carica e non scarica dalla rete; "Priority of excess PV energy" = Fed to grid (FV prima in rete, eccedenza
+    oltre l'uscita massima in batteria) oppure Charge.
+  - Third-party dispatch: carica/scarica comandate da piattaforma esterna; in carica il FV va prima in batteria;
+    "During discharging, batteries are preferentially discharged, and surplus PV energy is discarded" (in scarica la
+    batteria ha la precedenza e il FV in eccesso si PERDE: il contrario della regola annotata sopra).
+  - Charge from AC: disattivata di serie; con Fully fed to grid e Maximum self-consumption "The grid cannot charge
+    the ESS".
+- **Cessione totale - versione finale (23/10/2026, da valutare, NIENTE CODICE)**: impianto 20 kW, 2 inverter identici
+  SUN2000-10KTL-M1, 2 batterie da 15 kWh (una per inverter), nessuna carica da AC. Scenari: senza batteria (produzione
+  di Cismondi in proporzione) e con batteria (2 x 15 kWh). Il sistema sceglie la modalita' migliore tra quelle
+  Huawei (Fully fed to grid, TOU, Third-party dispatch), la rivaluta ogni 2 ore con i nuovi dati dell'inverter,
+  prevede meteo e produzione, aggiorna i prezzi di vendita; la giornata e' una serie di simulazioni ogni 2 ore che
+  correggono il piano precedente; autoapprendimento dalle scelte precedenti; obiettivo: massimo ricavo di vendita;
+  rispetto dei limiti di carica/scarica delle batterie.
+  Decisioni (23/10/2026): limite verso la rete 17 kW; ogni batteria carica e scarica al massimo 5 kW; uscita di ogni
+  inverter 10 kW (nominale); simulazione ogni 2 ore solo da oggi in avanti (si salvano le previsioni da ora; per i
+  giorni passati resta il calcolo attuale, ottimo teorico). Valutazione: Maximum self-consumption esclusa (nessun
+  carico); Fully fed to grid quasi uguale a senza batteria (picco Cismondi 7.173 W -> circa 6,2 kW per inverter, sotto
+  i 10 kW: la batteria non si caricherebbe); da confrontare TOU (priorita' "Charge", max 14 fasce) e Third-party
+  dispatch (in scarica il FV in eccesso si perde). Da verificare: in TOU la scarica va anche in rete o solo ai carichi?
+  Autoapprendimento (23/10/2026): il sistema deve imparare dalle scelte precedenti e migliorarsi. Proposta (da
+  confermare): (1) previsione di produzione corretta con l'errore misurato (per ora del giorno e tipo di cielo);
+  (2) ogni piano a 2 ore salvato e confrontato a fine giornata con il risultato reale e con l'ottimo a posteriori
+  (rimpianto in EUR); (3) per ogni modalita' si registra quando avrebbe vinto (stagione, nuvolosita', differenza tra
+  prezzo massimo e minimo) e la scelta successiva ne tiene conto; (4) margini di prudenza (energia tenuta in batteria,
+  anticipo/ritardo della scarica) regolati in base agli errori passati; (5) in pagina l'andamento del rimpianto e della
+  quota dell'ottimo raggiunta, per vedere se migliora davvero.
+  Precisazione (23/10/2026): NON si vuole una misura del miglioramento. Ogni 2 ore la simulazione rivaluta tutto e
+  decide cosa fare; obiettivo unico: massimo ricavo, vendendo nelle ore a prezzo piu' alto. Previsione della
+  produzione col metodo piu' preciso. Proposta: irraggiamento sul piano dei pannelli (GTI, con inclinazione e
+  orientamento) da piu' modelli meteo Open-Meteo (ItaliaMeteo ARPAE ICON-2I 2 km fino a 3 giorni; MeteoFrance AROME
+  a 15 minuti; un modello globale per l'orizzonte lungo) + modello imparato sui dati reali di Cismondi (produzione
+  vera contro previsioni salvate) + correzione in giornata a ogni giro con la produzione misurata dall'inverter e la
+  radiazione da satellite (Open-Meteo Satellite Radiation API, DWD MTG, ritardo circa 20 minuti). Si tiene, per ogni
+  orizzonte di previsione, la combinazione con l'errore misurato piu' basso.
+  Orientamento (23/10/2026): Cismondi 11 kW, Sud, inclinazione 2 gradi. Impianto simulato: vedi CORREZIONE sotto
+  (tutto a Ovest 2 gradi). Si lavora sui dati di Cismondi (i piu' freschi disponibili): la produzione E e O si ricava da quella
+  misurata a Sud con il rapporto tra l'irraggiamento sul piano E (o O) e quello sul piano S, quarto d'ora per quarto
+  d'ora (con 2 gradi di inclinazione la differenza e' piccola: da quantificare).
+  Decisioni (23/10/2026): proporzione con Cismondi = 11 kW (fattore 20 / 11 = 1,818; prima 11,48).
+  CORREZIONE (23/10/2026): tutto l'impianto da 20 kW e' a OVEST, inclinazione 2 gradi (non meta' Est e meta' Ovest):
+  2 inverter da 10 kW, ognuno con 10 kW di pannelli a Ovest e la sua batteria da 15 kWh. La produzione si ricava da
+  quella misurata a Sud a Cismondi con il rapporto tra irraggiamento sul piano Ovest 2 gradi e sul piano Sud 2 gradi.
+  Semplificazione approvata (23/10/2026): i due inverter sono identici e con lo stesso orientamento, quindi la
+  simulazione li tratta come un solo inverter da 20 kW con una batteria da 30 kWh (carica max 10 kW, scarica max
+  10 kW), limite verso la rete 17 kW, nessuna carica da AC.
+  TOU (23/10/2026, indicazione dell'utente): nelle fasce di scarica la batteria cede in rete, massimizzando la vendita
+  (impianto in cessione totale, senza carichi). Punto chiuso per la simulazione.
+- **Regola di lavoro (23/10/2026)**: il codice si scrive solo su richiesta esplicita; le indicazioni si annotano e si
+  chiariscono prima con domande.
 - **Simulazione su richiesta (22/10/2026)**: dalla pagina si impostano i parametri di una simulazione e la si avvia
   subito (avvio di un giro dedicato su GitHub con il token salvato nel browser); risultati mostrati nella pagina a
   parte, senza toccare le simulazioni normali ne' i comandi all'inverter. Parametri e periodo: da definire.

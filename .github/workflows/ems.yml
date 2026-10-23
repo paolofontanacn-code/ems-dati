@@ -99,12 +99,16 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python ml/email_report.py
 
+      # Revisione R03 - 23/10/2026: simulazione ogni 2 ore (cessione_live.py) + ottimo teorico (cessione_totale.py)
       - name: Cessione totale 20 kW (pagina cessione.html, solo simulazione)
         continue-on-error: true
         timeout-minutes: 10
         env:
           EMS_REPO_DIR: ${{ github.workspace }}
-        run: python ml/cessione_totale.py
+          EMS_DATI: ${{ github.workspace }}/memoria_mango
+        run: |
+          python ml/cessione_live.py
+          python ml/cessione_totale.py
 
       - name: Token cifrato e pulizia delle credenziali
         if: always()

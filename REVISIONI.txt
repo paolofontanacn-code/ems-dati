@@ -1,6 +1,35 @@
 EMS Cismondi - elenco delle revisioni
 (le consegne precedenti al 23/10/2026 non sono numerate)
 
+R03 - 23/10/2026
+  Cessione totale 20 kW:
+  - Nuovo impianto: 20 kW a Ovest inclinazione 2 gradi; 2 inverter SUN2000-10KTL-M1 identici e 2 batterie da 15 kWh,
+    calcolati come un inverter da 20 kW con batteria da 30 kWh (carica e scarica max 10 kW); rete max 17 kW;
+    nessuna carica da AC (tolto il profilo 1AC).
+  - Produzione = Cismondi (11 kW, Sud, 2 gradi) x 20 / 11 x rapporto irraggiamento Ovest / Sud (Open-Meteo).
+  - Nuovo ml/cessione_live.py: simulazione ogni 2 ore da oggi in avanti: previsione della produzione (piu' modelli
+    meteo, il migliore per orizzonte, correzione imparata per ora del giorno e con le ultime letture), prezzi NORD,
+    scelta della modalita' Huawei (Fully fed to grid, TOU max 14 fasce, Third-party dispatch) con il ricavo atteso
+    piu' alto, esecuzione con la produzione vera, apprendimento dello scarto atteso/ottenuto di ogni modalita'.
+  - ml/cessione_totale.py: ottimo teorico dei giorni passati con il nuovo impianto; funzioni comuni.
+  - Pagina cessione.html: grafico del giorno della simulazione ogni 2 ore per primo, tabella delle decisioni,
+    grafico dell'ottimo teorico, totali e grafici con entrambi; Aiuto aggiornato.
+  - Workflow: il passo "Cessione totale" esegue cessione_live.py e poi cessione_totale.py.
+  File modificati: repository/ml/cessione_totale.py, repository/ml/cessione_live.py (nuovo), repository/cessione.html,
+  repository/.github/workflows/ems.yml, repository/README.md, repository/REVISIONI.txt, REVISIONI.txt
+
+R02 - 23/10/2026
+  Cessione totale 20 kW (ml/cessione_totale.py, cessione.html):
+  - Carica della batteria al massimo 5 kW (scarica resta 10 kW).
+  - Carica AC (profilo 1AC): perdita della doppia conversione 5 % in piu'; la carica in continua dai pannelli
+    dell'inverter A e' prioritaria: se nel giorno la batteria si riempie gia' con quella, la carica AC non si usa.
+    (In R01 la carica AC veniva usata anche quando c'era energia libera in continua: corretto.)
+  - Pagina: grafico del giorno per primo; nel grafico del giorno anche la potenza ceduta in rete dei profili
+    0, 1, 1AC; curve e barre di tutti i grafici selezionabili con un clic sulla legenda (la scelta resta
+    cambiando mese o giorno e alla riapertura della pagina); asse dei prezzi nascosto se il prezzo e' spento.
+  File modificati: repository/ml/cessione_totale.py, repository/cessione.html, repository/README.md,
+  repository/REVISIONI.txt, REVISIONI.txt
+
 R01 - 23/10/2026
   Cessione totale 20 kW (ml/cessione_totale.py, cessione.html):
   - Batteria 15 kWh / 10 kW (prima 30 kWh / 10 kW).

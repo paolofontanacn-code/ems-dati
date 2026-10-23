@@ -1,4 +1,6 @@
 <!doctype html>
+<!-- Revisione R03 - 23/10/2026 - nuovo impianto (20 kW a Ovest 2 gradi, 2 inverter da 10 kW, 2 batterie da 15 kWh = 30 kWh 10/10 kW, rete 17 kW, nessuna carica da AC); simulazione ogni 2 ore da oggi in avanti (modalita' scelta, previsione, decisioni); ottimo teorico dei giorni passati; tolto il profilo 1AC -->
+<!-- Revisione R02 - 23/10/2026 - grafico del giorno per primo, con la potenza ceduta in rete dei profili 0, 1, 1AC; curve e barre selezionabili dalla legenda (scelta ricordata); carica batteria 5 kW; carica AC con perdita 5 % e solo se la carica in continua non basta -->
 <!-- Revisione R01 - 23/10/2026 - batteria 15 kWh / 10 kW; 2 inverter da 10 kW; profili 1 (senza carica AC) e 1AC (carica AC dall'inverter senza batteria, mai dalla rete); numero di revisione in alto -->
 <html lang="it">
 <head>
@@ -9,11 +11,11 @@
 :root {
   --sfondo: #f6f7f9; --carta: #ffffff; --testo: #1d2330; --tenue: #5b6475; --bordo: #d5dae3; --accento: #0072B2;
   /* Okabe-Ito: distinguibili anche da chi non vede bene i colori */
-  --p0: #E69F00; --p1: #0072B2; --p1ac: #CC79A7; --ben: #009E73; --fv: #E69F00; --prezzo: #D55E00; --soc: #0072B2; --neg: #D55E00;
+  --p0: #E69F00; --p1: #0072B2; --p1ac: #CC79A7; --rete0: #1d2330; --rete1: #56B4E9; --rete1ac: #009E73; --prev: #CC79A7; --ben: #009E73; --fv: #E69F00; --prezzo: #D55E00; --soc: #0072B2; --neg: #D55E00;
 }
 @media (prefers-color-scheme: dark) {
   :root { --sfondo: #11151c; --carta: #1a2029; --testo: #eef1f6; --tenue: #a9b2c2; --bordo: #323b48; --accento: #56B4E9;
-          --p1: #56B4E9; --soc: #56B4E9; }
+          --p1: #56B4E9; --soc: #56B4E9; --rete0: #eef1f6; --rete1: #0072B2; }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--sfondo); color: var(--testo); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -36,6 +38,7 @@ h2 { font-size: 17px; margin: 0 0 4px; }
 svg { display: block; width: 100%; height: auto; overflow: visible; }
 svg text { fill: var(--tenue); font-size: 12px; font-family: inherit; }
 .legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; margin-top: 6px; }
+.legenda span { cursor: pointer; user-select: none; } .legenda span.spento { opacity: .45; text-decoration: line-through; }
 .legenda i { display: inline-block; width: 22px; height: 12px; vertical-align: -1px; margin-right: 6px; border: 1px solid var(--testo); }
 .tab { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
@@ -51,7 +54,7 @@ tr.escluso td { color: var(--tenue); font-style: italic; }
 <header>
   <h1>Cessione totale 20 kW</h1>
   <span class="etichetta">SOLO SIMULAZIONE</span>
-  <span class="nota">Revisione R01</span>
+  <span class="nota">Revisione R03</span>
   <span class="nota" id="aggiornato">caricamento…</span>
   <a class="nota" href="./">← pagina EMS Cismondi</a>
 </header>
@@ -68,31 +71,35 @@ tr.escluso td { color: var(--tenue); font-style: italic; }
     <p class="spiega">Impianto ipotetico da 20 kW in cessione totale: tutta l'energia prodotta va in rete, venduta in RID al prezzo orario zonale NORD (PO NORD) del GME. Nessun comando viene inviato a nessun impianto.</p>
     <dl>
       <dt>Impianto</dt>
-      <dd>Produzione = letture Huawei a 5 minuti dell'impianto di Cismondi (11,48 kW, inclinazione simile) × 20 / 11,48. Due inverter da 10 kW, pannelli divisi a metà (10 kW per inverter). Una sola batteria, collegata all'inverter A. Uscita totale verso la rete al massimo 15 kW. Nessun prelievo dalla rete: la carica dalla rete non è ammessa.</dd>
-      <dt>Profilo 0 – senza batteria (situazione di oggi)</dt>
-      <dd>Ceduto = prodotto (ogni inverter al massimo 10 kW, totale al massimo 15 kW), pagato al prezzo orario NORD dell'ora.</dd>
-      <dt>Profilo 1 – batteria <span class="par_batt">15 kWh / 10 kW</span>, senza carica AC</dt>
-      <dd>La batteria si carica solo con i pannelli dell'inverter A. Immagazzina nelle ore a prezzo di cessione più basso e restituisce in quelle a prezzo più alto.</dd>
-      <dt>Profilo 1AC – batteria <span class="par_batt">15 kWh / 10 kW</span>, con carica AC</dt>
-      <dd>Come il profilo 1, ma la batteria si può caricare anche con l'energia prodotta dall'inverter B (senza batteria), che passa dal lato alternata dell'inverter A. Mai dalla rete.</dd>
-      <dt>Per i profili 1 e 1AC</dt>
-      <dd>Perdita tra carica e scarica: 5 % (uguale per carica dai pannelli e carica AC). Ogni giorno il programma usa i prezzi del giorno e del giorno dopo (pubblicati dal GME il giorno prima) e tiene solo le decisioni del giorno.</dd>
+      <dd>20 kW di pannelli a <b>Ovest</b>, inclinazione 2°. Due inverter SUN2000-10KTL-M1 identici e due batterie da 15 kWh, calcolati come un inverter da 20 kW con una batteria da <span class="par_batt">30 kWh, carica 10 kW, scarica 10 kW</span>. Verso la rete al massimo <span class="par_rete">17</span> kW. Nessun prelievo dalla rete e nessuna carica da AC. Perdita tra carica e scarica: 5 %.</dd>
+      <dt>Produzione</dt>
+      <dd>Letture Huawei di Cismondi (11 kW, Sud, 2°), i dati più freschi, × 20 / 11 × rapporto tra l'irraggiamento sul piano Ovest e sul piano Sud, ora per ora (radiazione diretta e diffusa di Open-Meteo per il luogo di Cismondi).</dd>
+      <dt>Simulazione ogni 2 ore (da oggi in avanti)</dt>
+      <dd>Ogni 2 ore (00, 02, … 22) il programma rivaluta tutto da capo: previsione della produzione (più modelli meteo; si usa quello che ha sbagliato meno per ogni orizzonte; correzione imparata per ora del giorno; correzione con le ultime letture reali), prezzi NORD noti (domani dalle 13 circa), energia in batteria. Per ogni modalità Huawei calcola il programma e il ricavo atteso e sceglie la migliore:
+        <ul>
+          <li><b>Fully fed to grid</b>: la batteria si carica solo con la produzione oltre il limite verso la rete e scarica appena c'è spazio sotto il limite (non segue i prezzi).</li>
+          <li><b>TOU</b>: fasce orarie di carica (i pannelli caricano prima la batteria) e di scarica (la batteria cede in rete, i pannelli hanno la precedenza sul limite), al massimo 14 fasce al giorno; fuori dalle fasce la batteria prende solo la produzione oltre il limite.</li>
+          <li><b>Third-party dispatch</b>: carica e scarica comandate quarto d'ora per quarto d'ora; in scarica la batteria ha la precedenza e la produzione oltre il limite si perde.</li>
+        </ul>
+        Poi l'impianto simulato «vive» i quarti d'ora con la produzione vera. Il programma impara: errore di ogni modello meteo, correzione per ora del giorno, scarto tra ricavo atteso e ottenuto di ogni modalità (provata anche quando non è scelta). Obiettivo: il ricavo più alto, vendendo nelle ore a prezzo più alto.</dd>
+      <dt>Ottimo teorico (giorni passati)</dt>
+      <dd>Per i giorni prima dell'avvio, e come confronto: produzione e prezzi considerati noti in anticipo, batteria gestita nel modo migliore possibile. È il limite massimo, nella realtà il risultato è più basso.</dd>
     </dl>
-    <h2>Limiti da tenere presenti</h2>
+    <h2>Da sapere</h2>
     <ul class="spiega">
-      <li>La produzione del giorno e del giorno dopo è considerata nota (previsione perfetta): il beneficio dei profili 1 e 1AC è il massimo ottenibile, nella realtà sarà un po' più basso.</li>
-      <li>L'energia rimasta in batteria a mezzanotte, venduta il giorno dopo, è attribuita al giorno in cui è stata prodotta (colonna «riporto»).</li>
-      <li>La carica AC non ha perdite di conversione oltre al 5 %.</li>
-      <li>Non sono conteggiati: usura della batteria, costo dell'impianto, corrispettivi del GSE, consumi propri dell'impianto. Il costo dell'impianto e il payback si aggiungeranno dopo.</li>
-      <li>I giorni con meno del 90 % delle letture sono mostrati in corsivo ed esclusi dai totali.</li>
+      <li>Simulazione ogni 2 ore: l'energia rimasta in batteria a mezzanotte viene venduta il giorno dopo e conta nel giorno in cui è venduta (un giorno può risultare negativo e il successivo positivo). Nell'ottimo teorico invece passa al giorno in cui è stata prodotta (colonna «riporto»).</li>
+      <li>Clic su una voce della legenda per nascondere o mostrare la curva o le barre: la scelta resta anche cambiando mese o giorno.</li>
+      <li>Non sono conteggiati: usura della batteria, costo dell'impianto, corrispettivi del GSE, consumi propri dell'impianto.</li>
+      <li>Ottimo teorico: i giorni con meno del 90 % delle letture sono in corsivo ed esclusi dai totali.</li>
     </ul>
   </section>
+  <section><h2 id="t_live">Giorno – simulazione ogni 2 ore</h2><p class="spiega">Produzione vera e prevista, potenza in rete con e senza batteria, energia in batteria e prezzo, per quarto d'ora. Clic sulla legenda per scegliere le curve.</p><div id="live_tessere"></div><div id="g_live"></div><div class="tab" id="decisioni"></div></section>
+  <section><h2 id="t_giorno">Giorno – ottimo teorico</h2><p class="spiega">Con produzione e prezzi noti in anticipo (limite massimo). Clic sulla legenda per scegliere le curve.</p><div id="g_giorno"></div></section>
   <section id="s_totali"><h2>Totali del mese</h2><div id="totali"></div></section>
-  <section><h2>Euro al giorno</h2><p class="spiega">Ricavo di ogni giorno: profilo 0 (senza batteria), 1 (batteria senza carica AC), 1AC (batteria con carica AC).</p><div id="g_euro"></div></section>
-  <section><h2>Beneficio della batteria al giorno</h2><p class="spiega">Profilo 1 − profilo 0 e profilo 1AC − profilo 0, in euro.</p><div id="g_ben"></div></section>
-  <section><h2>Energia al giorno</h2><p class="spiega">kWh prodotti, energia restituita dalla batteria nei profili 1 e 1AC, energia caricata in AC dall'inverter B (profilo 1AC).</p><div id="g_kwh"></div></section>
-  <section><h2>Mese per mese</h2><p class="spiega">Totali dei giorni validi di ogni mese.</p><div id="g_mesi"></div></section>
-  <section><h2 id="t_giorno">Dettaglio del giorno</h2><p class="spiega">Prezzo orario NORD, produzione ed energia in batteria (profili 1 e 1AC), per quarto d'ora.</p><div id="g_giorno"></div></section>
+  <section><h2>Euro al giorno</h2><p class="spiega">Ricavo di ogni giorno: senza batteria, con batteria (simulazione ogni 2 ore) e ottimo teorico.</p><div id="g_euro"></div></section>
+  <section><h2>Beneficio della batteria al giorno</h2><p class="spiega">Con batteria − senza batteria, in euro.</p><div id="g_ben"></div></section>
+  <section><h2>Energia al giorno</h2><p class="spiega">kWh prodotti e restituiti dalla batteria.</p><div id="g_kwh"></div></section>
+  <section><h2>Mese per mese</h2><p class="spiega">Ottimo teorico: totali dei giorni validi di ogni mese.</p><div id="g_mesi"></div></section>
   <section><h2>Giorni del mese</h2><div class="tab" id="tabella"></div></section>
 </main>
 
@@ -141,21 +148,41 @@ function scala(min, max) {
   const tacche = []; for (let v = a; v <= b + passo / 2; v += passo) tacche.push(+v.toFixed(10));
   return { a, b, tacche };
 }
+// serie nascoste dalla legenda: restano nascoste cambiando mese o giorno (memoria del browser)
+let nascoste = {};
+try { nascoste = JSON.parse(localStorage.getItem("cess_nascoste")) || {}; } catch (e) {}
+const chiaveS = (cont, nome) => cont.id + "|" + nome;
+function legendaCliccabile(cont, voci, ridisegna) {
+  const leg = document.createElement("div"); leg.className = "legenda";
+  for (const [nome, sfondo] of voci) {
+    const sp = document.createElement("span"); sp.setAttribute("role", "button"); sp.tabIndex = 0;
+    if (nascoste[chiaveS(cont, nome)]) sp.className = "spento";
+    sp.setAttribute("aria-pressed", String(!nascoste[chiaveS(cont, nome)]));
+    sp.innerHTML = `<i style="background:${sfondo}"></i>${nome}`;
+    const cambia = () => { const k = chiaveS(cont, nome); if (nascoste[k]) delete nascoste[k]; else nascoste[k] = true;
+      try { localStorage.setItem("cess_nascoste", JSON.stringify(nascoste)); } catch (e) {} ridisegna(); };
+    sp.addEventListener("click", cambia);
+    sp.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); cambia(); } });
+    leg.appendChild(sp);
+  }
+  cont.appendChild(leg);
+}
 // grafico a barre raggruppate: etichette x, serie [{nome, valori, riempi}]
-function barre(cont, etichette, serie, unita, dec = 2) {
+function barre(cont, etichette, tutteSerie, unita, dec = 2) {
   cont.innerHTML = "";
+  const serie = tutteSerie.filter(s => !nascoste[chiaveS(cont, s.nome)]);
   const W = Math.max(320, cont.clientWidth), Hh = 280, ml = 58, mr = 10, mt = 10, mb = 40;
   const svg = el("svg", { viewBox: `0 0 ${W} ${Hh}`, role: "img", "aria-label": serie.map(s => s.nome).join(", ") }, cont);
   motivi(svg);
   const tutti = serie.flatMap(s => s.valori).filter(v => v != null);
-  const sc = scala(Math.min(0, ...tutti), Math.max(0, ...tutti));
+  const sc = scala(Math.min(0, ...tutti, 0), Math.max(0, ...tutti, 0));
   const y = v => mt + (sc.b - v) / (sc.b - sc.a) * (Hh - mt - mb);
   for (const t of sc.tacche) {
     el("line", { x1: ml, x2: W - mr, y1: y(t), y2: y(t), stroke: css("--bordo"), "stroke-width": t === 0 ? 1.5 : 1 }, svg);
     el("text", { x: ml - 6, y: y(t) + 4, "text-anchor": "end" }, svg).textContent = fmt(t, Math.abs(t) < 10 && t % 1 ? 2 : 0);
   }
   el("text", { x: 4, y: mt + 10 }, svg).textContent = unita;
-  const n = etichette.length, larg = (W - ml - mr) / Math.max(1, n), gb = larg * 0.8 / serie.length;
+  const n = etichette.length, larg = (W - ml - mr) / Math.max(1, n), gb = larg * 0.8 / Math.max(1, serie.length);
   const ogni = Math.ceil(n / Math.max(1, Math.floor((W - ml - mr) / 34)));
   etichette.forEach((et, i) => {
     const x0 = ml + i * larg + larg * 0.1;
@@ -167,91 +194,142 @@ function barre(cont, etichette, serie, unita, dec = 2) {
     });
     if (i % ogni === 0) el("text", { x: ml + i * larg + larg / 2, y: Hh - mb + 16, "text-anchor": "middle" }, svg).textContent = et;
   });
-  const leg = document.createElement("div"); leg.className = "legenda";
   const campione = r => r === "url(#righe)" ? `repeating-linear-gradient(45deg, ${css("--p1")} 0 4px, ${css("--carta")} 4px 6px)`
     : r === "url(#quadri)" ? `repeating-linear-gradient(45deg, ${css("--carta")} 0 1px, transparent 1px 5px), repeating-linear-gradient(-45deg, ${css("--carta")} 0 1px, ${css("--p1ac")} 1px 5px)`
     : r === "url(#punti)" ? `radial-gradient(${css("--carta")} 1px, ${css("--ben")} 1.5px) 0 0 / 5px 5px` : r;
-  leg.innerHTML = serie.map(s => `<span><i style="background:${campione(s.riempi)}"></i>${s.nome}</span>`).join("");
-  cont.appendChild(leg);
+  legendaCliccabile(cont, tutteSerie.map(s => [s.nome, campione(s.riempi)]), () => barre(cont, etichette, tutteSerie, unita, dec));
 }
-// grafico del giorno: linee su due assi (sinistra kWh, destra €/kWh)
-function linee(cont, q, qac, inizio) {
+// grafico del giorno: linee su due assi (sinistra kW / kWh, destra €/kWh); asse dei tempi sempre di 24 ore
+// serie: [{nome, valori (uno per quarto d'ora), colore, tratto, larg, dx (asse destro)}]
+function linee(cont, inizio, nq, serie) {
   cont.innerHTML = "";
-  const W = Math.max(320, cont.clientWidth), Hh = 300, ml = 52, mr = 58, mt = 26, mb = 36, n = q.length;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${Hh}`, role: "img", "aria-label": "prezzo, produzione e batteria del giorno" }, cont);
-  const x = k => ml + k / Math.max(1, n) * (W - ml - mr);       // asse dei tempi: tutto il giorno
-  const sk = scala(0, Math.max(1, ...q.map(r => r.soc), ...qac.map(r => r.soc), ...q.map(r => r.fv * 4)));
-  const sp = scala(Math.min(0, ...q.map(r => r.prezzo)), Math.max(...q.map(r => r.prezzo)));
+  const W = Math.max(320, cont.clientWidth), Hh = 300, ml = 52, mr = 58, mt = 26, mb = 36, n = nq;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${Hh}`, role: "img", "aria-label": serie.map(s => s.nome).join(", ") }, cont);
+  const x = k => ml + k / Math.max(1, n) * (W - ml - mr);
+  const vede = s => !nascoste[chiaveS(cont, s.nome)];
+  const vals = d => serie.filter(s => vede(s) && !!s.dx === d).flatMap(s => s.valori.filter(v => v != null));
+  const sk = scala(Math.min(0, ...vals(false)), Math.max(1, ...vals(false)));
+  const vd = vals(true), dx = vd.length > 0;
+  const sp = scala(Math.min(0, ...vd, 0), Math.max(0.01, ...vd));
   const yk = v => mt + (sk.b - v) / (sk.b - sk.a) * (Hh - mt - mb), yp = v => mt + (sp.b - v) / (sp.b - sp.a) * (Hh - mt - mb);
   for (const t of sk.tacche) { el("line", { x1: ml, x2: W - mr, y1: yk(t), y2: yk(t), stroke: css("--bordo") }, svg);
     el("text", { x: ml - 6, y: yk(t) + 4, "text-anchor": "end" }, svg).textContent = fmt(t, 0); }
-  for (const t of sp.tacche) el("text", { x: W - mr + 6, y: yp(t) + 4 }, svg).textContent = fmt(t, 2);
-  el("text", { x: 2, y: mt + 10 }, svg).textContent = "kWh / kW";
-  el("text", { x: W - 2, y: mt + 10, "text-anchor": "end" }, svg).textContent = "€/kWh";
+  if (dx) for (const t of sp.tacche) el("text", { x: W - mr + 6, y: yp(t) + 4 }, svg).textContent = fmt(t, 2);
+  el("text", { x: 2, y: 12 }, svg).textContent = "kW / kWh";
+  if (dx) el("text", { x: W - 2, y: 12, "text-anchor": "end" }, svg).textContent = "€/kWh";
   for (let h = 0; h <= n / 4; h += (W < 600 ? 6 : 3)) el("text", { x: x(h * 4), y: Hh - mb + 16, "text-anchor": "middle" }, svg).textContent =
     new Date((inizio + h * 3600) * 1000).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
-  const traccia = (val, y, colore, tratto, larg) => el("path", { d: val.map((v, k) => `${k ? "L" : "M"}${x(k).toFixed(1)},${y(v).toFixed(1)}L${x(k + 1).toFixed(1)},${y(v).toFixed(1)}`).join(""),
-    fill: "none", stroke: colore, "stroke-width": larg, "stroke-dasharray": tratto || "" }, svg);
-  traccia(q.map(r => r.fv * 4), yk, css("--fv"), "", 2);
-  traccia(q.map(r => r.soc), yk, css("--soc"), "7 4", 2.5);
-  traccia(qac.map(r => r.soc), yk, css("--p1ac"), "12 3 2 3", 2.5);
-  traccia(q.map(r => r.prezzo), yp, css("--prezzo"), "2 3", 2.5);
-  const leg = document.createElement("div"); leg.className = "legenda";
-  leg.innerHTML = `<span><i style="background:${css("--fv")}"></i>produzione 20 kW (kW, asse sinistro, linea piena)</span>
-    <span><i style="background:${css("--soc")}"></i>energia in batteria profilo 1 (kWh, asse sinistro, tratteggio lungo)</span>
-    <span><i style="background:${css("--p1ac")}"></i>energia in batteria profilo 1AC (kWh, asse sinistro, tratto-punto)</span>
-    <span><i style="background:${css("--prezzo")}"></i>prezzo orario NORD (€/kWh, asse destro, puntini)</span>`;
-  cont.appendChild(leg);
+  for (const s of serie) {
+    if (!vede(s)) continue;
+    const y = s.dx ? yp : yk;
+    let d = "", su = false;
+    s.valori.forEach((v, k) => { if (v == null) { su = false; return; }
+      d += `${su ? "L" : "M"}${x(k).toFixed(1)},${y(v).toFixed(1)}L${x(k + 1).toFixed(1)},${y(v).toFixed(1)}`; su = true; });
+    if (d) el("path", { d, fill: "none", stroke: s.colore, "stroke-width": s.larg || 2, "stroke-dasharray": s.tratto || "" }, svg);
+  }
+  legendaCliccabile(cont, serie.map(s => [s.nome, s.colore]), () => linee(cont, inizio, nq, serie));
 }
 
-let G = [], M = [], indice = null;
+let G = [], M = [], L = [], indice = null, indiceLive = null;
 const giornoBreve = g => g.slice(8, 10) + "/" + g.slice(5, 7);
 const nomeMese = m => new Date(m + "-15T12:00:00").toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+const NOMI_MODI = { fully: "Fully fed to grid", tou: "TOU", terzi: "Third-party dispatch" };
+function mezzanotte(g) {      // inizio del giorno a Roma (secondi) e numero di quarti d'ora
+  const prova = h => Date.parse(`${g}T00:00:00${h}`) / 1000;
+  const fmtG = t => new Date(t * 1000).toLocaleString("sv-SE", { timeZone: "Europe/Rome" }).slice(0, 16);
+  let t0 = [prova("+02:00"), prova("+01:00")].find(t => fmtG(t) === `${g} 00:00`);
+  const d = new Date(g + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 1);
+  const g1 = d.toISOString().slice(0, 10);
+  const t1 = [Date.parse(`${g1}T00:00:00+02:00`) / 1000, Date.parse(`${g1}T00:00:00+01:00`) / 1000].find(t => fmtG(t) === `${g1} 00:00`);
+  return [t0, Math.round((t1 - t0) / 900)];
+}
 
 async function mostraGiorno() {
   const g = $("giorno").value; if (!g) return;
-  $("t_giorno").textContent = "Dettaglio del " + new Date(g + "T12:00:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
-  try { const d = await scarica(`cessione/giorni/${g}.json`, true); linee($("g_giorno"), d.profili.p1, d.profili.p1ac, d.inizio); }
-  catch (e) { $("g_giorno").innerHTML = `<p class="errore">${e.message}</p>`; }
+  const data = new Date(g + "T12:00:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+  $("t_live").textContent = "Giorno – simulazione ogni 2 ore – " + data;
+  $("t_giorno").textContent = "Giorno – ottimo teorico – " + data;
+  const [t0, nq] = mezzanotte(g);
+  // simulazione ogni 2 ore
+  try {
+    const d = await scarica(`cessione/live/giorni/${g}.json`, true);
+    const per = {}; for (const q of d.quarti) per[Math.round((q.t - t0) / 900)] = q;
+    const col = f => Array.from({ length: nq }, (_, k) => per[k] ? f(per[k]) : null);
+    const r = L.find(x => x.giorno === g) || {};
+    $("live_tessere").innerHTML = `<div class="tessere">
+      <div class="tessera"><span>Produzione 20 kW</span><b>${fmt(num(r.fv_kwh), 1)}</b><span>kWh (${r.quarti || 0} quarti d'ora)</span></div>
+      <div class="tessera"><span>Senza batteria</span><b>${fmt(num(r.p0_eur))}</b><span>€</span></div>
+      <div class="tessera"><span>Con batteria</span><b>${fmt(num(r.batt_eur))}</b><span>€</span></div>
+      <div class="tessera"><span>Beneficio della batteria</span><b class="${num(r.beneficio_eur) >= 0 ? "pos" : "negv"}">${fmt(num(r.beneficio_eur))}</b><span>€ (vendite del giorno)</span></div>
+      <div class="tessera"><span>Batteria a fine giornata</span><b>${fmt(num(r.soc_fine), 1)}</b><span>kWh</span></div></div>`;
+    linee($("g_live"), t0, nq, [
+      { nome: "produzione vera (kW, linea piena)", valori: col(q => q.fv * 4), colore: css("--fv"), larg: 2 },
+      { nome: "produzione prevista (kW, tratteggio)", valori: col(q => q.prev == null ? null : q.prev * 4), colore: css("--prev"), tratto: "6 3", larg: 2 },
+      { nome: "in rete con batteria (kW, linea spessa)", valori: col(q => q.ceduto * 4), colore: css("--rete1"), larg: 2.6 },
+      { nome: "in rete senza batteria (kW, linea sottile)", valori: col(q => q.ceduto0 * 4), colore: css("--rete0"), larg: 1.2 },
+      { nome: "energia in batteria (kWh, tratteggio lungo)", valori: col(q => q.soc), colore: css("--soc"), tratto: "10 4", larg: 2.4 },
+      { nome: "prezzo orario NORD (€/kWh, asse destro, puntini)", valori: col(q => q.prezzo), colore: css("--prezzo"), tratto: "2 3", larg: 2.4, dx: true }]);
+  } catch (e) { $("live_tessere").innerHTML = ""; $("g_live").innerHTML = `<p class="nota">Nessuna simulazione ogni 2 ore per questo giorno (la simulazione parte dall'avvio della revisione R03).</p>`; }
+  try {
+    const dec = await scarica(`cessione/live/decisioni/${g}.json`, true);
+    $("decisioni").innerHTML = `<h2 style="margin-top:12px">Decisioni del giorno</h2><table><tr><th>Ora</th><th>Dati fino a</th><th>Batteria kWh</th><th>Scelta</th>
+      <th>Atteso Fully €</th><th>Atteso TOU €</th><th>Atteso Third-party €</th><th>Previsione kWh</th><th>Correzione letture</th><th>Modello meteo</th><th>Fasce TOU</th></tr>` +
+      dec.map(x => `<tr><td>${x.ora.slice(11, 16)}</td><td>${x.dati_fino_a.slice(11, 16)}</td><td>${fmt(x.soc_kwh, 1)}</td><td><b>${x.nome_modo}</b></td>
+        <td>${fmt(x.punteggio_eur.fully)}</td><td>${fmt(x.punteggio_eur.tou)}</td><td>${fmt(x.punteggio_eur.terzi)}</td><td>${fmt(x.previsione_kwh, 1)}</td>
+        <td>${fmt(x.correzione_ultime_letture, 2)}</td><td style="text-align:left">${Object.entries(x.modello_per_orizzonte || {}).map(([o, m]) => o + ": " + m).join("<br>")}</td>
+        <td style="text-align:left;white-space:normal;min-width:220px">${x.fasce_tou || "–"}</td></tr>`).join("") + `</table>
+      <p class="nota">Atteso = ricavo previsto fino all'ultimo prezzo noto, corretto con lo scarto imparato. ${Object.values(dec[dec.length - 1].modelli_errore || {}).length ? "Modelli meteo non disponibili: " + Object.keys(dec[dec.length - 1].modelli_errore).join(", ") + "." : ""}</p>`;
+  } catch (e) { $("decisioni").innerHTML = ""; }
+  // ottimo teorico
+  try {
+    const d = await scarica(`cessione/giorni/${g}.json`, true);
+    const q = d.quarti;
+    linee($("g_giorno"), d.inizio, q.length, [
+      { nome: "produzione (kW, linea piena)", valori: q.map(r => r.fv * 4), colore: css("--fv"), larg: 2 },
+      { nome: "in rete con batteria (kW, linea spessa)", valori: q.map(r => r.ceduto * 4), colore: css("--rete1"), larg: 2.6 },
+      { nome: "in rete senza batteria (kW, linea sottile)", valori: (d.p0_ceduto || []).map(v => v * 4), colore: css("--rete0"), larg: 1.2 },
+      { nome: "energia in batteria (kWh, tratteggio lungo)", valori: q.map(r => r.soc), colore: css("--soc"), tratto: "10 4", larg: 2.4 },
+      { nome: "prezzo orario NORD (€/kWh, asse destro, puntini)", valori: q.map(r => r.prezzo), colore: css("--prezzo"), tratto: "2 3", larg: 2.4, dx: true }]);
+  } catch (e) { $("g_giorno").innerHTML = `<p class="nota">Ottimo teorico non ancora calcolato per questo giorno (si calcola a giorno finito).</p>`; }
 }
 
 function mostraMese() {
   const m = $("mese").value;
-  const R = G.filter(r => r.mese === m), V = R.filter(r => r.valido === "1");
-  const t = k => V.reduce((a, r) => a + (num(r[k]) || 0), 0);
-  const pm = (e, k) => fmt(t(e) / Math.max(1e-9, t(k)), 3);
-  const ben = k => `<b class="${t(k) >= 0 ? "pos" : "negv"}">${fmt(t(k))}</b>`;
+  const giorni = [...new Set([...G.filter(r => r.mese === m).map(r => r.giorno), ...L.filter(r => r.giorno.slice(0, 7) === m).map(r => r.giorno)])].sort();
+  const R = G.filter(r => r.mese === m), V = R.filter(r => r.valido === "1"), LV = L.filter(r => r.giorno.slice(0, 7) === m);
+  const t = k => V.reduce((a, r) => a + (num(r[k]) || 0), 0), tl = k => LV.reduce((a, r) => a + (num(r[k]) || 0), 0);
+  const ben = v => `<b class="${v >= 0 ? "pos" : "negv"}">${fmt(v)}</b>`;
   $("totali").innerHTML = `<div class="tessere">
-    <div class="tessera"><span>Produzione 20 kW</span><b>${fmt(t("fv_kwh"), 0)}</b><span>kWh (${V.length} giorni validi su ${R.length})</span></div>
-    <div class="tessera"><span>Profilo 0 – senza batteria</span><b>${fmt(t("p0_eur"))}</b><span>€ · ${pm("p0_eur", "p0_ceduti_kwh")} €/kWh</span></div>
-    <div class="tessera"><span>Profilo 1 – batteria senza carica AC</span><b>${fmt(t("p1_eur"))}</b><span>€ · ${pm("p1_eur", "p1_ceduti_kwh")} €/kWh</span></div>
-    <div class="tessera"><span>Profilo 1AC – batteria con carica AC</span><b>${fmt(t("p1ac_eur"))}</b><span>€ · ${pm("p1ac_eur", "p1ac_ceduti_kwh")} €/kWh</span></div>
-    <div class="tessera"><span>Beneficio profilo 1</span>${ben("p1_beneficio_eur")}<span>€ sul profilo 0</span></div>
-    <div class="tessera"><span>Beneficio profilo 1AC</span>${ben("p1ac_beneficio_eur")}<span>€ sul profilo 0</span></div></div>`;
-  const et = R.map(r => giornoBreve(r.giorno)), opaco = R.map(r => r.valido !== "1");
-  const S = (nome, k, riempi, o = opaco, righe = R) => ({ nome, valori: righe.map(r => num(r[k])), riempi, opaco: o });
-  barre($("g_euro"), et, [S("Profilo 0 – senza batteria", "p0_eur", css("--p0")), S("Profilo 1 – senza carica AC", "p1_eur", "url(#righe)"),
-                          S("Profilo 1AC – con carica AC", "p1ac_eur", "url(#quadri)")], "€");
-  barre($("g_ben"), et, [S("Beneficio profilo 1", "p1_beneficio_eur", "url(#righe)"), S("Beneficio profilo 1AC", "p1ac_beneficio_eur", "url(#quadri)")], "€");
-  barre($("g_kwh"), et, [S("Prodotti", "fv_kwh", css("--p0")), S("Restituiti dalla batteria – profilo 1", "p1_scarica_kwh", "url(#righe)"),
-                         S("Restituiti dalla batteria – profilo 1AC", "p1ac_scarica_kwh", "url(#quadri)"),
-                         S("Caricati in AC dall'inverter B – profilo 1AC", "p1ac_carica_ac_kwh", "url(#punti)")], "kWh", 1);
-  barre($("g_mesi"), M.map(x => nomeMese(x.mese)), [S("Profilo 0 – senza batteria", "p0_eur", css("--p0"), null, M),
-    S("Profilo 1 – senza carica AC", "p1_eur", "url(#righe)", null, M), S("Profilo 1AC – con carica AC", "p1ac_eur", "url(#quadri)", null, M),
-    S("Beneficio profilo 1", "p1_beneficio_eur", "url(#punti)", null, M), S("Beneficio profilo 1AC", "p1ac_beneficio_eur", css("--p1ac"), null, M)], "€");
+    ${LV.length ? `<div class="tessera"><span>Ogni 2 ore – senza batteria</span><b>${fmt(tl("p0_eur"))}</b><span>€ (${LV.length} giorni)</span></div>
+    <div class="tessera"><span>Ogni 2 ore – con batteria</span><b>${fmt(tl("batt_eur"))}</b><span>€</span></div>
+    <div class="tessera"><span>Ogni 2 ore – beneficio</span>${ben(tl("beneficio_eur"))}<span>€</span></div>` : ""}
+    <div class="tessera"><span>Ottimo teorico – senza batteria</span><b>${fmt(t("p0_eur"))}</b><span>€ (${V.length} giorni validi su ${R.length})</span></div>
+    <div class="tessera"><span>Ottimo teorico – con batteria</span><b>${fmt(t("p1_eur"))}</b><span>€</span></div>
+    <div class="tessera"><span>Ottimo teorico – beneficio</span>${ben(t("p1_beneficio_eur"))}<span>€</span></div></div>`;
+  const et = giorni.map(giornoBreve);
+  const gv = (righe, k) => giorni.map(g => { const r = righe.find(x => x.giorno === g); return r ? num(r[k]) : null; });
+  const op = giorni.map(g => { const r = R.find(x => x.giorno === g); return r ? r.valido !== "1" : false; });
+  const S = (nome, valori, riempi, opaco = op) => ({ nome, valori, riempi, opaco });
+  barre($("g_euro"), et, [S("Senza batteria (prezzi del giorno)", giorni.map((g, i) => gv(LV, "p0_eur")[i] ?? gv(R, "p0_eur")[i]), css("--p0")),
+                          S("Con batteria – ogni 2 ore", gv(LV, "batt_eur"), "url(#quadri)"), S("Con batteria – ottimo teorico", gv(R, "p1_eur"), "url(#righe)")], "€");
+  barre($("g_ben"), et, [S("Beneficio – ogni 2 ore", gv(LV, "beneficio_eur"), "url(#quadri)"), S("Beneficio – ottimo teorico", gv(R, "p1_beneficio_eur"), "url(#righe)")], "€");
+  barre($("g_kwh"), et, [S("Prodotti", giorni.map((g, i) => gv(LV, "fv_kwh")[i] ?? gv(R, "fv_kwh")[i]), css("--p0")),
+                         S("Restituiti dalla batteria – ogni 2 ore", gv(LV, "scarica_kwh"), "url(#quadri)"),
+                         S("Restituiti dalla batteria – ottimo teorico", gv(R, "p1_scarica_kwh"), "url(#righe)")], "kWh", 1);
+  barre($("g_mesi"), M.map(x => nomeMese(x.mese)), [S("Senza batteria", M.map(x => num(x.p0_eur)), css("--p0"), null),
+    S("Con batteria – ottimo teorico", M.map(x => num(x.p1_eur)), "url(#righe)", null), S("Beneficio – ottimo teorico", M.map(x => num(x.p1_beneficio_eur)), "url(#punti)", null)], "€");
   const cb = v => `class="${num(v) >= 0 ? "pos" : "negv"}"`;
-  $("tabella").innerHTML = `<table><tr><th>Giorno</th><th>Prodotti kWh</th><th>Profilo 0 €</th><th>Profilo 1 €</th><th>Profilo 1AC €</th>
-    <th>Beneficio 1 €</th><th>Beneficio 1AC €</th><th>Riporto 1 / 1AC €</th><th>Restituiti 1 / 1AC kWh</th><th>Carica AC kWh</th>
-    <th>Prezzo scarica 1 / 1AC €/kWh</th><th>NORD min–max €/kWh</th><th>Letture</th></tr>` +
-    R.map(r => `<tr class="${r.valido === "1" ? "" : "escluso"}"><td>${giornoBreve(r.giorno)}</td><td>${fmt(num(r.fv_kwh), 1)}</td><td>${fmt(num(r.p0_eur))}</td>
-      <td>${fmt(num(r.p1_eur))}</td><td>${fmt(num(r.p1ac_eur))}</td><td ${cb(r.p1_beneficio_eur)}>${fmt(num(r.p1_beneficio_eur))}</td>
-      <td ${cb(r.p1ac_beneficio_eur)}>${fmt(num(r.p1ac_beneficio_eur))}</td><td>${fmt(num(r.p1_riporto_eur))} / ${fmt(num(r.p1ac_riporto_eur))}</td>
-      <td>${fmt(num(r.p1_scarica_kwh), 1)} / ${fmt(num(r.p1ac_scarica_kwh), 1)}</td><td>${fmt(num(r.p1ac_carica_ac_kwh), 1)}</td>
-      <td>${fmt(num(r.p1_prezzo_scarica), 3)} / ${fmt(num(r.p1ac_prezzo_scarica), 3)}</td>
-      <td>${fmt(num(r.prezzo_min_eur_kwh), 3)}–${fmt(num(r.prezzo_max_eur_kwh), 3)}</td><td>${fmt(num(r.copertura) * 100, 0)} %</td></tr>`).join("") + `</table>`;
+  $("tabella").innerHTML = `<table><tr><th>Giorno</th><th>Prodotti kWh</th><th>Senza batteria €</th><th>Ogni 2 ore €</th><th>Beneficio ogni 2 ore €</th>
+    <th>Modalità (quarti d'ora)</th><th>Ottimo teorico €</th><th>Beneficio ottimo €</th><th>di cui riporto €</th><th>NORD min–max €/kWh</th><th>Letture</th></tr>` +
+    giorni.map(g => { const r = R.find(x => x.giorno === g) || {}, l = LV.find(x => x.giorno === g) || {};
+      const modi = l.giorno ? ["fully", "tou", "terzi"].filter(k => num(l["quarti_" + k]) > 0).map(k => `${NOMI_MODI[k]} ${l["quarti_" + k]}`).join(", ") : "–";
+      return `<tr class="${r.valido === "0" ? "escluso" : ""}"><td>${giornoBreve(g)}</td><td>${fmt(num(l.fv_kwh ?? r.fv_kwh), 1)}</td><td>${fmt(num(l.p0_eur ?? r.p0_eur))}</td>
+      <td>${fmt(num(l.batt_eur))}</td><td ${cb(l.beneficio_eur)}>${fmt(num(l.beneficio_eur))}</td><td style="text-align:left">${modi}</td>
+      <td>${fmt(num(r.p1_eur))}</td><td ${cb(r.p1_beneficio_eur)}>${fmt(num(r.p1_beneficio_eur))}</td><td>${fmt(num(r.p1_riporto_eur))}</td>
+      <td>${r.giorno ? fmt(num(r.prezzo_min_eur_kwh), 3) + "–" + fmt(num(r.prezzo_max_eur_kwh), 3) : "–"}</td><td>${r.giorno ? fmt(num(r.copertura) * 100, 0) + " %" : "–"}</td></tr>`; }).join("") + `</table>`;
   const prima = $("giorno").value;
-  $("giorno").innerHTML = R.map(r => `<option value="${r.giorno}">${giornoBreve(r.giorno)}</option>`).join("");
-  $("giorno").value = R.some(r => r.giorno === prima) ? prima : (R.length ? R[R.length - 1].giorno : "");
+  $("giorno").innerHTML = giorni.map(g => `<option value="${g}">${giornoBreve(g)}</option>`).join("");
+  $("giorno").value = giorni.includes(prima) ? prima : (giorni.length ? giorni[giorni.length - 1] : "");
   mostraGiorno();
 }
 
@@ -263,10 +341,14 @@ async function avvio() {
     document.querySelector("main").insertAdjacentHTML("afterbegin", `<section class="errore">Dati non ancora disponibili (${e.message}): si preparano al prossimo giro di GitHub.</section>`);
     return;
   }
+  try { [indiceLive, L] = await Promise.all([scarica("cessione/live/indice.json", true), scarica("cessione/live/giornaliero.csv").then(csv)]); } catch (e) { L = []; }
   const pp = indice.parametri || {};
-  if (pp.capacita_kwh) document.querySelectorAll(".par_batt").forEach(e => e.textContent = `${fmt(pp.capacita_kwh, 0)} kWh / ${fmt(pp.potenza_batteria_kw, 0)} kW`);
-  $("aggiornato").textContent = (indice.revisione ? "calcolo " + indice.revisione + ", " : "") + "aggiornato al " + new Date(indice.aggiornato).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-  const mesi = [...new Set(G.map(r => r.mese))];
+  if (pp.capacita_kwh) document.querySelectorAll(".par_batt").forEach(e => e.textContent = `${fmt(pp.capacita_kwh, 0)} kWh, carica ${fmt(pp.potenza_carica_kw, 0)} kW, scarica ${fmt(pp.potenza_scarica_kw, 0)} kW`);
+  if (pp.limite_rete_kw) document.querySelectorAll(".par_rete").forEach(e => e.textContent = fmt(pp.limite_rete_kw, 0));
+  const quando = t => new Date(t).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  $("aggiornato").textContent = (indice.revisione ? "calcolo " + indice.revisione + ", " : "") + "aggiornato al " + quando(indice.aggiornato) +
+    (indiceLive ? ` · ogni 2 ore: dal ${quando(indiceLive.inizio)}, eseguito fino al ${quando(indiceLive.eseguito_fino_a)}, modalità ${NOMI_MODI[indiceLive.modo_attuale] || "–"}` : "");
+  const mesi = [...new Set([...G.map(r => r.mese), ...L.map(r => r.giorno.slice(0, 7))])].sort();
   $("mese").innerHTML = mesi.map(m => `<option value="${m}">${nomeMese(m)}</option>`).join("");
   $("mese").value = mesi[mesi.length - 1] || "";
   mostraMese();
