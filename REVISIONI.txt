@@ -1,0 +1,17 @@
+EMS Cismondi - elenco delle revisioni
+(le consegne precedenti al 23/10/2026 non sono numerate)
+
+R01 - 23/10/2026
+  Cessione totale 20 kW (ml/cessione_totale.py, cessione.html):
+  - Batteria 15 kWh / 10 kW (prima 30 kWh / 10 kW).
+  - Impianto con 2 inverter da 10 kW, pannelli divisi a meta'; 1 sola batteria, sull'inverter A.
+    Uscita verso la rete al massimo 15 kW; prelievo dalla rete sempre 0 (carica da rete non ammessa).
+  - Due simulazioni con batteria: profilo 1 (carica solo dai pannelli dell'inverter A) e profilo 1AC
+    (anche carica AC con l'energia dell'inverter B, mai dalla rete). Profilo 0 senza batteria invariato.
+  - Pagina: grafici, totali, tabella e Aiuto con i profili 0, 1, 1AC; dati della batteria letti dai
+    parametri del calcolo; numero di revisione in alto.
+  Pagina principale (index.html): numero di revisione in alto.
+  Introdotta la numerazione delle revisioni (intestazione dei file modificati, questo elenco, nome dello zip).
+  Comprende anche la prima versione della pagina cessione.html (consegnata il 23/10/2026 senza numero).
+  File modificati: repository/ml/cessione_totale.py, repository/cessione.html, repository/index.html,
+  repository/README.md, repository/REVISIONI.txt, REVISIONI.txt

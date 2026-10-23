@@ -1,5 +1,7 @@
 # EMS Cismondi - simulazione su GitHub
 
+Revisione R01 - 23/10/2026 (elenco delle revisioni: REVISIONI.txt)
+
 **SOLO SIMULAZIONE**: nessun comando viene inviato all'inverter Huawei.
 
 **Pagina con i grafici**: https://paolofontanacn-code.github.io/ems-dati/ (giorno per giorno: condizioni 0, 1 reale, 2, 2a-2e e controllo automatico simulato; pulsante Aiuto con le descrizioni;
@@ -40,11 +42,14 @@ Tutti i valori sono in `mango/config.lua`.
 
 Simulazione a parte, solo calcolo: impianto ipotetico da 20 kW in cessione totale (prodotto = ceduto), venduto in RID
 al prezzo orario zonale NORD (PO NORD). Produzione = letture Huawei di Cismondi (11,48 kW, inclinazione simile)
-x 20 / 11,48; uscita verso la rete al massimo 15 kW.
+x 20 / 11,48. Due inverter da 10 kW (pannelli meta' e meta'), una sola batteria sull'inverter A; uscita verso la rete
+al massimo 15 kW; prelievo dalla rete 0 (la carica dalla rete non e' ammessa).
 - **Profilo 0** - senza batteria (situazione di oggi): ceduto = prodotto.
-- **Profilo 1** - batteria 30 kWh / 10 kW, carica solo dal FV (nessuna carica da AC): immagazzina nelle ore a prezzo
-  piu' basso e restituisce in quelle a prezzo piu' alto; perdita 5 % tra carica e scarica; prezzi del giorno e del
-  giorno dopo (orizzonte mobile), produzione considerata nota (beneficio massimo ottenibile). Usura non conteggiata.
+- **Profilo 1** - batteria 15 kWh / 10 kW (R01), caricata solo dai pannelli dell'inverter A.
+- **Profilo 1AC** - come 1, piu' carica AC con l'energia dell'inverter B (mai dalla rete).
+Per 1 e 1AC: si immagazzina nelle ore a prezzo piu' basso e si restituisce in quelle a prezzo piu' alto; perdita 5 %
+tra carica e scarica; prezzi del giorno e del giorno dopo (orizzonte mobile), produzione considerata nota (beneficio
+massimo ottenibile). Usura non conteggiata.
 Calcolo: `ml/cessione_totale.py` a ogni giro; risultati in `cessione/` (giornaliero.csv, mensile.csv, giorni/,
 prezzi/ = prezzi orari GME dei giorni prima della simulazione, scaricati una volta sola, al massimo 15 per giro).
 Da fare: costo dell'impianto e payback.
@@ -92,6 +97,11 @@ imposta segreti e permessi, avvia il primo giro e ne controlla l'esito. Se si ri
 con una nuova autorizzazione Huawei.
 
 ## Prossimi aggiornamenti (annotati)
+
+- **Revisioni (23/10/2026)**: da ora ogni consegna ha un numero di revisione, scritto in ogni file modificato
+  (intestazione), in un elenco delle revisioni con le modifiche (REVISIONI.txt nello zip), in alto nella pagina e
+  nel nome del file zip consegnato (es. Installa_EMS_R01.zip). Le consegne precedenti NON si ricostruiscono: si parte
+  da R01 con la prossima consegna.
 
 Fatti nella fase 1 (GitHub): profilo F0 con e senza carica da rete, cessione al quarto d'ora senza imposte,
 usura 0,02 EUR/kWh, scenario senza batteria, curve nascoste che restano, limite di 1 ciclo forzato al giorno e costo
