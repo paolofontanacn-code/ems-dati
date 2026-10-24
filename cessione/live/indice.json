@@ -1,23 +1,23 @@
 {
- "aggiornato": "2026-10-24T00:37:41+02:00",
+ "aggiornato": "2026-10-24T03:06:07+02:00",
  "revisione": "R03",
  "inizio": "2026-10-23T22:00+02:00",
- "eseguito_fino_a": "2026-10-24T00:15+02:00",
+ "eseguito_fino_a": "2026-10-24T02:45+02:00",
  "soc_kwh": 0.0,
  "modo_attuale": "terzi",
  "errore_modelli": {},
  "scarto_modi": {
   "fully": {
    "v": 0.0,
-   "n": 1
+   "n": 2
   },
   "tou": {
    "v": 0.0,
-   "n": 1
+   "n": 2
   },
   "terzi": {
    "v": 0.0,
-   "n": 1
+   "n": 2
   }
  },
  "modelli": [
