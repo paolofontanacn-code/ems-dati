@@ -112,5 +112,43 @@
   },
   "correzione_ultime_letture": 1.0,
   "fasce_tou": "scarica 25/10 06:45-07:00; carica 25/10 07:00-13:00; carica 25/10 13:30-14:00; scarica 25/10 18:00-21:00"
+ },
+ {
+  "ora": "2026-10-25T11:07+01:00",
+  "dati_fino_a": "2026-10-25T10:45+01:00",
+  "soc_kwh": 9.0,
+  "modo": "terzi",
+  "nome_modo": "Third-party dispatch",
+  "atteso_eur": {
+   "fully": 8.048,
+   "tou": 10.021,
+   "terzi": 10.021
+  },
+  "scarto_imparato_eur": {
+   "fully": -0.717,
+   "tou": -0.15,
+   "terzi": -0.116
+  },
+  "punteggio_eur": {
+   "fully": 7.331,
+   "tou": 9.871,
+   "terzi": 9.904
+  },
+  "orizzonte_fino_a": "2026-10-26T00:00+01:00",
+  "previsione_kwh": 29.56,
+  "modelli": [
+   "ecmwf_ifs025",
+   "icon_seamless",
+   "italia_meteo_arpae_icon_2i",
+   "meteofrance_seamless"
+  ],
+  "modelli_errore": {},
+  "modello_per_orizzonte": {
+   "0-2h": "italia_meteo_arpae_icon_2i",
+   "2-12h": "italia_meteo_arpae_icon_2i",
+   "oltre 12h": "italia_meteo_arpae_icon_2i"
+  },
+  "correzione_ultime_letture": 0.94,
+  "fasce_tou": "carica 25/10 10:45-14:15; scarica 25/10 18:00-21:00"
  }
 ]
