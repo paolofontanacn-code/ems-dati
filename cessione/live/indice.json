@@ -1,9 +1,9 @@
 {
- "aggiornato": "2026-10-25T18:51:28+01:00",
+ "aggiornato": "2026-10-25T21:46:37+01:00",
  "revisione": "R03",
  "inizio": "2026-10-23T22:00+02:00",
- "eseguito_fino_a": "2026-10-25T18:30+01:00",
- "soc_kwh": 29.091,
+ "eseguito_fino_a": "2026-10-25T21:30+01:00",
+ "soc_kwh": 13.301,
  "modo_attuale": "terzi",
  "errore_modelli": {
   "italia_meteo_arpae_icon_2i": {
@@ -65,16 +65,16 @@
  },
  "scarto_modi": {
   "fully": {
-   "v": -0.019375,
-   "n": 13
+   "v": -0.0155,
+   "n": 14
   },
   "tou": {
-   "v": -0.006789,
-   "n": 13
+   "v": -0.005431,
+   "n": 14
   },
   "terzi": {
-   "v": -0.001332,
-   "n": 13
+   "v": -0.001066,
+   "n": 14
   }
  },
  "modelli": [
