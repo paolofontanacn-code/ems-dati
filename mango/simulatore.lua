@@ -1,3 +1,4 @@
+-- Revisione R05 - 26/10/2026 - scarica forzata mai sotto P_MIN_SCARICA_W (2 kW): sotto, la batteria si ferma
 -- simulatore.lua - modello energetico della batteria simulata (SOLO SIMULAZIONE)
 --
 -- Dati FV e consumi (W medi nell'intervallo) e un'azione, calcola i flussi:
@@ -66,6 +67,7 @@ function M.passo_num(c, e, soc, azione, fv, carico, dt, di_giorno)
   if cat == "scarica" then
     local livello = tonumber(azione:match("_(%d+)$")) or c.P_MAX_SCARICA_W
     local p = min(livello, p_sca_max(c, e, soc, dt, max(c.SOC_MIN, c.SOC_MIN_VENDITA), livello))
+    if p < (c.P_MIN_SCARICA_W or 0) then p = 0 end           -- R05: scarica modulabile solo tra 2 e 5 kW
     batt_car = min(manca, p)
     batt_rete = p - batt_car
     rete_car = manca - batt_car

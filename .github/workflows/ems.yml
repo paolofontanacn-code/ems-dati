@@ -1,3 +1,4 @@
+# Revisione R04 - 24/10/2026 - salvataggio con nuovi tentativi; decisione della cessione fino a 90 s
 # EMS Cismondi - SOLO SIMULAZIONE: ogni 30 minuti GitHub esegue lo stesso programma del Mango sui dati Huawei
 # a 5 minuti, misura il carico di lavoro che avrebbe il Mango e riaddestra i modelli.
 name: EMS simulazione
@@ -99,6 +100,7 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python ml/email_report.py
 
+      # Revisione R04 - 24/10/2026: decisione con algoritmo evolutivo (fino a 90 s) + ottimo teorico
       # Revisione R03 - 23/10/2026: simulazione ogni 2 ore (cessione_live.py) + ottimo teorico (cessione_totale.py)
       - name: Cessione totale 20 kW (pagina cessione.html, solo simulazione)
         continue-on-error: true
@@ -106,6 +108,7 @@ jobs:
         env:
           EMS_REPO_DIR: ${{ github.workspace }}
           EMS_DATI: ${{ github.workspace }}/memoria_mango
+          EMS_TEMPO_DECISIONE: "90"
         run: |
           python ml/cessione_live.py
           python ml/cessione_totale.py
@@ -143,5 +146,8 @@ jobs:
           git config user.email "ems-simulazione@users.noreply.github.com"
           git add -A
           git commit -q -m "EMS: aggiornamento $(TZ=Europe/Rome date '+%d/%m/%Y %H:%M')" || { echo "Niente da salvare"; exit 0; }
-          git pull -q --rebase --autostash || true
-          git push -q
+          for i in 1 2 3 4 5; do        # R04: anche l'apprendimento salva nel repository: si riprova
+            git pull -q --rebase --autostash && git push -q && exit 0
+            echo "Salvataggio non riuscito: riprovo"; sleep 15
+          done
+          exit 1

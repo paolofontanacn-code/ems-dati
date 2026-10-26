@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Revisione R05 - 26/10/2026 - meteo (radiazione, temperatura, nuvolosita') nel grafico delle potenze, ognuno con la sua scala; in alto revisione della pagina e revisione installata (file versione.json) -->
 <!-- Revisione R01 - 23/10/2026 - numero di revisione in alto nella pagina -->
 <html lang="it">
 <head>
@@ -67,7 +68,7 @@ pre { font-size: 12px; overflow-x: auto; margin: 0; white-space: pre; }
 <header>
   <h1>EMS Cismondi</h1>
   <span class="etichetta">SOLO SIMULAZIONE</span>
-  <span class="nota">Revisione R01</span>
+  <span class="nota" id="revisione">Pagina R05</span>
   <span class="nota" id="aggiornato">caricamento…</span>
   <a class="nota" href="cessione.html">Cessione totale 20 kW →</a>
 </header>
@@ -132,6 +133,7 @@ const PANNELLI = [
   ["giornaliero", "Giorno per giorno"],
   ["registro", "Registro ultimo giro"],
 ];
+const REV_PAGINA = "R05";
 const PREDEFINITI = ["tabella", "potenze", "soc", "prezzi", "giornaliero"];
 function leggiScelte() {
   try { const v = JSON.parse(localStorage.getItem("ems_pannelli")); if (Array.isArray(v)) return new Set(v); } catch (e) {}
@@ -383,16 +385,36 @@ function pTabella(d, g) {
   s.insertAdjacentHTML("beforeend", h);
 }
 
+// meteo dell'ora di ogni riga: dalle colonne del giorno simulato o dal file meteo mensile (giorni solo reali)
+function meteoRighe(d) {
+  const R = d.righe;
+  if (d.info.tipo !== "storico") return { ghi: col(R, "ghi_wm2"), temp: col(R, "temp_c"), nuv: col(R, "nuvole") };
+  const M = d.meteo || {};
+  const v = (r, k) => { const h = M[Math.floor(+r.ts / 3600) * 3600]; return h ? num(h[k]) : null; };
+  return { ghi: R.map(r => v(r, "ghi")), temp: R.map(r => v(r, "temp")), nuv: R.map(r => v(r, "nuvole")) };
+}
+const OKABE = { arancio: "#E69F00", celeste: "#56B4E9", verde: "#009E73", giallo: "#F0E442", blu: "#0072B2", vermiglio: "#D55E00", rosa: "#CC79A7" };
+
 function pPotenze(d) {
-  const s = sezione("potenze", "Potenze reali (misurate da Huawei)", "Rete: sopra lo zero immissione, sotto lo zero prelievo. Batteria: sopra lo zero in carica. Clic su una voce della legenda per nasconderla: resta nascosta anche cambiando giorno.");
-  const R = d.righe, x = R.map(r => +r.ts);
+  const s = sezione("potenze", "Potenze reali (misurate da Huawei) e meteo", "Rete: sopra lo zero immissione, sotto lo zero prelievo. Batteria: sopra lo zero in carica. Meteo (Open-Meteo, linee tratteggiate): radiazione W/m², temperatura °C, nuvolosità %, ognuno con la sua scala a destra. Clic su una voce della legenda per nasconderla: resta nascosta anche cambiando giorno.");
+  const R = d.righe, x = R.map(r => +r.ts), m = meteoRighe(d);
   const serie = [
     { label: "FV", stroke: css("--fv"), dati: col(R, "fv_w") },
     { label: "Consumo", stroke: css("--carico"), dati: col(R, "carico_w") },
     { label: "Rete", stroke: css("--rete"), dati: R.map(r => (num(r.immissione_w) || 0) - (num(r.prelievo_w) || 0)) },
   ];
   if (d.info.tipo !== "storico") serie.push({ label: "Batteria", stroke: css("--batt"), dati: col(R, "batteria_w") });
-  grafico(s, x, serie, { unita: "W" });
+  const assi = [];
+  const meteo = [["Radiazione W/m²", "ghi", m.ghi, OKABE.blu, [8, 4], (v, d) => fmt(v, d)],
+                 ["Temperatura °C", "temp", m.temp, OKABE.rosa, [2, 3], (v, d) => fmt(v, d) + "°"],
+                 ["Nuvolosità %", "nuv", m.nuv, css("--tenue"), [8, 3, 2, 3], (v, d) => fmt(v, d) + "%"]];
+  for (const [label, sc, dati, colore, dash, vf] of meteo) {
+    if (!dati.some(v => v != null)) continue;
+    serie.push({ label, stroke: colore, dash, width: 1.4, scale: sc, dati, dec: sc === "temp" ? 1 : 0 });
+    assi.push({ scale: sc, side: 1, size: 48, show: larghezza(s) >= 700, stroke: colore, grid: { show: false }, values: (u, v) => v.map(a => vf(a, v.length > 1 && Math.abs(v[1] - v[0]) < 1 ? 1 : 0)) });
+  }
+  if (!assi.length) s.querySelector(".spiega").insertAdjacentHTML("beforeend", " Meteo non disponibile per questo giorno.");
+  grafico(s, x, serie, { unita: "W", altezza: 300, assi, scale: { ghi: { range: (u, a, b) => [0, Math.max(100, b || 0)] }, temp: {}, nuv: { range: [0, 100] } } });
 }
 
 function pSoc(d) {
@@ -591,8 +613,16 @@ async function mostra() {
   }
 }
 
+async function revisioni() {
+  let inst = "?";
+  try { inst = (await scarica("versione.json", "json")).revisione || "?"; } catch (e) {}
+  $("revisione").textContent = `Pagina ${REV_PAGINA} · installata ${inst}`;
+  $("revisione").title = "Revisione di questa pagina e revisione installata sul repository (versione.json)";
+}
+
 async function avvio(ricarica) {
   if (ricarica) cache.clear();
+  revisioni();
   try {
     await caricaIndice();
     giornaliero = csv(await scarica("pannello/giornaliero.csv"));

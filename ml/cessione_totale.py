@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# Revisione R06 - 26/10/2026 - REVISIONE = R06 (nessun altro cambiamento)
+# Revisione R05 - 26/10/2026 - carica 0-10 kW e scarica 2-10 kW (2 batterie da 5 kW; minimo 2 kW: solo nel modello non
+#   lineare di cessione_ottimizza.py, l'ottimo teorico lineare non ha il minimo); REVISIONE = R05
+# Revisione R04 - 24/10/2026 - ottimo() con valore finale dell'energia rimasta; REVISIONE = R04
 # Revisione R03 - 23/10/2026 - nuovo impianto: 20 kW a Ovest inclinazione 2 gradi, 2 inverter da 10 kW identici (calcolati
 #   come uno da 20 kW), 2 batterie da 15 kWh (= 30 kWh, carica e scarica max 10 kW), rete max 17 kW, nessuna carica da AC;
 #   produzione = Cismondi (11 kW, Sud, 2 gradi) x 20 / 11 x rapporto irraggiamento Ovest / Sud; funzioni comuni per la
@@ -44,7 +48,7 @@ DATI = os.environ.get("EMS_DATI", os.path.join(RADICE, "memoria_mango"))
 OUT = os.path.join(RADICE, "cessione")
 
 # ------------------------------------------------------------------ parametri (decisioni del 23/10/2026)
-REVISIONE = "R03"
+REVISIONE = "R06"
 P_CISMONDI_KW = 11.0             # Cismondi: 11 kW, Sud, inclinazione 2 gradi
 P_IMPIANTO_KW = 20.0             # impianto simulato
 SCALA = P_IMPIANTO_KW / P_CISMONDI_KW
@@ -56,7 +60,7 @@ P_INVERTER_KW = 20.0             # 2 x SUN2000-10KTL-M1 (10 kW nominali ciascuno
 LIMITE_RETE_KW = 17.0            # massimo verso la rete
 CAPACITA_KWH = 30.0              # 2 x 15 kWh
 P_CARICA_KW = 10.0               # 2 x 5 kW
-P_SCARICA_KW = 10.0              # 2 x 5 kW
+P_SCARICA_KW = 10.0              # 2 x 5 kW (R05: ogni batteria scarica tra 2 e 5 kW o e' ferma)
 PERDITA_CICLO = 0.05             # tra energia caricata ed energia restituita
 COPERTURA_MINIMA = 0.90          # giorni con meno del 90 % delle letture: mostrati ma esclusi dai totali
 URL_GME = os.environ.get("EMS_PROVA_GME_API", "https://api.mercatoelettrico.org/request/api/v1")

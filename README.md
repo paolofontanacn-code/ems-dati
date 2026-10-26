@@ -1,6 +1,6 @@
 # EMS Cismondi - simulazione su GitHub
 
-Revisione R03 - 23/10/2026 (elenco delle revisioni: REVISIONI.txt)
+Revisione R04 - 24/10/2026 (elenco delle revisioni: REVISIONI.txt)
 
 **SOLO SIMULAZIONE**: nessun comando viene inviato all'inverter Huawei.
 
@@ -38,23 +38,26 @@ Ogni giorno GitHub manda il resoconto via email (Gmail) ai destinatari di `impos
 
 Tutti i valori sono in `mango/config.lua`.
 
-## Cessione totale 20 kW (dal 23/10/2026, pagina `cessione.html`) - revisione R03
+## Cessione totale 20 kW (dal 23/10/2026, pagina `cessione.html`) - revisione R04
 
 Simulazione a parte, solo calcolo: impianto ipotetico da 20 kW in cessione totale (prodotto = ceduto), venduto in RID
 al prezzo orario zonale NORD (PO NORD).
-- **Impianto**: 20 kW di pannelli a Ovest, inclinazione 2 gradi; 2 x SUN2000-10KTL-M1 e 2 batterie da 15 kWh, calcolati
-  come un inverter da 20 kW con una batteria da 30 kWh (carica e scarica max 10 kW, perdita 5 %); verso la rete max
-  17 kW; nessun prelievo dalla rete, nessuna carica da AC.
-- **Produzione**: Cismondi (11 kW, Sud, 2 gradi; i dati piu' freschi) x 20 / 11 x rapporto irraggiamento Ovest / Sud
-  (radiazione diretta e diffusa Open-Meteo, modello isotropo).
-- **Simulazione ogni 2 ore, da oggi in avanti** (`ml/cessione_live.py`, risultati in `cessione/live/`): a ogni fascia
-  di 2 ore rivaluta tutto (previsione della produzione con piu' modelli meteo - il migliore per orizzonte secondo
-  l'errore misurato - correzione imparata per ora del giorno, correzione con le ultime letture; prezzi noti;
-  energia in batteria) e sceglie la modalita' Huawei con il ricavo atteso piu' alto: Fully fed to grid, TOU (max 14
-  fasce al giorno), Third-party dispatch. Poi i quarti d'ora vengono "vissuti" con la produzione vera. Impara anche
-  lo scarto atteso/ottenuto di ogni modalita' (provata in parallelo anche quando non e' scelta).
-- **Ottimo teorico dei giorni passati** (`ml/cessione_totale.py`): produzione e prezzi noti in anticipo (limite
-  massimo); senza batteria e con batteria.
+- **Impianto**: 20 kW a Ovest, inclinazione 2 gradi; 2 x SUN2000-10KTL-M1 e 2 batterie da 15 kWh calcolati come un
+  inverter da 20 kW con batteria da 30 kWh (carica e scarica max 10 kW, perdita 5 %); rete max 17 kW; nessun prelievo,
+  nessuna carica da AC. Modello fisico non lineare (R04): perdita in piu' a bassa potenza di scarica, potenza ridotta
+  vicino a batteria piena o vuota.
+- **Produzione**: Cismondi (11 kW, Sud, 2 gradi) x 20 / 11 x rapporto irraggiamento Ovest / Sud.
+- **Decisione ogni 2 ore** (`ml/cessione_live.py` + `ml/cessione_ottimizza.py`, nel giro dei 30 minuti, fino a 90 s):
+  previsione di produzione (piu' modelli meteo, il migliore per orizzonte, correzioni imparate) con 3 scenari; prezzi
+  noti + previsti dallo storico fino a fine domani; piano con una modalita' Huawei per fascia di 2 ore (anche diverse
+  nello stesso giorno) e fasce TOU / comandi per ora, cercato con algoritmo evolutivo partendo da programmazione
+  lineare, logica fuzzy, modalita' pure e piano precedente. Il contesto di ogni decisione e' salvato in
+  `cessione/live/contesti/`.
+- **Autoapprendimento** (`ml/cessione_apprendimento.py`, workflow separato `cessione_apprendimento.yml` ogni 2 ore,
+  fino a 45 minuti): rigioca le decisioni delle ultime 2 settimane con altri parametri (algoritmo evolutivo sui
+  parametri) e li adotta solo se avrebbero reso di piu' (`cessione/live/apprendimento.json`).
+- **Ottimo teorico dei giorni passati** (`ml/cessione_totale.py`): produzione e prezzi noti in anticipo (limite massimo).
+- Ancora da chiarire: limite ai cambi di modalita' al giorno (per ora nessun limite; parametro "costo_cambio").
 Da fare: costo dell'impianto e payback.
 
 ## Dove guardare
@@ -274,8 +277,236 @@ per SOC alto, meteo con secondo tentativo, email giornaliera. Restano per la fas
   10 kW), limite verso la rete 17 kW, nessuna carica da AC.
   TOU (23/10/2026, indicazione dell'utente): nelle fasce di scarica la batteria cede in rete, massimizzando la vendita
   (impianto in cessione totale, senza carichi). Punto chiuso per la simulazione.
+- **Cessione totale - apprendimento dagli errori di gestione della batteria (23/10/2026, dopo R03, NIENTE CODICE
+  finche' non richiesto)**: a fine giornata confrontare la simulazione ogni 2 ore con l'ottimo a posteriori (stessa
+  produzione e stessi prezzi, stessa energia in batteria a inizio giorno) e misurare il "rimpianto" in EUR e le sue
+  cause (scarica troppo presto o troppo tardi, energia tenuta a mezzanotte, carica mancata); usare questi errori per
+  correggere le decisioni successive: valore dell'energia lasciata in batteria a fine orizzonte (oggi fisso = prezzo
+  medio), margine di prudenza sulla previsione, scelta e forma delle fasce TOU.
+- **Cessione totale - prezzi e prova prima di cambiare (23/10/2026, dopo R03, NIENTE CODICE finche' non richiesto)**:
+  (6) usare SEMPRE tutti i prezzi gia' noti (oggi; domani appena pubblicati dal GME, verso le 13) e, oltre l'ultimo
+  prezzo noto, una PREVISIONE dei prezzi imparata dallo storico (giorno della settimana, stagione, ultimi giorni), cosi'
+  l'orizzonte delle decisioni arriva sempre almeno a fine domani; la previsione viene sostituita dai prezzi veri appena
+  arrivano. Nota: oggi i prezzi di domani li scarica la simulazione principale dalle 13:30 (ORA_PREZZI, poi ogni 30
+  minuti) e la simulazione ogni 2 ore li legge da li': valutare un tentativo dalle 13:00.
+  (9) prima di adottare una modifica delle regole, rigiocare i giorni gia' vissuti con le previsioni salvate, con la
+  regola vecchia e con la nuova; adottare la nuova solo se rende di piu' (controllo interno, non un rapporto).
+- **Cessione totale - molte simulazioni e autoapprendimento evolutivo (23/10/2026, dopo R03, NIENTE CODICE finche'
+  non richiesto)**: fino a 1 ora di calcolo su GitHub. Le tre modalita' possono alternarsi nello stesso giorno (fasce di
+  2 ore): valutare le combinazioni (3^12 = 531.441 sequenze in 24 ore, troppe da provare una per una) con
+  programmazione dinamica sulle fasce di 2 ore + algoritmo evolutivo (sequenze di modalita', fasce TOU, potenze,
+  parametri) + logica fuzzy come regola in gara; modello fisico non lineare (rendimento variabile, riduzione di potenza
+  vicino a pieno/vuoto, FV perso in scarica); piu' scenari di produzione; prezzi mancanti stimati dallo storico.
+  Proposta di organizzazione: workflow separato ogni 2 ore (timeout 60 minuti, gruppo di concorrenza proprio) per
+  l'apprendimento lungo (rigioco dei giorni vissuti e taratura evolutiva), cosi' non blocca il giro di 30 minuti;
+  la decisione ogni 2 ore resta veloce e usa i parametri gia' tarati. Da chiarire: limite ai cambi di modalita' al giorno.
+- **Avvio dei giri dal Mango (24/10/2026, fase 2, NIENTE CODICE finche' non richiesto)**: GitHub avvia i giri programmati
+  in modo irregolare (notte 23-24/10: solo 3 giri su 16 previsti, tutti riusciti; gli altri mai avviati). Scelta
+  dell'utente: sara' il Mango ad avviare i giri ogni 30 minuti (chiamata "workflow_dispatch" a GitHub, dopo la lettura
+  Huawei), gia' previsto nella fase 2. Fino ad allora i giri restano quelli di GitHub (irregolari) piu' quelli a mano.
+- **Stabilita' della programmazione (24/10/2026, NIENTE CODICE finche' non richiesto)**: nella scelta della simulazione
+  migliore NON si cambia la programmazione gia' spedita all'inverter se il nuovo piano, nelle 4 ore successive, non
+  rende almeno il 10 % in piu' delle stesse 4 ore del piano in vigore (entrambi valutati con i dati nuovi: previsione,
+  prezzi, energia in batteria). Scopo: evitare cambi troppo frequenti. Vale per la cessione totale (simulazione ogni
+  2 ore) e, in fase 2, per i comandi veri dal Mango. Soglia minima (24/10/2026): 0,10 EUR = costo attribuito a un cambio
+  di programmazione delle 2 ore seguenti. Si cambia solo se il nuovo piano, nelle 4 ore successive, rende almeno il 10 %
+  in piu' E il guadagno supera 0,10 EUR (il costo del cambio, come la penalita' di 0,10 EUR per cambiamento gia' usata
+  nella simulazione di Cismondi).
+  Costo dei cambi di modalita' DENTRO il piano (tra fasce di 2 ore): resta un parametro tarato dall'apprendimento
+  (parte da 0 EUR, limiti 0-0,50 EUR), su indicazione dell'utente (24/10/2026).
+  Da inserire nella prossima revisione (R05), quando richiesto: la R04 consegnata NON contiene ancora la regola
+  4 ore / 10 % / 0,10 EUR.
+  Decisione dell'utente (24/10/2026): la R04 NON viene installata; si aspetta la R05 (contenuto R04 + questa regola).
+- **R05 - meteo nel grafico delle potenze (24/10/2026, NIENTE CODICE finche' non richiesto)**: le curve del meteo
+  (irraggiamento, nuvolosita', temperatura) si possono mostrare nello stesso grafico delle potenze, selezionabili dalla
+  legenda, con il proprio asse y (vedi anche "Grafico unico con piu' grandezze", colori per ipovedenti, asse 24 ore).
+  Deciso (24/10/2026): in ENTRAMBE le pagine (Cismondi e cessione), con visualizzazioni simili tra le due pagine
+  (stessi tipi di grafico, stessi colori e tratteggi, stessa legenda selezionabile, stesso asse 24 ore).
+  Le due pagine useranno lo STESSO metodo di disegno dei grafici (oggi: Cismondi con uPlot, cessione con disegno
+  proprio). Deciso (24/10/2026): uPlot per entrambe (zoom, valori al passaggio del mouse); anche i grafici a barre
+  della cessione passano a uPlot.
+- **R05 - revisione mostrata nelle pagine (24/10/2026, NIENTE CODICE finche' non richiesto)**: la pagina di Cismondi
+  mostra "Revisione R01" anche con la R03 installata, perche' il numero scritto in pagina e' quello dell'ultima modifica
+  di index.html (R01; R02 e R03 non l'hanno toccato). Proposta: in alto in ogni pagina la revisione INSTALLATA (letta
+  da un file unico aggiornato a ogni consegna) e, accanto, quella della pagina. CONFERMATO dall'utente (24/10/2026).
+- **Third-party dispatch: come ottenerlo sull'inverter (24/10/2026, DA VERIFICARE prima di usarlo per decidere)**: la
+  guida "FusionSolar App and SUN2000 App Device Commissioning Guide" Issue 09 (par. 4.4.5) descrive la modalita'
+  Third-party dispatch per lo SmartAssistant: un EMS esterno collegato (oggetti previsti, es. GridX) manda istruzioni,
+  la batteria passa in Third-party dispatch e al termine torna alla modalita' di prima; scegliendo GridX si abilitano
+  HTTP e Modbus TCP ("may have network security risks"). Non e' documentato come farlo con il solo Smart Dongle, ne'
+  con l'API FusionSolar. Strade da verificare: Modbus TCP in rete locale (Mango sulla stessa rete; MAI porta 502 esposta
+  su Internet), API FusionSolar, dispositivo SmartAssistant/EMMA. Finche' non e' verificato, la simulazione lo usa come
+  ipotesi.
+  Verifica API (24/10/2026): nel "SmartPVMS 25.1.0 Northbound API Reference" di Huawei esiste la pagina "API for
+  Delivering Battery Charge and Discharge Tasks" (e nella 25.4.0 "API for Delivering an Inverter Active Power Setting
+  Task"), ma il contenuto non e' leggibile da qui (sito Huawei bloccato agli strumenti automatici): parametri, limiti e
+  permessi da leggere. Da progetti pubblici: la carica/scarica forzata (Stop/Charge/Discharge, durata o energia,
+  potenza) e' comandabile via Modbus (Smart Dongle in rete locale) o con richieste del portale web FusionSolar (non API
+  ufficiale); un progetto dichiara che nell'OpenAPI la batteria ha solo valori in lettura (forse versione precedente).
+  Indice del "SmartPVMS 26.2.0 NBI Reference" Issue 03 (23/10/2026), mandato dall'utente: API di comando 5.2.1 compiti
+  di carica e scarica della batteria (pag. 244), 5.2.3 impostazione della modalita' della batteria (253), 5.2.5 parametri
+  della batteria (268), 5.2.7 potenza attiva dell'inverter (276), 5.2.9 compiti di carica/scarica "dispatch-based" (286);
+  4 limiti alle chiamate (65-77); 7.5 esempi di programmazione della batteria (314); FAQ 8.16 "The device does not
+  support this setting" (338) e 8.20 taglio del FV e limite di corrente in carica/scarica forzata (340). Da leggere il
+  contenuto di queste pagine.
+  LETTO (24/10/2026) dal "SmartPVMS 26.2.0 北向接口参考" (versione cinese, documento 01 del 30/06/2026, gia' allegato):
+  - 5.2.3 modalita' della batteria via API: SOLO "maximumSelfConsumption", "TOU", "thirdPartyDispatch" (Fully fed to grid
+    NON impostabile via API). TOU: max 14 finestre HH:MM non sovrapposte, giorni di ripetizione, redundantPVEnergyPriority
+    = fedToGridPreference / chargePreference, allowedAcChargePower (Dongle 0-50 kW). Per "thirdPartyDispatch" la batteria
+    va in attesa dei comandi; supportato con Dongle, SmartAssistant, inverter diretto (non con datalogger).
+  - 5.2.9 comando in thirdPartyDispatch: solo potenza in W (>0 carica, <0 scarica, 0 fermo), resta valido finche' non
+    cambia; niente durata ne' SOC. Prima va impostata la modalita' con 5.2.3.
+  - 5.2.1 carica/scarica forzata: potenza, durata (0-1440 min) o SOC obiettivo; non cambia la modalita'; Huawei lo indica
+    come funzione di prova, sconsigliata nell'uso normale (per fasce fisse: TOU).
+  - Limiti (4.2): ogni API di comando e di verifica 1 chiamata al minuto per account; non ripetere per lo stesso impianto
+    finche' il compito non e' finito.
+  - Vincoli thirdPartyDispatch (7.5): M1 SINGOLO + LUNA2000 S0/S1 + Dongle (= Cismondi, SUN2000-10KTL-M1 compreso nella
+    lista); M1 IN PARALLELO + LUNA + SmartAssistant (= impianto da 20 kW con 2 inverter: serve SmartAssistant). Possibili
+    limitazioni: controllo della potenza al punto di connessione, autodiagnosi, calibrazione SOH annuale, protezioni della
+    batteria; Huawei consiglia di abilitare l'acquisto dalla rete in thirdPartyDispatch, altrimenti le potenze possono
+    differire dal comando (contrasta con "nessun prelievo" della cessione totale: da verificare).
+  - Nota: la versione inglese dell'utente e' l'Issue 03 del 23/10/2026: possibili differenze.
+- **Mango aggiuntivo (24/10/2026, decisione dell'utente, NIENTE CODICE)**: sara' programmato un Mango aggiuntivo, collegato
+  al router, che conterra' anche il programma gia' discusso (fase 2); sul Mango sara' installata la VPN per l'accesso
+  dall'esterno; dettagli da definire. Nota: secondo il documento Huawei (7.5) il comando Third-party dispatch via API con
+  2 inverter in parallelo richiede uno SmartAssistant, a prescindere da chi manda i comandi; il Mango non lo sostituisce
+  via API (via Modbus in rete locale: non documentato qui, da verificare).
+- **Obiettivo finale (24/10/2026, PUNTO FERMATO)**: comandare l'impianto di Cismondi (1 inverter, 1 batteria) via API.
+  Secondo il documento Huawei e' una configurazione supportata (M1 singolo + LUNA2000 S0/S1 + Dongle), a condizione di:
+  modello esatto e firmware compatibili, permessi di comando dell'account API, pagina di configurazione del portale che
+  permetta di impostare la modalita' della batteria (FAQ 8.16). Verifica senza comandi possibile: API di lettura della
+  modalita' della batteria (5.1.5.1). Simulazione da 20 kW: resta simulazione (SmartAssistant necessario per 2 inverter).
+- **R05 - niente accensioni/spegnimenti dentro la stessa ora (26/10/2026, NIENTE CODICE finche' non richiesto)**: il 24/10
+  la R03 ha scaricato 18:00-20:00 a 10 kW, si e' fermata 20:00-20:30 e ha ripreso 20:30-21:00 (4,9 e 10 kW); anche alle
+  11:45 la carica e' scesa a 0,65 kW per un solo quarto d'ora. COMPORTAMENTO DA EVITARE (indicazione dell'utente).
+  Causa (verificata sui dati pubblicati): il prezzo RID e' orario, quindi i 4 quarti d'ora di un'ora valgono uguale e la
+  programmazione lineare sceglie a caso dove mettere la scarica dentro l'ora (piani 16:29 e 19:35: "scarica 18:00-20:15;
+  20:45-21:00" e "19:15-20:00; 20:30-21:00"). Rimedi per la R05: comando costante per ogni ora (gia' cosi' nella R04 per
+  Third-party dispatch), a parita' di ricavo preferire il piano con meno cambi e scarica/carica continue, regola
+  4 ore / 10 % / 0,10 EUR per non cambiare il piano spedito.
+  Correzione dell'utente (26/10/2026): non e' mai stato detto di scaricare a piena potenza. Variabile della simulazione
+  per ridurre i cambi: potenza ceduta dalla batteria MODULABILE tra 2 e 5 kW (scelta dal programma, costante a tratti).
+  Verifica sul documento Huawei (SmartPVMS 26.2.0, versione cinese 01 del 30/06/2026): possibile.
+  - Third-party dispatch (5.2.9): "dispatchPower" in W, qualsiasi valore entro i limiti (es. -2000 ... -5000 W).
+  - Carica/scarica forzata (5.2.1): "powerDispatch" in W.
+  - TOU (5.2.3): le finestre non hanno una potenza propria; la potenza massima di scarica (e di carica) della batteria si
+    imposta a parte con 5.2.5 "maximumDischargePower" / "maximumChargePower" (W, da 200 W al massimo del dispositivo)
+    e vale per tutte le finestre finche' non la si cambia.
+  - Ogni API di comando: 1 chiamata al minuto per account.
+  Deciso (26/10/2026): CARICA modulabile da 0 a 5 kW (anche sotto i 2 kW, con la produzione disponibile); SCARICA
+  modulabile tra 2 e 5 kW, oppure ferma.
+  Ambito (26/10/2026, corretto): i limiti valgono PER OGNI BATTERIA dell'impianto da 20 kW (2 batterie da 15 kWh, una per
+  inverter): ognuna carica 0-5 kW e scarica 2-5 kW o ferma. Impianto intero: carica 0-10 kW; scarica 2-10 kW (una sola
+  batteria 2-5 kW, entrambe 4-10 kW). Massimi totali invariati (10 kW).
+  Cismondi (26/10/2026): stessi limiti anche nella simulazione di Cismondi: carica 0-5 kW, scarica 2-5 kW o ferma (al
+  posto dei livelli di scarica forzata 1, 2, 3, 5 kW e della carica a 5 kW).
 - **Regola di lavoro (23/10/2026)**: il codice si scrive solo su richiesta esplicita; le indicazioni si annotano e si
   chiariscono prima con domande.
 - **Simulazione su richiesta (22/10/2026)**: dalla pagina si impostano i parametri di una simulazione e la si avvia
   subito (avvio di un giro dedicato su GitHub con il token salvato nel browser); risultati mostrati nella pagina a
   parte, senza toccare le simulazioni normali ne' i comandi all'inverter. Parametri e periodo: da definire.
+
+## Revisione R05 (26/10/2026) - realizzata su richiesta ("crea codice")
+- Regola di stabilita' 4 ore / +10 % / 0,10 EUR: ml/cessione_ottimizza.py `stabilita()`. Confronto con i dati nuovi su tutto
+  l'orizzonte (fino a fine domani) tra piano nuovo e "piano spedito per 4 ore, poi piano nuovo"; soglia = max(0,10 EUR;
+  10 % del ricavo delle 4 ore del piano spedito). Esito registrato in ogni decisione (campo "stabilita").
+  Prova simulata 21-22/10 (dati di prova): dopo la prima decisione il piano spedito e' sempre stato mantenuto (guadagni
+  sotto la soglia). Risultato 22/10: beneficio +2,25 EUR; la R04 senza regola aveva reso di piu' nella stessa prova
+  (2,61 EUR in due giorni) perche' il 21/10 aveva messo da parte energia per la mattina del 22/10. DA VALUTARE con i dati
+  veri: la regola e' dell'utente; il comportamento conservativo e' atteso con guadagni piccoli.
+- Potenze modulabili: carica 0-10 kW, scarica 2-10 kW o ferma (zona morta sotto 2 kW nel modello); gene "potenza TOU"
+  2-10 kW; costo 0,002 EUR per cambio di comando tra ore. Cismondi: LIVELLI_SCARICA_W = 2, 3, 4, 5 kW; P_MIN_SCARICA_W 2 kW.
+- Pagine: uPlot anche per cessione.html (barre disegnate in proprio dentro uPlot, motivi a righe/quadri/punti);
+  meteo nei grafici delle potenze di entrambe le pagine (radiazione blu/verde tratteggio, temperatura rosa puntini,
+  nuvolosita' grigio tratto-punto, scale proprie a destra; sul telefono le scale del meteo sono nascoste, i valori
+  restano nella legenda); revisione installata da versione.json.
+- Non ancora fatto (note congelate): grafico unico di Cismondi con tutte le grandezze, energie a barre in index.html,
+  asse 24 ore in index.html, apprendimento dagli errori di gestione della batteria (rimpianto), avvio dei giri dal Mango.
+
+## Richieste per la pagina della cessione (26/10/2026, NIENTE CODICE finche' non richiesto)
+- Prezzi: nel grafico del giorno della simulazione ogni 2 ore la curva del prezzo arriva oggi solo fino all'ultimo quarto
+  d'ora simulato. Va riportata fino all'ultimo prezzo noto (i prezzi NORD del giorno dopo arrivano verso le 13); una volta
+  letti non cambiano.
+- Batteria: oltre ai kWh, riportare la carica della batteria in % (capacita' 30 kWh).
+- Pulsanti "giorno precedente" e "giorno successivo"; cambiando giorno le curve scelte restano (oggi la scelta e' gia'
+  ricordata per grafico: da verificare anche tra un mese e l'altro).
+- Scale "confuse" (segnalazione dell'utente con un'immagine non arrivata): da chiarire quale grafico e cosa confonde
+  (oggi: sinistra kW/kWh; destra €/kWh, W/m², °C, % nuvolosita').
+  Risposte dell'utente (26/10/2026): batteria in % INSIEME ai kWh (curva in piu', selezionabile); domani selezionabile
+  come giorno quando i prezzi ci sono (prezzi e piano previsto); scale: l'utente rimanda l'immagine.
+  Immagine dell'utente (26/10/2026, pagina installata R03, grafico del giorno con produzione vera e prezzo accesi):
+  1) scala sinistra con valori ripetuti "0, 1, 1, 2" (tacche ogni 0,5 scritte senza decimali);
+  2) la curva del prezzo (€/kWh) e' disegnata sulla scala destra, che nell'immagine non si vede: sembra letta sulla
+     scala dei kW. Nella R05 (uPlot): decimali secondo il passo delle tacche e scala destra colorata come la sua curva;
+     da verificare sulla pagina vera dopo l'installazione.
+
+## R06 - evoluzione dei piani (26/10/2026, proposta dell'utente, NIENTE CODICE finche' non richiesto)
+- Vedere come cambia il piano migliore per i giorni futuri: per la decisione dell'ora x poter scegliere anche i piani
+  calcolati alle ore x-2, x-4, x-6 (al massimo 3 periodi indietro) e confrontarli.
+- Stato attuale (R05, verificato nel codice): per ogni decisione si salvano il contesto (previsione di produzione,
+  incertezza, prezzi noti e previsti: cessione/live/contesti/<t>.json) e, nel registro delle decisioni, solo il
+  riassunto a testo del piano. Il piano completo quarto per quarto e' salvato solo per l'ultima decisione (stato.json,
+  sovrascritto) e le curve attese (energia in batteria, potenza in rete) non sono salvate. Quindi per la R06 serve
+  salvare a ogni decisione il piano completo e le curve attese; i piani calcolati prima dell'installazione della R06
+  non si possono rivedere.
+- Con la regola delle 4 ore ci sono due piani per decisione: quello calcolato (migliore) e quello spedito (le 4 ore del
+  piano precedente se il guadagno e' sotto soglia).
+- Gia' in lista per la R06: pulsanti giorno precedente/successivo con le curve scelte che restano; prezzi fino
+  all'ultimo noto; batteria anche in %; domani selezionabile quando i prezzi ci sono; scale (immagine dell'utente).
+- Risposte dell'utente (26/10/2026): curve per ogni decisione = energia in batteria, potenza in rete, carica/scarica,
+  produzione prevista (tutte); vista UNA DECISIONE ALLA VOLTA (scelta da menu: x, x-2, x-4, x-6); per ogni decisione si
+  salvano e si mostrano ENTRAMBI i piani, calcolato e spedito.
+- Precisazione dell'utente (26/10/2026): per ogni decisione si registra e si mostra il piano migliore delle 10 ORE
+  SUCCESSIVE all'ora della decisione (es. decisione delle 14: dalle 14 alle 24). CONFERMATO (26/10/2026): il calcolo resta fino a
+  fine domani; solo questo grafico (evoluzione dei piani) ha l'asse dei tempi di 10 ore dall'ora della decisione, anche
+  oltre la mezzanotte (decisione delle 22:00: dalle 22:00 alle 08:00 del giorno dopo). Gli altri grafici restano a 24 ore.
+- Proposta dell'utente (26/10/2026, NIENTE CODICE): sull'asse dei tempi del grafico un pallino per ogni decisione,
+  all'ora in cui la simulazione e' finita. Passando il mouse su un pallino si accendono le curve del piano migliore
+  calcolato in quel momento, di quello precedente e di quello successivo. Esempio dell'utente: il pallino delle 14:00
+  accenderebbe solo il piano della simulazione precedente inviata (da chiarire).
+  Fattibilita' (uPlot): pallini disegnati con un "draw hook" sotto l'asse x; passaggio del mouse letto con gli eventi
+  del grafico; curve dei piani aggiunte come serie temporanee. Sul telefono il mouse non c'e': servirebbe il tocco.
+  Richiede i piani completi salvati a ogni decisione (R06).
+  Chiarito (26/10/2026): il pallino va all'ora in cui la simulazione e' FINITA davvero (es. decisione della fascia delle
+  14 finita alle 14:30 -> pallino alle 14:30). Prima di quell'ora vale il piano della simulazione precedente.
+  Stato R05 (verificato nel codice): nel registro delle decisioni ci sono "ora" (ora del giro in cui si decide) e
+  "secondi" (durata della ricerca del piano); l'ora di fine non e' registrata: nella R06 va salvata.
+  CONFERMATO (26/10/2026): in simulazione l'ora di fine della simulazione e' l'ora in cui il piano e' "inviato".
+  Mouse sul pallino (26/10/2026, utente): dall'ora di fine dei calcoli si vedono il piano appena calcolato e il piano
+  migliore della simulazione precedente (2 piani).
+  Risposta dell'utente (26/10/2026): sul telefono i pallini NON ci sono (solo PC con mouse).
+  Risposta dell'utente (26/10/2026): pallini in TUTTI E DUE i grafici (giorno della simulazione ogni 2 ore, asse 24 ore;
+  evoluzione dei piani, asse 10 ore).
+  Risposta dell'utente (26/10/2026): i piani x-2, x-4, x-6 si mostrano sulla STESSA finestra della decisione x (es. x =
+  14:00: tutti dalle 14:00 alle 24:00). Conseguenza: per coprire x+10 ore il piano di x-6 deve essere registrato per
+  16 ore dalla sua decisione (non 10): da decidere quante ore registrare.
+
+### R06 - riepilogo concordato con l'utente (26/10/2026) - sostituisce le note R06 sopra dove diverse
+1. Prezzi: curva del prezzo fino all'ultimo prezzo noto (non solo fino all'ultima simulazione).
+2. Batteria: anche in % oltre ai kWh.
+3. Pulsanti giorno precedente/successivo; le curve scelte restano; domani selezionabile quando ci sono i prezzi.
+4. A ogni simulazione si registrano il piano migliore calcolato e quello spedito, con l'ora di fine dei calcoli.
+5. Pallino (solo PC, mouse) per ogni simulazione all'ora di fine dei calcoli: passandoci sopra si vedono il piano
+   appena calcolato e il migliore della simulazione precedente.
+ANNULLATO dall'utente (26/10/2026): grafico di 10 ore e scelta dei piani x-2, x-4, x-6 (e quindi la domanda su quante
+ore registrare per x-6 e su quale finestra mostrare).
+- Utente (26/10/2026): il riassunto a testo del piano non serve (oggi e' nel registro delle decisioni e nella colonna
+  "Piano" della tabella delle decisioni). Da chiarire se togliere anche la colonna dalla pagina.
+- Utente (26/10/2026): a ogni simulazione si salvano ENTRAMBI i piani completi (calcolato e spedito). Mouse sul
+  pallino: piano appena calcolato + piano SPEDITO del pallino precedente.
+  Confermato (26/10/2026): mouse sul pallino -> 3 piani: calcolato del pallino, spedito del pallino, spedito del
+  pallino precedente.
+
+## Revisione R06 (26/10/2026) - realizzata su richiesta ("crea revisione dei files e codice")
+Contenuto: punti 1-5 del riepilogo R06 sopra, piu' le risposte dell'utente (entrambi i piani salvati; sul pallino 3 piani:
+calcolato e spedito della simulazione, spedito della precedente; solo potenza in rete; niente pallini sul telefono;
+tolto il riassunto a testo e la colonna "Piano").
+- I piani sono salvati per tutto l'orizzonte del calcolo (fino a fine domani), con la produzione prevista dello scenario
+  probabile: circa 80 kB al giorno nel repository (prova simulata).
+- Il pallino e' all'ora di fine dei calcoli: ora del giro + durata del calcolo. Il pallino della prima simulazione
+  dopo l'installazione non ha il piano precedente (i piani prima della R06 non sono salvati).
+- Pallini solo nel grafico della simulazione ogni 2 ore (il grafico di 10 ore e' stato annullato).
+- Prova simulata 21-22/10 (dati di prova): beneficio -3,58 EUR il 21/10 e +5,93 EUR il 22/10 (2,36 EUR in due giorni);
+  con la R05 nella prova precedente -0,12 e +2,25 EUR. La R06 non cambia il codice della decisione. La ricerca evolutiva e'
+  a tempo (6 s nella prova): sullo stesso contesto ha fatto 275, 254 e 233 generazioni in tre prove, quindi i piani
+  possono cambiare da una prova all'altra. Non verificato che sia l'unica causa della differenza.

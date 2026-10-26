@@ -1,6 +1,75 @@
 EMS Cismondi - elenco delle revisioni
 (le consegne precedenti al 23/10/2026 non sono numerate)
 
+R06 - 26/10/2026
+  Cessione totale 20 kW:
+  - ml/cessione_live.py: a ogni simulazione (ogni 2 ore) si salvano i piani completi CALCOLATO (migliore) e SPEDITO
+    (dopo la regola delle 4 ore), con l'ora di fine dei calcoli (= ora di "invio" del piano): potenza in rete,
+    energia in batteria, potenza della batteria, produzione prevista e prezzi, per quarto d'ora fino a fine domani
+    (cessione/live/piani/AAAA-MM-GG.json e piano_ultimo.json). Prezzi NORD noti da ieri all'ultimo disponibile
+    (cessione/live/prezzi_noti.json). Tolto il riassunto a testo del piano dal registro delle decisioni (aggiunta
+    l'ora di fine dei calcoli).
+  - Pagina cessione.html:
+    - prezzo nel grafico della simulazione ogni 2 ore fino all'ultimo prezzo noto;
+    - energia in batteria anche in % (scala % a destra, la stessa della nuvolosita'), in entrambi i grafici del giorno;
+    - pulsanti giorno precedente / successivo (anche tra un mese e l'altro); le curve scelte restano;
+    - domani tra i giorni quando i suoi prezzi ci sono ("(prezzi)"): prezzi e ultimo piano spedito;
+    - pallini (solo PC con mouse) sotto il grafico della simulazione ogni 2 ore, uno per simulazione all'ora di fine
+      dei calcoli: col mouse sopra si vedono la potenza in rete del piano calcolato e del piano spedito di quella
+      simulazione e del piano spedito della simulazione precedente;
+    - tolta la colonna "Piano" (riassunto a testo) dalla tabella delle decisioni.
+  File modificati: pannello_ems.py, LEGGIMI.txt, repository/versione.json, repository/cessione.html,
+  repository/ml/cessione_live.py, repository/ml/cessione_totale.py, repository/README.md, repository/REVISIONI.txt,
+  REVISIONI.txt
+
+R05 - 26/10/2026  (comprende tutta la R04, mai installata)
+  Cessione totale 20 kW:
+  - Regola di stabilita' (ml/cessione_ottimizza.py stabilita(), usata da cessione_live.py e dal rigioco
+    dell'apprendimento): il piano gia' spedito per le prossime 4 ore si cambia solo se il nuovo rende almeno il 10 % in
+    piu' E almeno 0,10 EUR. Confronto con i dati nuovi (3 scenari) su tutto l'orizzonte: piano nuovo contro piano
+    spedito per 4 ore e poi piano nuovo. Altrimenti restano le 4 ore del piano spedito (dopo, il piano nuovo).
+  - Potenza modulabile: carica 0-10 kW (0-5 kW per batteria); scarica 2-10 kW (2-5 kW per batteria) oppure ferma: sotto
+    2 kW la batteria non scarica. TOU con potenza massima di scarica scelta dal programma (2-10 kW, come
+    maximumDischargePower dell'API 5.2.5). Comandi costanti per ora; piccolo costo (0,002 EUR) per ogni cambio di comando
+    tra un'ora e l'altra: a parita' di ricavo vince il piano con meno cambi.
+  - Pagina cessione.html: tutti i grafici con uPlot (linee e barre, legenda cliccabile ricordata, valori al passaggio
+    del mouse); meteo (radiazione, temperatura, nuvolosita' di Cismondi) nei grafici del giorno, ognuno con la sua scala;
+    asse dei tempi di 24 ore; colonna "Piano spedito (regola 4 ore)" nelle decisioni; piano in breve (clic per tutto);
+    Aiuto: potenze modulabili, regola delle 4 ore, Fully fed to grid non impostabile via API.
+  Cismondi (Mango):
+  - Scarica forzata modulabile 2-5 kW (livelli 2, 3, 4, 5 kW al posto di 1, 2, 3, 5); sotto 2 kW la batteria si ferma.
+    Carica dalla rete invariata (fino a 1...5 kW secondo la condizione).
+  - Pagina index.html: meteo (radiazione, temperatura, nuvolosita') nel grafico delle potenze, ognuno con la sua scala.
+  Entrambe le pagine: in alto "Pagina Rxx · installata Ryy" (la revisione installata e' nel nuovo file versione.json,
+  aggiornato a ogni consegna).
+  File modificati: pannello_ems.py, LEGGIMI.txt, repository/versione.json (nuovo), repository/index.html,
+  repository/cessione.html, repository/mango/config.lua, repository/mango/simulatore.lua,
+  repository/ml/cessione_ottimizza.py, repository/ml/cessione_live.py, repository/ml/cessione_apprendimento.py,
+  repository/ml/cessione_totale.py, repository/README.md, repository/REVISIONI.txt, REVISIONI.txt
+
+R04 - 24/10/2026
+  Installazione:
+  - UN SOLO file INSTALLA_EMS.bat (nuovo avvia_ems.py): se il repository ems-dati e' gia' installato fa l'aggiornamento,
+    altrimenti l'installazione completa. Tolto PANNELLO_EMS.bat.
+  Cessione totale 20 kW:
+  - Nuovo ml/cessione_ottimizza.py: modello fisico non lineare; prezzi mancanti previsti dallo storico (orizzonte fino a
+    fine domani); 3 scenari di produzione; piano con modalita' diverse nello stesso giorno (una per fascia di 2 ore) e
+    fasce TOU / comandi per ora, cercato con algoritmo evolutivo partendo da programmazione lineare, logica fuzzy,
+    modalita' pure e piano precedente.
+  - ml/cessione_live.py: usa il nuovo piano (fino a 90 s per decisione); salva il contesto di ogni decisione; esegue i
+    quarti d'ora con il modello non lineare; tolto lo scarto per modalita' della R03 (sostituito dall'apprendimento).
+  - Nuovo ml/cessione_apprendimento.py e workflow .github/workflows/cessione_apprendimento.yml (ogni 2 ore, max 60
+    minuti, separato dal giro dei 30 minuti): rigioco delle decisioni delle ultime 2 settimane e ricerca evolutiva dei
+    parametri; adozione solo se rendono di piu'.
+  - Pagina cessione.html: tabella delle decisioni con piano, punti di partenza e piani provati; stato
+    dell'apprendimento; Aiuto aggiornato.
+  - Workflow ems.yml: salvataggio con nuovi tentativi (anche l'apprendimento salva); decisione fino a 90 s.
+  File modificati: INSTALLA_EMS.bat, avvia_ems.py (nuovo), pannello_ems.py, LEGGIMI.txt, PANNELLO_EMS.bat (tolto),
+  repository/ml/cessione_ottimizza.py (nuovo), repository/ml/cessione_apprendimento.py (nuovo),
+  repository/ml/cessione_live.py, repository/ml/cessione_totale.py, repository/cessione.html,
+  repository/.github/workflows/ems.yml, repository/.github/workflows/cessione_apprendimento.yml (nuovo),
+  repository/README.md, repository/REVISIONI.txt, REVISIONI.txt
+
 R03 - 23/10/2026
   Cessione totale 20 kW:
   - Nuovo impianto: 20 kW a Ovest inclinazione 2 gradi; 2 inverter SUN2000-10KTL-M1 identici e 2 batterie da 15 kWh,

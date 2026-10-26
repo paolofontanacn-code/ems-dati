@@ -1,3 +1,4 @@
+-- Revisione R05 - 26/10/2026 - scarica forzata modulabile 2-5 kW (livelli 2, 3, 4, 5 kW; sotto 2 kW la batteria si ferma)
 -- config.lua - CONFIGURAZIONE della simulazione EMS sul Mango (impianto Cismondi)
 -- SOLO SIMULAZIONE: il programma legge l'impianto ma non invia alcun comando all'inverter.
 -- Modificare solo i valori, lasciando virgole e virgolette.
@@ -32,7 +33,8 @@ return {
   SOC_MAX = 95,                         -- "Fine carica SOC"
   SOC_MIN = 6,                          -- "Fine scarica SOC" (riserva minima)
   SOC_MIN_VENDITA = 20,                 -- la scarica verso la rete non scende sotto questo SOC
-  LIVELLI_SCARICA_W = { 1000, 2000, 3000, 5000 },   -- potenze graduate della scarica forzata
+  LIVELLI_SCARICA_W = { 2000, 3000, 4000, 5000 },   -- potenze graduate della scarica forzata (R05: 2-5 kW)
+  P_MIN_SCARICA_W = 2000,               -- R05: la scarica forzata non va sotto 2 kW (se non si puo', la batteria si ferma)
   P_CARICA_RITARDATA_W = 200,           -- potenza di carica minima impostabile via API (carica ritardata)
   -- rendimenti iniziali (IPOTESI): vengono sostituiti da quelli misurati appena ci sono dati sufficienti
   RENDIMENTO_CARICA = 0.95,             -- energia immagazzinata / energia entrante

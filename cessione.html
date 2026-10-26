@@ -1,4 +1,7 @@
 <!doctype html>
+<!-- Revisione R06 - 26/10/2026 - prezzi fino all'ultimo noto; energia in batteria anche in %; pulsanti giorno precedente/successivo (le curve scelte restano); domani selezionabile quando ci sono i prezzi (prezzi e ultimo piano spedito); pallini delle simulazioni (solo PC): col mouse sopra, potenza in rete del piano calcolato, del piano spedito e del piano spedito precedente; tolta la colonna Piano (riassunto a testo) dalle decisioni -->
+<!-- Revisione R05 - 26/10/2026 - grafici con uPlot (linee e barre, legenda cliccabile ricordata); meteo (radiazione, temperatura, nuvolosita') nei grafici delle potenze del giorno; asse dei tempi di 24 ore; revisione della pagina e revisione installata (versione.json); colonna stabilita' del piano nelle decisioni; Aiuto: scarica modulabile 2-10 kW, regola dei 4 ore, Fully fed to grid non impostabile via API -->
+<!-- Revisione R04 - 24/10/2026 - decisioni: piano a fasce di 2 ore con modalita' diverse nello stesso giorno (algoritmo evolutivo, semi lineari e fuzzy), prezzi previsti, apprendimento dei parametri; tabella delle decisioni e Aiuto aggiornati -->
 <!-- Revisione R03 - 23/10/2026 - nuovo impianto (20 kW a Ovest 2 gradi, 2 inverter da 10 kW, 2 batterie da 15 kWh = 30 kWh 10/10 kW, rete 17 kW, nessuna carica da AC); simulazione ogni 2 ore da oggi in avanti (modalita' scelta, previsione, decisioni); ottimo teorico dei giorni passati; tolto il profilo 1AC -->
 <!-- Revisione R02 - 23/10/2026 - grafico del giorno per primo, con la potenza ceduta in rete dei profili 0, 1, 1AC; curve e barre selezionabili dalla legenda (scelta ricordata); carica batteria 5 kW; carica AC con perdita 5 % e solo se la carica in continua non basta -->
 <!-- Revisione R01 - 23/10/2026 - batteria 15 kWh / 10 kW; 2 inverter da 10 kW; profili 1 (senza carica AC) e 1AC (carica AC dall'inverter senza batteria, mai dalla rete); numero di revisione in alto -->
@@ -7,6 +10,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cessione totale 20 kW</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.min.css">
+<script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
 <style>
 :root {
   --sfondo: #f6f7f9; --carta: #ffffff; --testo: #1d2330; --tenue: #5b6475; --bordo: #d5dae3; --accento: #0072B2;
@@ -35,14 +40,15 @@ h2 { font-size: 17px; margin: 0 0 4px; }
 .tessera { border: 1px solid var(--bordo); border-radius: 8px; padding: 8px 10px; }
 .tessera b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
 .tessera span { color: var(--tenue); font-size: 13px; }
-svg { display: block; width: 100%; height: auto; overflow: visible; }
-svg text { fill: var(--tenue); font-size: 12px; font-family: inherit; }
-.legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; margin-top: 6px; }
-.legenda span { cursor: pointer; user-select: none; } .legenda span.spento { opacity: .45; text-decoration: line-through; }
-.legenda i { display: inline-block; width: 22px; height: 12px; vertical-align: -1px; margin-right: 6px; border: 1px solid var(--testo); }
+.grafico { width: 100%; overflow: hidden; }
+.uplot { font-family: inherit; }
+.u-legend { font-size: 13px; }
+.u-legend .u-series th { cursor: pointer; white-space: normal; }
+.u-legend { max-width: 100%; }
+.u-legend .u-marker { width: 22px; }
 .tab { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
-th, td { padding: 5px 8px; border-bottom: 1px solid var(--bordo); text-align: right; white-space: nowrap; }
+th, td { vertical-align: top; padding: 5px 8px; border-bottom: 1px solid var(--bordo); text-align: right; white-space: nowrap; }
 th:first-child, td:first-child { text-align: left; }
 tr.escluso td { color: var(--tenue); font-style: italic; }
 .pos { color: var(--ben); font-weight: 600; } .negv { color: var(--neg); font-weight: 600; }
@@ -54,7 +60,7 @@ tr.escluso td { color: var(--tenue); font-style: italic; }
 <header>
   <h1>Cessione totale 20 kW</h1>
   <span class="etichetta">SOLO SIMULAZIONE</span>
-  <span class="nota">Revisione R03</span>
+  <span class="nota" id="revisione">Pagina R05</span>
   <span class="nota" id="aggiornato">caricamento…</span>
   <a class="nota" href="./">← pagina EMS Cismondi</a>
 </header>
@@ -62,7 +68,9 @@ tr.escluso td { color: var(--tenue); font-style: italic; }
   <label class="nota" for="mese">Mese</label>
   <select id="mese"></select>
   <label class="nota" for="giorno">Giorno</label>
+  <button id="g_prec" title="Giorno precedente" aria-label="Giorno precedente">◀</button>
   <select id="giorno"></select>
+  <button id="g_succ" title="Giorno successivo" aria-label="Giorno successivo">▶</button>
   <button id="bottone_aiuto" aria-expanded="false" aria-controls="aiuto">Aiuto</button>
 </div>
 <main>
@@ -75,25 +83,32 @@ tr.escluso td { color: var(--tenue); font-style: italic; }
       <dt>Produzione</dt>
       <dd>Letture Huawei di Cismondi (11 kW, Sud, 2°), i dati più freschi, × 20 / 11 × rapporto tra l'irraggiamento sul piano Ovest e sul piano Sud, ora per ora (radiazione diretta e diffusa di Open-Meteo per il luogo di Cismondi).</dd>
       <dt>Simulazione ogni 2 ore (da oggi in avanti)</dt>
-      <dd>Ogni 2 ore (00, 02, … 22) il programma rivaluta tutto da capo: previsione della produzione (più modelli meteo; si usa quello che ha sbagliato meno per ogni orizzonte; correzione imparata per ora del giorno; correzione con le ultime letture reali), prezzi NORD noti (domani dalle 13 circa), energia in batteria. Per ogni modalità Huawei calcola il programma e il ricavo atteso e sceglie la migliore:
+      <dd>Ogni 2 ore (00, 02, … 22) il programma rivaluta tutto da capo:
         <ul>
-          <li><b>Fully fed to grid</b>: la batteria si carica solo con la produzione oltre il limite verso la rete e scarica appena c'è spazio sotto il limite (non segue i prezzi).</li>
-          <li><b>TOU</b>: fasce orarie di carica (i pannelli caricano prima la batteria) e di scarica (la batteria cede in rete, i pannelli hanno la precedenza sul limite), al massimo 14 fasce al giorno; fuori dalle fasce la batteria prende solo la produzione oltre il limite.</li>
-          <li><b>Third-party dispatch</b>: carica e scarica comandate quarto d'ora per quarto d'ora; in scarica la batteria ha la precedenza e la produzione oltre il limite si perde.</li>
+          <li><b>Produzione prevista</b>: più modelli meteo (si usa quello che ha sbagliato meno per ogni orizzonte), correzione imparata per ora del giorno, correzione con le ultime letture reali; 3 scenari (bassa, probabile, alta) secondo l'incertezza misurata.</li>
+          <li><b>Prezzi</b>: quelli noti e, oltre l'ultimo noto, una previsione dallo storico (giorno della settimana, giorni recenti): l'orizzonte arriva sempre a fine domani.</li>
+          <li><b>Piano</b>: per ogni fascia di 2 ore una modalità Huawei – anche diverse nello stesso giorno – e per ogni ora la fascia TOU (carica/scarica, max 14 al giorno) o il comando di potenza (Third-party dispatch). Il piano migliore è cercato con un <b>algoritmo evolutivo</b> (decine di migliaia di piani provati) partendo da programmazione lineare, <b>logica fuzzy</b> (prezzo basso e sole → carica, prezzo alto → scarica), modalità pure e piano precedente. Ogni piano è provato con un modello fisico non lineare (rendimento più basso a bassa potenza, potenza ridotta vicino a batteria piena o vuota).</li>
+          <li>Modalità: <b>Fully fed to grid</b> (la batteria prende solo la produzione oltre il limite e scarica fino al limite; <b>non impostabile via API</b> Huawei: si simula come confronto), <b>TOU</b> (fasce di carica: i pannelli caricano prima la batteria; fasce di scarica: la batteria cede in rete fino alla potenza massima scelta, i pannelli hanno la precedenza), <b>Third-party dispatch</b> (potenza comandata; in scarica la produzione oltre il limite si perde).</li>
+          <li><b>Potenza modulabile</b> (R05): carica 0–5 kW per batteria (0–10 kW l'impianto), scarica 2–5 kW per batteria (2–10 kW l'impianto) oppure ferma; sotto 2 kW la batteria non scarica. Comandi costanti per ora: niente accensioni e spegnimenti nella stessa ora; a parità di ricavo vince il piano con meno cambi.</li>
+          <li><b>Stabilità del piano</b> (R05): il piano già spedito per le prossime 4 ore si cambia solo se il nuovo rende almeno il 10 % in più e almeno 0,10 € (costo di una riprogrammazione). Il confronto è fatto con i dati nuovi: piano nuovo contro piano spedito per 4 ore e poi piano nuovo.</li>
         </ul>
-        Poi l'impianto simulato «vive» i quarti d'ora con la produzione vera. Il programma impara: errore di ogni modello meteo, correzione per ora del giorno, scarto tra ricavo atteso e ottenuto di ogni modalità (provata anche quando non è scelta). Obiettivo: il ricavo più alto, vendendo nelle ore a prezzo più alto.</dd>
+        Poi l'impianto simulato «vive» i quarti d'ora con la produzione vera. <b>Autoapprendimento</b>: ogni 2 ore un calcolo separato rigioca le decisioni delle ultime 2 settimane con altri parametri (valore dell'energia lasciata in batteria, scenari, costo dei cambi, regole fuzzy), cercati con un algoritmo evolutivo, e li adotta solo se avrebbero reso di più. Obiettivo: il ricavo più alto, vendendo nelle ore a prezzo più alto.</dd>
       <dt>Ottimo teorico (giorni passati)</dt>
       <dd>Per i giorni prima dell'avvio, e come confronto: produzione e prezzi considerati noti in anticipo, batteria gestita nel modo migliore possibile. È il limite massimo, nella realtà il risultato è più basso.</dd>
     </dl>
     <h2>Da sapere</h2>
     <ul class="spiega">
       <li>Simulazione ogni 2 ore: l'energia rimasta in batteria a mezzanotte viene venduta il giorno dopo e conta nel giorno in cui è venduta (un giorno può risultare negativo e il successivo positivo). Nell'ottimo teorico invece passa al giorno in cui è stata prodotta (colonna «riporto»).</li>
+      <li>Prezzo NORD: nel grafico della simulazione ogni 2 ore arriva fino all'ultimo prezzo noto (quelli di domani arrivano verso le 13; una volta letti non cambiano). Domani compare tra i giorni quando i suoi prezzi ci sono, con l'ultimo piano spedito.</li>
+      <li>Energia in batteria in kWh (scala a sinistra) e in % della capacità (scala % a destra, la stessa della nuvolosità).</li>
+      <li>Pallini (solo su PC): sotto il grafico della simulazione ogni 2 ore, uno per ogni simulazione, all'ora di fine dei calcoli (= ora in cui il piano è «inviato»). Con il mouse sopra un pallino si vedono la potenza in rete prevista del piano calcolato (migliore) e del piano spedito di quella simulazione e del piano spedito della simulazione precedente. Calcolato e spedito sono diversi quando la regola delle 4 ore tiene il piano spedito prima.</li>
+      <li>Meteo nei grafici del giorno: Open-Meteo per il luogo di Cismondi (stessi dati della pagina EMS Cismondi), radiazione globale orizzontale, temperatura, nuvolosità, ognuno con la sua scala a destra.</li>
       <li>Clic su una voce della legenda per nascondere o mostrare la curva o le barre: la scelta resta anche cambiando mese o giorno.</li>
       <li>Non sono conteggiati: usura della batteria, costo dell'impianto, corrispettivi del GSE, consumi propri dell'impianto.</li>
       <li>Ottimo teorico: i giorni con meno del 90 % delle letture sono in corsivo ed esclusi dai totali.</li>
     </ul>
   </section>
-  <section><h2 id="t_live">Giorno – simulazione ogni 2 ore</h2><p class="spiega">Produzione vera e prevista, potenza in rete con e senza batteria, energia in batteria e prezzo, per quarto d'ora. Clic sulla legenda per scegliere le curve.</p><div id="live_tessere"></div><div id="g_live"></div><div class="tab" id="decisioni"></div></section>
+  <section><h2 id="t_live">Giorno – simulazione ogni 2 ore</h2><p class="spiega">Produzione vera e prevista, potenza in rete con e senza batteria, energia in batteria, prezzo e meteo, per quarto d'ora. Ogni grandezza ha la sua scala. Clic sulla legenda per scegliere le curve.</p><div id="live_tessere"></div><div id="g_live"></div><div class="tab" id="decisioni"></div></section>
   <section><h2 id="t_giorno">Giorno – ottimo teorico</h2><p class="spiega">Con produzione e prezzi noti in anticipo (limite massimo). Clic sulla legenda per scegliere le curve.</p><div id="g_giorno"></div></section>
   <section id="s_totali"><h2>Totali del mese</h2><div id="totali"></div></section>
   <section><h2>Euro al giorno</h2><p class="spiega">Ricavo di ogni giorno: senza batteria, con batteria (simulazione ogni 2 ore) e ottimo teorico.</p><div id="g_euro"></div></section>
@@ -113,7 +128,10 @@ const $ = id => document.getElementById(id);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const num = v => { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; };
 const fmt = (v, d = 2) => (v == null || isNaN(v)) ? "–" : Number(v).toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
-const NS = "http://www.w3.org/2000/svg";
+const REV_PAGINA = "R06";
+const ROMA = "Europe/Rome";
+// Okabe-Ito (distinguibili anche da chi non vede bene i colori) + tratteggi diversi
+const OKABE = { arancio: "#E69F00", celeste: "#56B4E9", verde: "#009E73", giallo: "#F0E442", blu: "#0072B2", vermiglio: "#D55E00", rosa: "#CC79A7" };
 
 function csv(t) {
   const r = t.trim().split(/\r?\n/).map(l => l.split(","));
@@ -123,114 +141,218 @@ function csv(t) {
 async function scarica(p, json) {
   const r = await fetch(BASE + p + "?t=" + Math.floor(Date.now() / 60000), { cache: "no-store" });
   if (!r.ok) throw new Error(`${p}: HTTP ${r.status}`);
+  if (json === "gz") return await new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).text();
   return json ? r.json() : r.text();
 }
-function el(tag, att, padre) { const e = document.createElementNS(NS, tag); for (const k in att) e.setAttribute(k, att[k]); if (padre) padre.appendChild(e); return e; }
 
-// motivi (tratteggi) per distinguere le barre anche senza colore
-function motivi(svg) {
-  const defs = el("defs", {}, svg);
-  const m = el("pattern", { id: "righe", width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
-  el("rect", { width: 6, height: 6, fill: css("--p1") }, m);
-  el("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: css("--carta"), "stroke-width": 2 }, m);
-  const x = el("pattern", { id: "quadri", width: 6, height: 6, patternUnits: "userSpaceOnUse" }, defs);
-  el("rect", { width: 6, height: 6, fill: css("--p1ac") }, x);
-  el("path", { d: "M0,0L6,6M6,0L0,6", stroke: css("--carta"), "stroke-width": 1.2 }, x);
-  const p = el("pattern", { id: "punti", width: 5, height: 5, patternUnits: "userSpaceOnUse" }, defs);
-  el("rect", { width: 5, height: 5, fill: css("--ben") }, p);
-  el("circle", { cx: 2.5, cy: 2.5, r: 1, fill: css("--carta") }, p);
-}
-function scala(min, max) {
-  if (min === max) { max = min + 1; }
-  const passo0 = (max - min) / 5, e = Math.pow(10, Math.floor(Math.log10(passo0)));
-  const passo = [1, 2, 2.5, 5, 10].map(k => k * e).find(k => k >= passo0);
-  const a = Math.floor(min / passo) * passo, b = Math.ceil(max / passo) * passo;
-  const tacche = []; for (let v = a; v <= b + passo / 2; v += passo) tacche.push(+v.toFixed(10));
-  return { a, b, tacche };
-}
+// ---------------------------------------------------------------- grafici (uPlot)
 // serie nascoste dalla legenda: restano nascoste cambiando mese o giorno (memoria del browser)
 let nascoste = {};
 try { nascoste = JSON.parse(localStorage.getItem("cess_nascoste")) || {}; } catch (e) {}
-const chiaveS = (cont, nome) => cont.id + "|" + nome;
-function legendaCliccabile(cont, voci, ridisegna) {
-  const leg = document.createElement("div"); leg.className = "legenda";
-  for (const [nome, sfondo] of voci) {
-    const sp = document.createElement("span"); sp.setAttribute("role", "button"); sp.tabIndex = 0;
-    if (nascoste[chiaveS(cont, nome)]) sp.className = "spento";
-    sp.setAttribute("aria-pressed", String(!nascoste[chiaveS(cont, nome)]));
-    sp.innerHTML = `<i style="background:${sfondo}"></i>${nome}`;
-    const cambia = () => { const k = chiaveS(cont, nome); if (nascoste[k]) delete nascoste[k]; else nascoste[k] = true;
-      try { localStorage.setItem("cess_nascoste", JSON.stringify(nascoste)); } catch (e) {} ridisegna(); };
-    sp.addEventListener("click", cambia);
-    sp.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); cambia(); } });
-    leg.appendChild(sp);
-  }
-  cont.appendChild(leg);
-}
-// grafico a barre raggruppate: etichette x, serie [{nome, valori, riempi}]
-function barre(cont, etichette, tutteSerie, unita, dec = 2) {
+const salvaNascoste = () => { try { localStorage.setItem("cess_nascoste", JSON.stringify(nascoste)); } catch (e) {} };
+const grafici = new Map();          // contenitore -> grafico
+function larghezza(el) { return Math.max(300, Math.floor(el.clientWidth)); }
+function base(cont, x, serie, opz) {
+  if (grafici.has(cont)) { grafici.get(cont).destroy(); grafici.delete(cont); }
   cont.innerHTML = "";
-  const serie = tutteSerie.filter(s => !nascoste[chiaveS(cont, s.nome)]);
-  const W = Math.max(320, cont.clientWidth), Hh = 280, ml = 58, mr = 10, mt = 10, mb = 40;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${Hh}`, role: "img", "aria-label": serie.map(s => s.nome).join(", ") }, cont);
-  motivi(svg);
-  const tutti = serie.flatMap(s => s.valori).filter(v => v != null);
-  const sc = scala(Math.min(0, ...tutti, 0), Math.max(0, ...tutti, 0));
-  const y = v => mt + (sc.b - v) / (sc.b - sc.a) * (Hh - mt - mb);
-  for (const t of sc.tacche) {
-    el("line", { x1: ml, x2: W - mr, y1: y(t), y2: y(t), stroke: css("--bordo"), "stroke-width": t === 0 ? 1.5 : 1 }, svg);
-    el("text", { x: ml - 6, y: y(t) + 4, "text-anchor": "end" }, svg).textContent = fmt(t, Math.abs(t) < 10 && t % 1 ? 2 : 0);
-  }
-  el("text", { x: 4, y: mt + 10 }, svg).textContent = unita;
-  const n = etichette.length, larg = (W - ml - mr) / Math.max(1, n), gb = larg * 0.8 / Math.max(1, serie.length);
-  const ogni = Math.ceil(n / Math.max(1, Math.floor((W - ml - mr) / 34)));
-  etichette.forEach((et, i) => {
-    const x0 = ml + i * larg + larg * 0.1;
-    serie.forEach((s, k) => {
-      const v = s.valori[i]; if (v == null) return;
-      const r = el("rect", { x: x0 + k * gb, y: Math.min(y(v), y(0)), width: Math.max(1, gb - 1), height: Math.max(0.5, Math.abs(y(v) - y(0))),
-        fill: typeof s.riempi === "function" ? s.riempi(v) : s.riempi, stroke: css("--testo"), "stroke-width": 0.4, opacity: s.opaco && s.opaco[i] ? 0.35 : 1 }, svg);
-      el("title", {}, r).textContent = `${et} – ${s.nome}: ${fmt(v, dec)} ${unita}`;
-    });
-    if (i % ogni === 0) el("text", { x: ml + i * larg + larg / 2, y: Hh - mb + 16, "text-anchor": "middle" }, svg).textContent = et;
-  });
-  const campione = r => r === "url(#righe)" ? `repeating-linear-gradient(45deg, ${css("--p1")} 0 4px, ${css("--carta")} 4px 6px)`
-    : r === "url(#quadri)" ? `repeating-linear-gradient(45deg, ${css("--carta")} 0 1px, transparent 1px 5px), repeating-linear-gradient(-45deg, ${css("--carta")} 0 1px, ${css("--p1ac")} 1px 5px)`
-    : r === "url(#punti)" ? `radial-gradient(${css("--carta")} 1px, ${css("--ben")} 1.5px) 0 0 / 5px 5px` : r;
-  legendaCliccabile(cont, tutteSerie.map(s => [s.nome, campione(s.riempi)]), () => barre(cont, etichette, tutteSerie, unita, dec));
-}
-// grafico del giorno: linee su due assi (sinistra kW / kWh, destra €/kWh); asse dei tempi sempre di 24 ore
-// serie: [{nome, valori (uno per quarto d'ora), colore, tratto, larg, dx (asse destro)}]
-function linee(cont, inizio, nq, serie) {
-  cont.innerHTML = "";
-  const W = Math.max(320, cont.clientWidth), Hh = 300, ml = 52, mr = 58, mt = 26, mb = 36, n = nq;
-  const svg = el("svg", { viewBox: `0 0 ${W} ${Hh}`, role: "img", "aria-label": serie.map(s => s.nome).join(", ") }, cont);
-  const x = k => ml + k / Math.max(1, n) * (W - ml - mr);
-  const vede = s => !nascoste[chiaveS(cont, s.nome)];
-  const vals = d => serie.filter(s => vede(s) && !!s.dx === d).flatMap(s => s.valori.filter(v => v != null));
-  const sk = scala(Math.min(0, ...vals(false)), Math.max(1, ...vals(false)));
-  const vd = vals(true), dx = vd.length > 0;
-  const sp = scala(Math.min(0, ...vd, 0), Math.max(0.01, ...vd));
-  const yk = v => mt + (sk.b - v) / (sk.b - sk.a) * (Hh - mt - mb), yp = v => mt + (sp.b - v) / (sp.b - sp.a) * (Hh - mt - mb);
-  for (const t of sk.tacche) { el("line", { x1: ml, x2: W - mr, y1: yk(t), y2: yk(t), stroke: css("--bordo") }, svg);
-    el("text", { x: ml - 6, y: yk(t) + 4, "text-anchor": "end" }, svg).textContent = fmt(t, 0); }
-  if (dx) for (const t of sp.tacche) el("text", { x: W - mr + 6, y: yp(t) + 4 }, svg).textContent = fmt(t, 2);
-  el("text", { x: 2, y: 12 }, svg).textContent = "kW / kWh";
-  if (dx) el("text", { x: W - 2, y: 12, "text-anchor": "end" }, svg).textContent = "€/kWh";
-  for (let h = 0; h <= n / 4; h += (W < 600 ? 6 : 3)) el("text", { x: x(h * 4), y: Hh - mb + 16, "text-anchor": "middle" }, svg).textContent =
-    new Date((inizio + h * 3600) * 1000).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
-  for (const s of serie) {
-    if (!vede(s)) continue;
-    const y = s.dx ? yp : yk;
-    let d = "", su = false;
-    s.valori.forEach((v, k) => { if (v == null) { su = false; return; }
-      d += `${su ? "L" : "M"}${x(k).toFixed(1)},${y(v).toFixed(1)}L${x(k + 1).toFixed(1)},${y(v).toFixed(1)}`; su = true; });
-    if (d) el("path", { d, fill: "none", stroke: s.colore, "stroke-width": s.larg || 2, "stroke-dasharray": s.tratto || "" }, svg);
-  }
-  legendaCliccabile(cont, serie.map(s => [s.nome, s.colore]), () => linee(cont, inizio, nq, serie));
+  const tenue = css("--tenue"), bordo = css("--bordo");
+  const asse = { stroke: tenue, grid: { stroke: bordo, width: 1 }, ticks: { stroke: bordo } };
+  const k = s => cont.id + "|" + s.label;
+  const o = {
+    width: larghezza(cont), height: opz.altezza || 300,
+    scales: opz.scale, axes: [{ ...asse, ...opz.assex }, ...opz.assi.map(a => ({ ...asse, ...a }))],
+    series: [opz.serie0, ...serie.map(s => ({ spanGaps: false, width: 2, points: { show: false }, ...s, show: !nascoste[k(s)] }))],
+    cursor: opz.cursore || {}, legend: { live: true },
+    hooks: { ...(opz.hooks || {}), setSeries: [(u, i) => { if (i == null || i < 1) return; const s = u.series[i];
+      if (s.show) delete nascoste[k(s)]; else nascoste[k(s)] = true; salvaNascoste(); }] },
+  };
+  const dati = [x, ...serie.map(s => s.dati)];
+  serie.forEach(s => delete s.dati);
+  const u = new uPlot(o, dati, cont);
+  grafici.set(cont, u);
+  return u;
 }
 
-let G = [], M = [], L = [], indice = null, indiceLive = null;
+// grafico del giorno: asse dei tempi sempre di 24 ore, ogni grandezza con la sua scala (sinistra potenze/energia, destra le altre)
+// pallini delle simulazioni (solo PC con mouse): [{t, nome, curve: [{nome, inizio, valori (kW), colore, tratto, larg}]}]
+const CON_MOUSE = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+function giorno(cont, inizio, nq, serie, pallini) {
+  const x = Array.from({ length: nq }, (_, k) => inizio + k * 900);
+  const scalini = uPlot.paths.stepped({ align: 1 });
+  const ora = t => new Date(t * 1e3).toLocaleTimeString("it-IT", { timeZone: ROMA, hour: "2-digit", minute: "2-digit" });
+  const SC = { k: ["kW / kWh", 0, false], e: ["€/kWh", 2, true], ghi: ["W/m²", 0, true], temp: ["°C", 0, true], pct: ["%", 0, true] };
+  const usate = [...new Set(serie.map(s => s.scale || "k"))];
+  const assi = usate.map(sc => { const [nome, d, dx] = SC[sc]; const s1 = serie.find(s => (s.scale || "k") === sc);
+    return { scale: sc, side: dx ? 1 : 3, size: dx ? 52 : 56, show: larghezza(cont) >= 700 || sc === "k" || sc === "e" || sc === "pct", label: nome, labelSize: 16, stroke: dx && sc !== "pct" ? s1.stroke : css("--tenue"),
+             grid: { show: sc === "k" }, values: (u, v) => v.map(a => fmt(a, v.length > 1 && Math.abs(v[1] - v[0]) < 1 ? Math.max(d, Math.abs(v[1] - v[0]) < 0.1 ? 2 : 1) : d)) }; });
+  const pal = (pallini || []).filter(p => p.t >= inizio && p.t <= inizio + nq * 900);
+  const usaPallini = pal.length > 0 && CON_MOUSE() && larghezza(cont) >= 700;
+  let attivo = -1;
+  const R = 5;                                                           // raggio del pallino (px)
+  const disegnaPallini = u => {
+    if (!usaPallini) return;
+    const c = u.ctx, px = uPlot.pxRatio, { left, top, width, height } = u.bbox, yb = top + height - 8 * px;
+    c.save(); c.beginPath(); c.rect(left, top, width, height); c.clip();
+    if (attivo >= 0) {                                                   // curve del pallino attivo
+      for (const cv of pal[attivo].curve) {
+        c.beginPath(); c.strokeStyle = cv.colore; c.lineWidth = cv.larg * px; c.setLineDash((cv.tratto || []).map(v => v * px));
+        let su = false;
+        cv.valori.forEach((v, i) => {
+          if (v == null) { su = false; return; }
+          const xa = u.valToPos(cv.inizio + i * 900, "x", true), xb = u.valToPos(cv.inizio + (i + 1) * 900, "x", true), y = u.valToPos(v, "k", true);
+          if (su) c.lineTo(xa, y); else c.moveTo(xa, y);
+          c.lineTo(xb, y); su = true;
+        });
+        c.stroke();
+      }
+      c.setLineDash([]);
+      const righe = [pal[attivo].nome, ...pal[attivo].curve.map(cv => cv.nome)];
+      c.font = `${12 * px}px system-ui, sans-serif`;
+      const w = Math.max(...righe.map(r => c.measureText(r).width)) + 44 * px, h = righe.length * 17 * px + 8 * px;
+      c.globalAlpha = 0.92; c.fillStyle = css("--carta"); c.fillRect(left + 6 * px, top + 6 * px, w, h); c.globalAlpha = 1;
+      c.strokeStyle = css("--bordo"); c.lineWidth = px; c.strokeRect(left + 6 * px, top + 6 * px, w, h);
+      righe.forEach((r, i) => {
+        const y = top + 6 * px + 15 * px + i * 17 * px;
+        if (i > 0) { const cv = pal[attivo].curve[i - 1]; c.beginPath(); c.strokeStyle = cv.colore; c.lineWidth = cv.larg * px;
+          c.setLineDash((cv.tratto || []).map(v => v * px)); c.moveTo(left + 12 * px, y - 4 * px); c.lineTo(left + 36 * px, y - 4 * px); c.stroke(); c.setLineDash([]); }
+        c.fillStyle = css("--testo"); c.fillText(r, left + (i > 0 ? 40 : 12) * px, y);
+      });
+    }
+    pal.forEach((p, i) => {
+      const xp = u.valToPos(p.t, "x", true);
+      c.beginPath(); c.arc(xp, yb, (i === attivo ? R + 2 : R) * px, 0, 7);
+      c.fillStyle = i === attivo ? css("--testo") : css("--carta"); c.fill();
+      c.lineWidth = 2 * px; c.strokeStyle = css("--testo"); c.stroke();
+    });
+    c.restore();
+  };
+  const u = base(cont, x, serie.map(s => ({ paths: scalini, ...s, scale: s.scale || "k", value: (u, v) => v == null ? "–" : fmt(v, s.dec ?? 2) })), {
+    altezza: 320, hooks: { draw: [disegnaPallini] },
+    scale: { x: { time: true, range: () => [inizio, inizio + nq * 900] }, k: { range: (u, a, b) => [Math.min(0, a ?? 0), Math.max(1, b ?? 1)] },
+             e: {}, ghi: { range: (u, a, b) => [0, Math.max(100, b ?? 0)] }, temp: {}, pct: { range: [0, 100] } },
+    assex: { space: 45, incrs: [3600, 7200, 10800, 21600], values: (u, v) => v.map(ora) },
+    assi, serie0: { label: "Ora", value: (u, v) => v == null ? "–" : ora(v) + "–" + ora(v + 900) },
+  });
+  if (usaPallini) {
+    const sopra = e => {
+      const yb = u.over.clientHeight - 8, xs = pal.map(p => u.valToPos(p.t, "x"));
+      let i = -1, dmin = 1e9;
+      xs.forEach((xp, k) => { const d = Math.hypot(e.offsetX - xp, e.offsetY - yb); if (d < dmin) { dmin = d; i = k; } });
+      const nuovo = dmin <= R + 6 ? i : -1;
+      if (nuovo !== attivo) { attivo = nuovo; u.over.style.cursor = attivo >= 0 ? "pointer" : ""; u.redraw(false, false); }
+    };
+    u.over.addEventListener("mousemove", sopra);
+    u.over.addEventListener("mouseleave", () => { if (attivo >= 0) { attivo = -1; u.redraw(false, false); } });
+  }
+  return u;
+}
+
+// motivi (tratteggi) per distinguere le barre anche senza colore
+function motivo(tipo, colore, sfondo) {
+  const c = document.createElement("canvas"); c.width = c.height = 8; const g = c.getContext("2d");
+  g.fillStyle = colore; g.fillRect(0, 0, 8, 8); g.strokeStyle = sfondo; g.lineWidth = 2;
+  if (tipo === "righe") { g.beginPath(); g.moveTo(0, 8); g.lineTo(8, 0); g.moveTo(-2, 2); g.lineTo(2, -2); g.moveTo(6, 10); g.lineTo(10, 6); g.stroke(); }
+  if (tipo === "quadri") { g.lineWidth = 1.2; g.beginPath(); g.moveTo(0, 0); g.lineTo(8, 8); g.moveTo(8, 0); g.lineTo(0, 8); g.stroke(); }
+  if (tipo === "punti") { g.fillStyle = sfondo; g.beginPath(); g.arc(4, 4, 1.4, 0, 7); g.fill(); }
+  return c;
+}
+function campione(r) {          // stesso motivo per il quadratino della legenda
+  if (!r.tipo) return r.colore;
+  return `url(${motivo(r.tipo, r.colore, css("--carta")).toDataURL()})`;
+}
+// grafico a barre raggruppate: etichette x, serie [{nome, valori, riempi: {colore, tipo}, opaco}]
+function barre(cont, etichette, tutte, unita, dec = 2) {
+  const n = etichette.length, x = etichette.map((_, i) => i);
+  const vuoto = () => new Path2D();
+  const disegna = u => {
+    const vis = u.series.map((s, i) => i).filter(i => i > 0 && u.series[i].show), m = Math.max(1, vis.length);
+    const passo = Math.abs(u.valToPos(1, "x", true) - u.valToPos(0, "x", true)), gb = passo * 0.8 / m;
+    const c = u.ctx, { left, top, width, height } = u.bbox;
+    c.save(); c.beginPath(); c.rect(left, top, width, height); c.clip();
+    vis.forEach((si, k) => {
+      const S = tutte[si - 1], val = u.data[si], y0 = u.valToPos(0, "y", true);
+      const fill = S.riempi.tipo ? c.createPattern(motivo(S.riempi.tipo, S.riempi.colore, css("--carta")), "repeat") : S.riempi.colore;
+      for (let i = 0; i < n; i++) {
+        const v = val[i]; if (v == null) continue;
+        const xa = u.valToPos(i, "x", true) - passo * 0.4 + k * gb, y = u.valToPos(v, "y", true);
+        c.globalAlpha = S.opaco && S.opaco[i] ? 0.35 : 1;
+        c.fillStyle = fill; c.fillRect(xa, Math.min(y, y0), Math.max(1, gb - 1), Math.max(0.5, Math.abs(y - y0)));
+        c.strokeStyle = css("--testo"); c.lineWidth = 0.5; c.strokeRect(xa, Math.min(y, y0), Math.max(1, gb - 1), Math.max(0.5, Math.abs(y - y0)));
+      }
+    });
+    c.restore();
+  };
+  const ogni = () => Math.ceil(n / Math.max(1, Math.floor(larghezza(cont) / 40)));
+  const u = base(cont, x, tutte.map(S => ({ label: S.nome, stroke: css("--testo"), width: 0, fill: S.riempi.colore, paths: vuoto, dati: S.valori,
+                                              value: (u, v) => v == null ? "–" : fmt(v, dec) + " " + unita })), {
+    altezza: 280,
+    scale: { x: { time: false, range: () => [-0.5, n - 0.5] }, y: { range: (u, a, b) => { const lo = Math.min(0, a ?? 0), hi = Math.max(0, b ?? 0); const p = (hi - lo || 1) * 0.06; return [lo < 0 ? lo - p : 0, hi + p]; } } },
+    assex: { space: 30, splits: () => x.filter(i => i % ogni() === 0), values: (u, v) => v.map(i => etichette[i] ?? ""), grid: { show: false } },
+    assi: [{ label: unita, size: 60, values: (u, v) => v.map(a => fmt(a, Math.abs(a) < 10 && a % 1 ? 2 : 0)) }],
+    serie0: { label: "", value: (u, i) => i == null ? "–" : etichette[i] },
+    hooks: { draw: [disegna] }, cursore: { points: { show: false }, drag: { x: false, y: false } },
+  });
+  u.root.querySelectorAll(".u-legend .u-series").forEach((r, i) => {
+    if (i === 0) return; const mk = r.querySelector(".u-marker"); if (!mk) return;
+    mk.style.background = campione(tutte[i - 1].riempi); mk.style.backgroundSize = "8px 8px"; mk.style.borderColor = css("--testo");
+  });
+  return u;
+}
+let attesaR; window.addEventListener("resize", () => { clearTimeout(attesaR); attesaR = setTimeout(() => { for (const [c, u] of grafici) u.setSize({ width: larghezza(c), height: u.height }); }, 150); });
+
+// ---------------------------------------------------------------- meteo del giorno (luogo di Cismondi, stessi dati della pagina EMS Cismondi)
+const cacheMeteo = new Map();
+async function meteoGiorno(g, t0, nq) {
+  if (cacheMeteo.has(g)) return cacheMeteo.get(g);
+  const acc = { ghi: Array(nq).fill(null).map(() => []), temp: Array(nq).fill(null).map(() => []), nuv: Array(nq).fill(null).map(() => []) };
+  const metti = (t, ghi, temp, nuv) => { const k = Math.floor((t - t0) / 900); if (k < 0 || k >= nq) return;
+    if (ghi != null) acc.ghi[k].push(ghi); if (temp != null) acc.temp[k].push(temp); if (nuv != null) acc.nuv[k].push(nuv); };
+  const righe = R => R.forEach(r => metti(+r.ts, num(r.ghi_wm2), num(r.temp_c), num(r.nuvole)));
+  let fonte = null;
+  try { righe(csv(await scarica(`dati/${g}/dataset.csv.gz`, "gz"))); fonte = "simulazione"; } catch (e) {}
+  if (!fonte) try { const R = csv(await scarica("pannello/oggi.csv")).filter(r => +r.ts >= t0 && +r.ts < t0 + nq * 900);
+    if (R.length) { righe(R); fonte = "oggi"; } } catch (e) {}
+  if (!fonte) try { const M = await scarica(`storico/meteo_${g.slice(0, 4)}${g.slice(5, 7)}.json`, true);
+    for (let k = 0; k < nq; k++) { const h = M[Math.floor((t0 + k * 900) / 3600) * 3600]; if (h) metti(t0 + k * 900, num(h.ghi), num(h.temp), num(h.nuvole)); }
+    fonte = "storico"; } catch (e) {}
+  const media = a => a.map(v => v.length ? v.reduce((x, y) => x + y, 0) / v.length : null);
+  const r = { ghi: media(acc.ghi), temp: media(acc.temp), nuv: media(acc.nuv) };
+  cacheMeteo.set(g, r);
+  return r;
+}
+function serieMeteo(m) {
+  return [{ label: "radiazione W/m² (tratteggio)", stroke: OKABE.verde, dash: [8, 4], width: 1.4, scale: "ghi", dati: m.ghi, dec: 0 },
+          { label: "temperatura °C (puntini)", stroke: OKABE.rosa, dash: [2, 3], width: 1.4, scale: "temp", dati: m.temp, dec: 1 },
+          { label: "nuvolosità % (tratto e punto)", stroke: css("--tenue"), dash: [8, 3, 2, 3], width: 1.4, scale: "pct", dati: m.nuv, dec: 0 }]
+    .filter(s => s.dati.some(v => v != null));
+}
+
+let G = [], M = [], L = [], indice = null, indiceLive = null, prezziNoti = {}, pianoUltimo = null;
+const capacita = () => num((indice && indice.parametri || {}).capacita_kwh) || 30;
+const hhmm = t => new Date(t * 1e3).toLocaleTimeString("it-IT", { timeZone: ROMA, hour: "2-digit", minute: "2-digit" });
+const ggmm = t => new Date(t * 1e3).toLocaleDateString("it-IT", { timeZone: ROMA, day: "2-digit", month: "2-digit" });
+// prezzo noto di ogni quarto d'ora del giorno (null se non noto)
+function prezziGiorno(g, t0, nq) {
+  const p = prezziNoti[g]; if (!p) return Array(nq).fill(null);
+  return Array.from({ length: nq }, (_, k) => { const i = Math.round((t0 + k * 900 - p.inizio) / 900); return p.prezzi[i] ?? null; });
+}
+// piani salvati a ogni simulazione (R06): del giorno e del giorno prima (per il pallino precedente)
+async function pianiDi(g) {
+  const d = new Date(g + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 1);
+  const ieri = d.toISOString().slice(0, 10), tutti = [];
+  for (const x of [ieri, g]) { try { tutti.push(...await scarica(`cessione/live/piani/${x}.json`, true)); } catch (e) {} }
+  return tutti.sort((a, b) => a.t_fine - b.t_fine);
+}
+function pallini(piani) {
+  return piani.map((p, i) => {
+    const prec = piani[i - 1];
+    const curve = [{ nome: "piano calcolato (migliore): potenza in rete kW", inizio: p.inizio, valori: p.calcolato.rete_kw, colore: css("--testo"), tratto: [3, 3], larg: 2.2 },
+                   { nome: "piano spedito: potenza in rete kW" + (p.cambiato ? "" : " (regola 4 ore: prime 4 ore del piano prima)"), inizio: p.inizio, valori: p.spedito.rete_kw, colore: OKABE.verde, larg: 3.2 }];
+    if (prec) curve.push({ nome: `piano spedito della simulazione precedente (fine calcoli ${ggmm(prec.t_fine)} ${hhmm(prec.t_fine)}): potenza in rete kW`, inizio: prec.inizio, valori: prec.spedito.rete_kw, colore: OKABE.rosa, tratto: [10, 3, 2, 3], larg: 2.6 });
+    return { t: p.t_fine, nome: `Simulazione finita alle ${hhmm(p.t_fine)} del ${ggmm(p.t_fine)}`, curve };
+  });
+}
+let generazioneGiorno = 0;
 const giornoBreve = g => g.slice(8, 10) + "/" + g.slice(5, 7);
 const nomeMese = m => new Date(m + "-15T12:00:00").toLocaleDateString("it-IT", { month: "long", year: "numeric" });
 const NOMI_MODI = { fully: "Fully fed to grid", tou: "TOU", terzi: "Third-party dispatch" };
@@ -250,9 +372,16 @@ async function mostraGiorno() {
   $("t_live").textContent = "Giorno – simulazione ogni 2 ore – " + data;
   $("t_giorno").textContent = "Giorno – ottimo teorico – " + data;
   const [t0, nq] = mezzanotte(g);
+  const meteo = await meteoGiorno(g, t0, nq);
   // simulazione ogni 2 ore
-  try {
-    const d = await scarica(`cessione/live/giorni/${g}.json`, true);
+  const mia = ++generazioneGiorno;
+  const piani = await pianiDi(g);
+  if (mia !== generazioneGiorno) return;
+  const prezzi = prezziGiorno(g, t0, nq), cap = capacita();
+  let d = null;
+  try { d = await scarica(`cessione/live/giorni/${g}.json`, true); } catch (e) {}
+  if (mia !== generazioneGiorno) return;
+  if (d) {
     const per = {}; for (const q of d.quarti) per[Math.round((q.t - t0) / 900)] = q;
     const col = f => Array.from({ length: nq }, (_, k) => per[k] ? f(per[k]) : null);
     const r = L.find(x => x.giorno === g) || {};
@@ -261,41 +390,64 @@ async function mostraGiorno() {
       <div class="tessera"><span>Senza batteria</span><b>${fmt(num(r.p0_eur))}</b><span>€</span></div>
       <div class="tessera"><span>Con batteria</span><b>${fmt(num(r.batt_eur))}</b><span>€</span></div>
       <div class="tessera"><span>Beneficio della batteria</span><b class="${num(r.beneficio_eur) >= 0 ? "pos" : "negv"}">${fmt(num(r.beneficio_eur))}</b><span>€ (vendite del giorno)</span></div>
-      <div class="tessera"><span>Batteria a fine giornata</span><b>${fmt(num(r.soc_fine), 1)}</b><span>kWh</span></div></div>`;
-    linee($("g_live"), t0, nq, [
-      { nome: "produzione vera (kW, linea piena)", valori: col(q => q.fv * 4), colore: css("--fv"), larg: 2 },
-      { nome: "produzione prevista (kW, tratteggio)", valori: col(q => q.prev == null ? null : q.prev * 4), colore: css("--prev"), tratto: "6 3", larg: 2 },
-      { nome: "in rete con batteria (kW, linea spessa)", valori: col(q => q.ceduto * 4), colore: css("--rete1"), larg: 2.6 },
-      { nome: "in rete senza batteria (kW, linea sottile)", valori: col(q => q.ceduto0 * 4), colore: css("--rete0"), larg: 1.2 },
-      { nome: "energia in batteria (kWh, tratteggio lungo)", valori: col(q => q.soc), colore: css("--soc"), tratto: "10 4", larg: 2.4 },
-      { nome: "prezzo orario NORD (€/kWh, asse destro, puntini)", valori: col(q => q.prezzo), colore: css("--prezzo"), tratto: "2 3", larg: 2.4, dx: true }]);
-  } catch (e) { $("live_tessere").innerHTML = ""; $("g_live").innerHTML = `<p class="nota">Nessuna simulazione ogni 2 ore per questo giorno (la simulazione parte dall'avvio della revisione R03).</p>`; }
+      <div class="tessera"><span>Batteria a fine giornata</span><b>${fmt(num(r.soc_fine), 1)}</b><span>kWh (${fmt(num(r.soc_fine) / cap * 100, 0)} %)</span></div></div>`;
+    giorno($("g_live"), t0, nq, [
+      { label: "produzione vera kW (linea piena)", dati: col(q => q.fv * 4), stroke: css("--fv"), width: 2 },
+      { label: "produzione prevista kW (tratteggio)", dati: col(q => q.prev == null ? null : q.prev * 4), stroke: css("--prev"), dash: [6, 3], width: 2 },
+      { label: "in rete con batteria kW (linea spessa)", dati: col(q => q.ceduto * 4), stroke: css("--rete1"), width: 2.6 },
+      { label: "in rete senza batteria kW (linea sottile)", dati: col(q => q.ceduto0 * 4), stroke: css("--rete0"), width: 1.2 },
+      { label: "energia in batteria kWh (tratteggio lungo)", dati: col(q => q.soc), stroke: css("--soc"), dash: [10, 4], width: 2.4, dec: 1 },
+      { label: "energia in batteria % (tratteggio corto)", dati: col(q => q.soc / cap * 100), stroke: css("--soc"), dash: [3, 3], width: 1.6, scale: "pct", dec: 0 },
+      { label: "prezzo NORD €/kWh (puntini)", dati: prezzi.map((v, k) => per[k] ? per[k].prezzo : v), stroke: css("--prezzo"), dash: [2, 3], width: 2.4, scale: "e", dec: 3 },
+      ...serieMeteo(meteo)], pallini(piani));
+  } else if (prezzi.some(v => v != null)) {
+    // giorno senza quarti vissuti (domani): prezzi noti e ultimo piano spedito
+    const P = pianoUltimo, sulGiorno = (arr, f = v => v) => Array.from({ length: nq }, (_, k) => {
+      if (!P) return null; const i = Math.round((t0 + k * 900 - P.inizio) / 900); const v = arr[i]; return v == null ? null : f(v); });
+    $("live_tessere").innerHTML = `<p class="nota">Giorno non ancora vissuto: prezzi noti${P ? ` e ultimo piano spedito (simulazione finita alle ${hhmm(P.t_fine)} del ${ggmm(P.t_fine)}; produzione prevista, scenario probabile)` : ""}.</p>`;
+    giorno($("g_live"), t0, nq, [
+      ...(P ? [{ label: "produzione prevista kW (tratteggio)", dati: sulGiorno(P.fv_prevista_kw), stroke: css("--prev"), dash: [6, 3], width: 2 },
+               { label: "in rete prevista, piano spedito kW", dati: sulGiorno(P.spedito.rete_kw), stroke: css("--rete1"), width: 2.6 },
+               { label: "energia in batteria prevista kWh (tratteggio lungo)", dati: sulGiorno(P.spedito.soc_kwh), stroke: css("--soc"), dash: [10, 4], width: 2.4, dec: 1 },
+               { label: "energia in batteria prevista % (tratteggio corto)", dati: sulGiorno(P.spedito.soc_kwh, v => v / cap * 100), stroke: css("--soc"), dash: [3, 3], width: 1.6, scale: "pct", dec: 0 }] : []),
+      { label: "prezzo NORD €/kWh (puntini)", dati: prezzi, stroke: css("--prezzo"), dash: [2, 3], width: 2.4, scale: "e", dec: 3 },
+      ...serieMeteo(meteo)], pallini(piani));
+  } else { $("live_tessere").innerHTML = ""; $("g_live").innerHTML = `<p class="nota">Nessuna simulazione ogni 2 ore per questo giorno (la simulazione parte dall'avvio della revisione R03).</p>`; }
   try {
     const dec = await scarica(`cessione/live/decisioni/${g}.json`, true);
-    $("decisioni").innerHTML = `<h2 style="margin-top:12px">Decisioni del giorno</h2><table><tr><th>Ora</th><th>Dati fino a</th><th>Batteria kWh</th><th>Scelta</th>
-      <th>Atteso Fully €</th><th>Atteso TOU €</th><th>Atteso Third-party €</th><th>Previsione kWh</th><th>Correzione letture</th><th>Modello meteo</th><th>Fasce TOU</th></tr>` +
+    const stab = st => !st ? "–" : (st.cambio ? "<b>cambiato</b>" : "mantenuto") +
+      (st.guadagno_eur != null ? `<br>nuovo +${fmt(st.guadagno_eur)} € (soglia ${fmt(st.soglia_eur)} €)` : `<br>${st.motivo || ""}`);
+    const semi = x => x.punteggi_semi ? Object.entries(x.punteggi_semi).map(([n, v]) => `${n} ${fmt(v)}`).join("<br>") : "–";
+    $("decisioni").innerHTML = `<h2 style="margin-top:12px">Decisioni del giorno</h2><table><tr><th>Ora</th><th>Dati fino a</th><th>Batteria kWh</th><th>Modalità ora</th>
+      <th>Ricavo atteso €</th><th>Punto di partenza €</th><th>Piani provati</th><th>Ore prezzo previsto</th><th>Piano spedito (regola 4 ore)</th><th>Previsione kWh</th><th>Correzione letture</th><th>Modello meteo</th></tr>` +
       dec.map(x => `<tr><td>${x.ora.slice(11, 16)}</td><td>${x.dati_fino_a.slice(11, 16)}</td><td>${fmt(x.soc_kwh, 1)}</td><td><b>${x.nome_modo}</b></td>
-        <td>${fmt(x.punteggio_eur.fully)}</td><td>${fmt(x.punteggio_eur.tou)}</td><td>${fmt(x.punteggio_eur.terzi)}</td><td>${fmt(x.previsione_kwh, 1)}</td>
-        <td>${fmt(x.correzione_ultime_letture, 2)}</td><td style="text-align:left">${Object.entries(x.modello_per_orizzonte || {}).map(([o, m]) => o + ": " + m).join("<br>")}</td>
-        <td style="text-align:left;white-space:normal;min-width:220px">${x.fasce_tou || "–"}</td></tr>`).join("") + `</table>
-      <p class="nota">Atteso = ricavo previsto fino all'ultimo prezzo noto, corretto con lo scarto imparato. ${Object.values(dec[dec.length - 1].modelli_errore || {}).length ? "Modelli meteo non disponibili: " + Object.keys(dec[dec.length - 1].modelli_errore).join(", ") + "." : ""}</p>`;
+        <td>${typeof x.atteso_eur === "number" ? fmt(x.atteso_eur) : fmt(Math.max(...Object.values(x.punteggio_eur || {0: null})))}</td>
+        <td style="text-align:left">${semi(x)}</td><td>${x.valutazioni ? x.valutazioni.toLocaleString("it-IT") + " (" + fmt(x.secondi, 0) + " s)" : "–"}</td>
+        <td>${x.ore_prezzo_previsto ?? "–"}</td><td style="text-align:left;white-space:normal;min-width:160px">${stab(x.stabilita)}</td><td>${fmt(x.previsione_kwh, 1)}</td>
+        <td>${fmt(x.correzione_ultime_letture, 2)}</td><td style="text-align:left">${Object.entries(x.modello_per_orizzonte || {}).map(([o, m]) => o + ": " + m).join("<br>")}</td></tr>`).join("") + `</table>
+      <p class="nota">Ricavo atteso = ricavo previsto fino a fine domani sui 3 scenari, più il valore dell'energia lasciata in batteria. Punto di partenza = stessi conti per i piani iniziali (programmazione lineare, logica fuzzy, modalità pure, piano precedente) prima dell'algoritmo evolutivo. ${Object.values(dec[dec.length - 1].modelli_errore || {}).length ? "Modelli meteo non disponibili: " + Object.keys(dec[dec.length - 1].modelli_errore).join(", ") + "." : ""}</p>`;
   } catch (e) { $("decisioni").innerHTML = ""; }
   // ottimo teorico
   try {
     const d = await scarica(`cessione/giorni/${g}.json`, true);
     const q = d.quarti;
-    linee($("g_giorno"), d.inizio, q.length, [
-      { nome: "produzione (kW, linea piena)", valori: q.map(r => r.fv * 4), colore: css("--fv"), larg: 2 },
-      { nome: "in rete con batteria (kW, linea spessa)", valori: q.map(r => r.ceduto * 4), colore: css("--rete1"), larg: 2.6 },
-      { nome: "in rete senza batteria (kW, linea sottile)", valori: (d.p0_ceduto || []).map(v => v * 4), colore: css("--rete0"), larg: 1.2 },
-      { nome: "energia in batteria (kWh, tratteggio lungo)", valori: q.map(r => r.soc), colore: css("--soc"), tratto: "10 4", larg: 2.4 },
-      { nome: "prezzo orario NORD (€/kWh, asse destro, puntini)", valori: q.map(r => r.prezzo), colore: css("--prezzo"), tratto: "2 3", larg: 2.4, dx: true }]);
+    const m2 = d.inizio === t0 && q.length === nq ? meteo : await meteoGiorno(g + "|o", d.inizio, q.length);
+    giorno($("g_giorno"), d.inizio, q.length, [
+      { label: "produzione kW (linea piena)", dati: q.map(r => r.fv * 4), stroke: css("--fv"), width: 2 },
+      { label: "in rete con batteria kW (linea spessa)", dati: q.map(r => r.ceduto * 4), stroke: css("--rete1"), width: 2.6 },
+      { label: "in rete senza batteria kW (linea sottile)", dati: (d.p0_ceduto || []).map(v => v * 4), stroke: css("--rete0"), width: 1.2 },
+      { label: "energia in batteria kWh (tratteggio lungo)", dati: q.map(r => r.soc), stroke: css("--soc"), dash: [10, 4], width: 2.4, dec: 1 },
+      { label: "energia in batteria % (tratteggio corto)", dati: q.map(r => r.soc / capacita() * 100), stroke: css("--soc"), dash: [3, 3], width: 1.6, scale: "pct", dec: 0 },
+      { label: "prezzo NORD €/kWh (puntini)", dati: q.map(r => r.prezzo), stroke: css("--prezzo"), dash: [2, 3], width: 2.4, scale: "e", dec: 3 },
+      ...serieMeteo(m2)]);
   } catch (e) { $("g_giorno").innerHTML = `<p class="nota">Ottimo teorico non ancora calcolato per questo giorno (si calcola a giorno finito).</p>`; }
 }
 
-function mostraMese() {
+const tuttiGiorni = () => [...new Set([...G.map(r => r.giorno), ...L.map(r => r.giorno), ...Object.keys(prezziNoti).filter(g => !L.length || g >= L[0].giorno)])].sort();
+function mostraMese(desiderato) {
   const m = $("mese").value;
-  const giorni = [...new Set([...G.filter(r => r.mese === m).map(r => r.giorno), ...L.filter(r => r.giorno.slice(0, 7) === m).map(r => r.giorno)])].sort();
+  const elenco = tuttiGiorni().filter(g => g.slice(0, 7) === m);                  // per la scelta del giorno
+  const giorni = elenco.filter(g => G.some(x => x.giorno === g) || L.some(x => x.giorno === g));   // per totali e grafici
   const R = G.filter(r => r.mese === m), V = R.filter(r => r.valido === "1"), LV = L.filter(r => r.giorno.slice(0, 7) === m);
   const t = k => V.reduce((a, r) => a + (num(r[k]) || 0), 0), tl = k => LV.reduce((a, r) => a + (num(r[k]) || 0), 0);
   const ben = v => `<b class="${v >= 0 ? "pos" : "negv"}">${fmt(v)}</b>`;
@@ -310,14 +462,15 @@ function mostraMese() {
   const gv = (righe, k) => giorni.map(g => { const r = righe.find(x => x.giorno === g); return r ? num(r[k]) : null; });
   const op = giorni.map(g => { const r = R.find(x => x.giorno === g); return r ? r.valido !== "1" : false; });
   const S = (nome, valori, riempi, opaco = op) => ({ nome, valori, riempi, opaco });
-  barre($("g_euro"), et, [S("Senza batteria (prezzi del giorno)", giorni.map((g, i) => gv(LV, "p0_eur")[i] ?? gv(R, "p0_eur")[i]), css("--p0")),
-                          S("Con batteria – ogni 2 ore", gv(LV, "batt_eur"), "url(#quadri)"), S("Con batteria – ottimo teorico", gv(R, "p1_eur"), "url(#righe)")], "€");
-  barre($("g_ben"), et, [S("Beneficio – ogni 2 ore", gv(LV, "beneficio_eur"), "url(#quadri)"), S("Beneficio – ottimo teorico", gv(R, "p1_beneficio_eur"), "url(#righe)")], "€");
-  barre($("g_kwh"), et, [S("Prodotti", giorni.map((g, i) => gv(LV, "fv_kwh")[i] ?? gv(R, "fv_kwh")[i]), css("--p0")),
-                         S("Restituiti dalla batteria – ogni 2 ore", gv(LV, "scarica_kwh"), "url(#quadri)"),
-                         S("Restituiti dalla batteria – ottimo teorico", gv(R, "p1_scarica_kwh"), "url(#righe)")], "kWh", 1);
-  barre($("g_mesi"), M.map(x => nomeMese(x.mese)), [S("Senza batteria", M.map(x => num(x.p0_eur)), css("--p0"), null),
-    S("Con batteria – ottimo teorico", M.map(x => num(x.p1_eur)), "url(#righe)", null), S("Beneficio – ottimo teorico", M.map(x => num(x.p1_beneficio_eur)), "url(#punti)", null)], "€");
+  const P0 = { colore: css("--p0") }, RIGHE = { colore: css("--p1"), tipo: "righe" }, QUADRI = { colore: css("--p1ac"), tipo: "quadri" }, PUNTI = { colore: css("--ben"), tipo: "punti" };
+  barre($("g_euro"), et, [S("Senza batteria (prezzi del giorno)", giorni.map((g, i) => gv(LV, "p0_eur")[i] ?? gv(R, "p0_eur")[i]), P0),
+                          S("Con batteria – ogni 2 ore", gv(LV, "batt_eur"), QUADRI), S("Con batteria – ottimo teorico", gv(R, "p1_eur"), RIGHE)], "€");
+  barre($("g_ben"), et, [S("Beneficio – ogni 2 ore", gv(LV, "beneficio_eur"), QUADRI), S("Beneficio – ottimo teorico", gv(R, "p1_beneficio_eur"), RIGHE)], "€");
+  barre($("g_kwh"), et, [S("Prodotti", giorni.map((g, i) => gv(LV, "fv_kwh")[i] ?? gv(R, "fv_kwh")[i]), P0),
+                         S("Restituiti dalla batteria – ogni 2 ore", gv(LV, "scarica_kwh"), QUADRI),
+                         S("Restituiti dalla batteria – ottimo teorico", gv(R, "p1_scarica_kwh"), RIGHE)], "kWh", 1);
+  barre($("g_mesi"), M.map(x => nomeMese(x.mese)), [S("Senza batteria", M.map(x => num(x.p0_eur)), P0, null),
+    S("Con batteria – ottimo teorico", M.map(x => num(x.p1_eur)), RIGHE, null), S("Beneficio – ottimo teorico", M.map(x => num(x.p1_beneficio_eur)), PUNTI, null)], "€");
   const cb = v => `class="${num(v) >= 0 ? "pos" : "negv"}"`;
   $("tabella").innerHTML = `<table><tr><th>Giorno</th><th>Prodotti kWh</th><th>Senza batteria €</th><th>Ogni 2 ore €</th><th>Beneficio ogni 2 ore €</th>
     <th>Modalità (quarti d'ora)</th><th>Ottimo teorico €</th><th>Beneficio ottimo €</th><th>di cui riporto €</th><th>NORD min–max €/kWh</th><th>Letture</th></tr>` +
@@ -328,11 +481,17 @@ function mostraMese() {
       <td>${fmt(num(r.p1_eur))}</td><td ${cb(r.p1_beneficio_eur)}>${fmt(num(r.p1_beneficio_eur))}</td><td>${fmt(num(r.p1_riporto_eur))}</td>
       <td>${r.giorno ? fmt(num(r.prezzo_min_eur_kwh), 3) + "–" + fmt(num(r.prezzo_max_eur_kwh), 3) : "–"}</td><td>${r.giorno ? fmt(num(r.copertura) * 100, 0) + " %" : "–"}</td></tr>`; }).join("") + `</table>`;
   const prima = $("giorno").value;
-  $("giorno").innerHTML = giorni.map(g => `<option value="${g}">${giornoBreve(g)}</option>`).join("");
-  $("giorno").value = giorni.includes(prima) ? prima : (giorni.length ? giorni[giorni.length - 1] : "");
+  $("giorno").innerHTML = elenco.map(g => `<option value="${g}">${giornoBreve(g)}${giorni.includes(g) ? "" : " (prezzi)"}</option>`).join("");
+  $("giorno").value = typeof desiderato === "string" && elenco.includes(desiderato) ? desiderato : elenco.includes(prima) ? prima : (giorni[giorni.length - 1] || elenco[elenco.length - 1] || "");
   mostraGiorno();
 }
 
+async function revisioni() {
+  let inst = "?";
+  try { inst = (await scarica("versione.json", true)).revisione || "?"; } catch (e) {}
+  $("revisione").textContent = `Pagina ${REV_PAGINA} · installata ${inst}`;
+  $("revisione").title = "Revisione di questa pagina e revisione installata sul repository (versione.json)";
+}
 async function avvio() {
   try {
     [indice, G, M] = await Promise.all([scarica("cessione/indice.json", true), scarica("cessione/giornaliero.csv").then(csv), scarica("cessione/mensile.csv").then(csv)]);
@@ -345,18 +504,35 @@ async function avvio() {
   const pp = indice.parametri || {};
   if (pp.capacita_kwh) document.querySelectorAll(".par_batt").forEach(e => e.textContent = `${fmt(pp.capacita_kwh, 0)} kWh, carica ${fmt(pp.potenza_carica_kw, 0)} kW, scarica ${fmt(pp.potenza_scarica_kw, 0)} kW`);
   if (pp.limite_rete_kw) document.querySelectorAll(".par_rete").forEach(e => e.textContent = fmt(pp.limite_rete_kw, 0));
+  revisioni();
   const quando = t => new Date(t).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   $("aggiornato").textContent = (indice.revisione ? "calcolo " + indice.revisione + ", " : "") + "aggiornato al " + quando(indice.aggiornato) +
     (indiceLive ? ` · ogni 2 ore: dal ${quando(indiceLive.inizio)}, eseguito fino al ${quando(indiceLive.eseguito_fino_a)}, modalità ${NOMI_MODI[indiceLive.modo_attuale] || "–"}` : "");
-  const mesi = [...new Set([...G.map(r => r.mese), ...L.map(r => r.giorno.slice(0, 7))])].sort();
+  try {
+    const ap = await scarica("cessione/live/apprendimento.json", true);
+    const u = (ap.storico || [])[ap.storico.length - 1];
+    if (u) $("aggiornato").textContent += ` · apprendimento ${quando(ap.aggiornato)}: ${u.decisioni} decisioni rigiocate, ${u.parametri_provati} insiemi di parametri provati, ${u.adottato ? "parametri nuovi adottati" : "parametri in uso confermati"}`;
+  } catch (e) {}
+  try { prezziNoti = (await scarica("cessione/live/prezzi_noti.json", true)).giorni || {}; } catch (e) { prezziNoti = {}; }
+  try { pianoUltimo = await scarica("cessione/live/piano_ultimo.json", true); } catch (e) { pianoUltimo = null; }
+  const mesi = [...new Set(tuttiGiorni().map(g => g.slice(0, 7)))].sort();
   $("mese").innerHTML = mesi.map(m => `<option value="${m}">${nomeMese(m)}</option>`).join("");
-  $("mese").value = mesi[mesi.length - 1] || "";
+  const vissuti = tuttiGiorni().filter(g => L.some(x => x.giorno === g) || G.some(x => x.giorno === g));
+  $("mese").value = (vissuti[vissuti.length - 1] || "").slice(0, 7) || mesi[mesi.length - 1] || "";
   mostraMese();
 }
-$("mese").addEventListener("change", mostraMese);
+$("mese").addEventListener("change", () => mostraMese());
+// giorno precedente / successivo, anche attraverso i mesi; le curve scelte restano (memoria del browser)
+function spostaGiorno(passo) {
+  const tutti = tuttiGiorni(), i = tutti.indexOf($("giorno").value), g = tutti[i + passo];
+  if (i < 0 || !g) return;
+  if (g.slice(0, 7) !== $("mese").value) { $("mese").value = g.slice(0, 7); mostraMese(g); }
+  else { $("giorno").value = g; mostraGiorno(); }
+}
+$("g_prec").addEventListener("click", () => spostaGiorno(-1));
+$("g_succ").addEventListener("click", () => spostaGiorno(1));
 $("giorno").addEventListener("change", mostraGiorno);
 $("bottone_aiuto").addEventListener("click", () => { const a = $("aiuto"); a.hidden = !a.hidden; $("bottone_aiuto").setAttribute("aria-expanded", String(!a.hidden)); });
-let attesa; window.addEventListener("resize", () => { clearTimeout(attesa); attesa = setTimeout(() => G.length && mostraMese(), 200); });
 avvio();
 </script>
 </body>

@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+# Revisione R06 - 26/10/2026 - a ogni decisione si salvano i piani completi calcolato e spedito (potenza in rete, energia
+#   in batteria, carica/scarica, produzione prevista) con l'ora di fine dei calcoli (cessione/live/piani/, piano_ultimo.json);
+#   prezzi noti fino all'ultimo disponibile (prezzi_noti.json); tolto il riassunto a testo del piano dal registro
+# Revisione R05 - 26/10/2026 - regola di stabilita' (4 ore / +10 % / 0,10 EUR) prima di cambiare il piano spedito;
+#   potenza TOU nel piano; carica 0-10 kW, scarica 2-10 kW
+# Revisione R04 - 24/10/2026 - decisione con piano a fasce di 2 ore (modalita' diverse nello stesso giorno) cercato con algoritmo
+#   evolutivo + semi lineari e fuzzy (cessione_ottimizza.py), modello fisico non lineare, prezzi mancanti previsti dallo
+#   storico (orizzonte fino a fine domani), parametri tarati dall'apprendimento; contesto di ogni decisione salvato per il rigioco
 # Revisione R03 - 23/10/2026 - prima versione: simulazione ogni 2 ore, da oggi in avanti
 """
 cessione_live.py - SOLO SIMULAZIONE: impianto da 20 kW in cessione totale (vedi cessione_totale.py per l'impianto),
@@ -16,10 +24,13 @@ A ogni giro di GitHub (ogni 30 minuti):
       orizzonte, il modello con l'errore misurato piu' basso (media dei modelli finche' non ci sono abbastanza dati);
       correzione con le ultime letture reali (scarto che si attenua nelle ore successive);
     - prezzi orari NORD noti (oggi; domani dalle 13 circa);
-    - per ogni modalita' Huawei (Fully fed to grid, TOU con al massimo 14 fasce al giorno, Third-party dispatch) si
-      calcola il programma e il ricavo atteso fino all'ultimo prezzo noto, corretto con lo scarto imparato;
-    - si sceglie la modalita' con il ricavo piu' alto.
-Uscite: cessione/live/ (stato.json, giornaliero.csv, giorni/AAAA-MM-GG.json, decisioni/AAAA-MM-GG.json)
+    - prezzi: quelli noti e, oltre l'ultimo noto, la previsione dallo storico: orizzonte almeno fino a fine domani;
+    - piano: per ogni fascia di 2 ore una modalita' Huawei (anche diverse nello stesso giorno) e per ogni ora il valore
+      della fascia TOU o del comando, cercato con algoritmo evolutivo partendo da programmazione lineare, logica fuzzy,
+      modalita' pure e piano precedente, valutato con il modello non lineare su 3 scenari di produzione
+      (cessione_ottimizza.py); parametri tarati dall'apprendimento (cessione_apprendimento.py).
+Uscite: cessione/live/ (stato.json, giornaliero.csv, giorni/AAAA-MM-GG.json, decisioni/AAAA-MM-GG.json,
+        piani/AAAA-MM-GG.json, piano_ultimo.json, prezzi_noti.json)
 """
 import csv
 import datetime as dt
@@ -28,22 +39,24 @@ import json
 import math
 import os
 import sys
+import time
 import urllib.parse
 
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cessione_totale as CT  # noqa: E402
+import cessione_ottimizza as CO  # noqa: E402
 
 OUT = os.path.join(CT.OUT, "live")
 MODELLI = [m for m in os.environ.get("EMS_MODELLI_METEO_CESSIONE",
            "italia_meteo_arpae_icon_2i,meteofrance_seamless,icon_seamless,ecmwf_ifs025").split(",") if m]
-MODI = ("fully", "tou", "terzi")
-NOMI_MODI = {"fully": "Fully fed to grid", "tou": "TOU", "terzi": "Third-party dispatch"}
+MODI = CO.MODI
+NOMI_MODI = CO.NOMI_MODI
+TEMPO_DECISIONE_S = float(os.environ.get("EMS_TEMPO_DECISIONE", "90"))
 PR_INIZIALE = 0.85              # resa iniziale: kW = 11 kW x irraggiamento / 1000 x 0,85 (poi corretta dai dati)
 ALFA_ERRORE = 0.05              # peso di ogni nuovo quarto d'ora nell'errore medio dei modelli
 ALFA_CORREZIONE = 0.05          # peso nella correzione per ora del giorno
-ALFA_MODO = 0.2                 # peso di ogni finestra di 2 ore nello scarto atteso/ottenuto delle modalita'
 MIN_CAMPIONI = 16               # quarti d'ora di giorno misurati prima di scegliere il modello migliore
 MAX_FASCE_TOU = 14
 TAU_ATTUALITA_S = 7200          # attenuazione della correzione con le ultime letture
@@ -122,6 +135,51 @@ def quarti_completi(letture, da_ts):
     return seq
 
 
+# ------------------------------------------------------------------ R06: piani completi per la pagina
+def curve_piano(contesto, piano):
+    """curve attese di un piano sulla produzione prevista (scenario probabile): kW in rete, kWh in batteria, kW batteria"""
+    quarti = contesto["quarti"]
+    x = [piano.get(str(t), [0, 0.0]) for t in quarti]
+    modi = np.array([[v[0] for v in x]])
+    val = np.array([[v[1] for v in x]])
+    cap = x[0][2] if len(x[0]) > 2 else CO.P_CMD_KW
+    pv = np.asarray(contesto["p50"], dtype=float)[None, :]
+    _, _, se = CO.simula(modi, val, pv, np.asarray(contesto["prezzi"], dtype=float), float(contesto["soc"]), dettaglio=True,
+                         cap_kw=[cap])
+    q = 1 / CT.Q
+    return {"rete_kw": [round(v * q, 2) for v in se["ceduto"]], "soc_kwh": [round(v, 2) for v in se["soc"]],
+            "batteria_kw": [round((c - d) * q, 2) for c, d in zip(se["carica"], se["scarica"])]}
+
+
+def salva_piani(contesto, calcolato, spedito, t_fine, t_decisione, stab):
+    voce = {"t_fine": int(t_fine), "t_decisione": int(t_decisione), "t_dati": int(contesto["t_dati"]),
+            "inizio": int(contesto["quarti"][0]), "passo_s": 900, "cambiato": bool(stab.get("cambio")),
+            "fv_prevista_kw": [round(v / CT.Q, 2) for v in contesto["p50"]],
+            "prezzo": [round(v, 4) for v in contesto["prezzi"]], "prezzo_noto": contesto["noto"],
+            "calcolato": curve_piano(contesto, calcolato), "spedito": curve_piano(contesto, spedito)}
+    fp = os.path.join(OUT, "piani", giorno_di(t_fine) + ".json")
+    reg = carica_json(fp, [])
+    reg.append(voce)
+    salva_json(fp, reg, compatto=True)
+    salva_json(os.path.join(OUT, "piano_ultimo.json"), voce, compatto=True)
+
+
+def salva_prezzi_noti(adesso):
+    """prezzi NORD noti da ieri all'ultimo disponibile (una volta letti non cambiano)"""
+    out = {}
+    g = (dt.date.fromisoformat(giorno_di(adesso)) - dt.timedelta(days=1)).isoformat()
+    for _ in range(4):
+        t0, nq = CT.mezzanotte(g)
+        pr, _ = CT.prezzi_giorno(g, nq, {"scaricati": CT.MAX_DOWNLOAD_GIRO})
+        if pr is None:
+            break
+        out[g] = {"inizio": t0, "prezzi": [round(float(v), 5) for v in pr]}
+        g = (dt.date.fromisoformat(g) + dt.timedelta(days=1)).isoformat()
+    salva_json(os.path.join(OUT, "prezzi_noti.json"), {"aggiornato": dt.datetime.fromtimestamp(adesso, CT.ROMA).isoformat(timespec="minutes"),
+                                                         "giorni": out}, compatto=True)
+    return out
+
+
 # ------------------------------------------------------------------ prezzi (solo file gia' scaricati: niente GME per il futuro)
 def prezzi_quarti(t_da, t_a):
     """prezzi NORD orari ripetuti sui quarti d'ora tra t_da e t_a; si ferma al primo giorno senza prezzi"""
@@ -195,87 +253,6 @@ def fascia_orizzonte(sec):
     return "0-2h" if sec < 7200 else ("2-12h" if sec < 43200 else "oltre 12h")
 
 
-# ------------------------------------------------------------------ programmi delle modalita' e ricavo atteso
-def simula(modo, pv, prezzi, soc0, piano, quarti):
-    soc, eur, ced_tot = soc0, 0.0, []
-    for k, t in enumerate(quarti):
-        c, s, ced, tagl, soc = CT.passo(modo, pv[k], soc, piano.get("c", {}).get(str(t), 0.0),
-                                        piano.get("s", {}).get(str(t), 0.0), piano.get("f", {}).get(str(t), "I"))
-        eur += ced * prezzi[k]
-        ced_tot.append(ced)
-    return eur, soc, ced_tot
-
-
-def fasce_tou(quarti, etichette):
-    """fasce TOU per giorno: tratti consecutivi C o D; al massimo 14 per giorno (si tolgono le fasce piu' corte)"""
-    et = list(etichette)
-    giorni = {}
-    for k, t in enumerate(quarti):
-        giorni.setdefault(giorno_di(t), []).append(k)
-    for idx in giorni.values():
-        while True:
-            tratti, k0 = [], None
-            for j, k in enumerate(idx):
-                if et[k] in "CD" and (k0 is None or et[k] != et[idx[j - 1]]):
-                    if k0 is not None:
-                        tratti.append((k0, idx[j - 1]))
-                    k0 = k
-                elif et[k] not in "CD" and k0 is not None:
-                    tratti.append((k0, idx[j - 1]))
-                    k0 = None
-            if k0 is not None:
-                tratti.append((k0, idx[-1]))
-            if len(tratti) <= MAX_FASCE_TOU:
-                break
-            a, b = min(tratti, key=lambda x: x[1] - x[0])
-            for k in range(a, b + 1):
-                et[k] = "I"
-    return et
-
-
-def programmi(pv, prezzi, soc0, quarti):
-    """programma e ricavo atteso di ogni modalita' sulla produzione prevista"""
-    n = len(quarti)
-    vfin = float(np.mean(prezzi)) if n else 0.0          # valore dell'energia rimasta a fine orizzonte (prezzo medio)
-    out = {}
-    out["fully"] = {"piano": {}}
-    c, s, x = CT.ottimo(np.asarray(pv), np.asarray(prezzi), soc0, valore_finale=vfin)
-    out["terzi"] = {"piano": {"c": {str(t): round(float(c[k]), 4) for k, t in enumerate(quarti) if c[k] > 1e-6},
-                              "s": {str(t): round(float(s[k]), 4) for k, t in enumerate(quarti) if s[k] > 1e-6}}}
-    et = ["C" if c[k] > 1e-6 else ("D" if s[k] > 1e-6 else "I") for k in range(n)]
-    candidati = [fasce_tou(quarti, et), fasce_tou(quarti, ["I" if e == "C" else e for e in et])]
-    migliore = None
-    for etc in candidati:                               # con e senza fasce di carica: si tiene la migliore
-        piano = {"f": {str(t): etc[k] for k, t in enumerate(quarti) if etc[k] != "I"}}
-        e, sf, _ = simula("tou", pv, prezzi, soc0, piano, quarti)
-        v = e + sf * CT.ETA * vfin
-        if migliore is None or v > migliore[0] + 1e-9:
-            migliore = (v, piano)
-    out["tou"] = {"piano": migliore[1]}
-    for m in MODI:
-        e, sf, ced = simula(m, pv, prezzi, soc0, out[m]["piano"], quarti)
-        out[m]["atteso_eur"] = e + sf * CT.ETA * vfin
-        out[m]["atteso_q"] = {str(t): round(ced[k] * prezzi[k], 5) for k, t in enumerate(quarti[:24])}
-    return out
-
-
-def testo_fasce(piano, quarti):
-    f = piano.get("f", {})
-    tratti, cur = [], None
-    for t in quarti:
-        e = f.get(str(t), "I")
-        if cur and cur[0] == e:
-            cur[2] = t + 900
-        else:
-            if cur and cur[0] != "I":
-                tratti.append(cur)
-            cur = [e, t, t + 900]
-    if cur and cur[0] != "I":
-        tratti.append(cur)
-    h = lambda t: dt.datetime.fromtimestamp(t, CT.ROMA).strftime("%d/%m %H:%M")
-    return "; ".join(f"{'carica' if e == 'C' else 'scarica'} {h(a)}-{h(b)[-5:]}" for e, a, b in tratti)
-
-
 # ------------------------------------------------------------------ principale
 def main():
     os.makedirs(OUT, exist_ok=True)
@@ -296,9 +273,13 @@ def main():
         ultimo = max(lett)
         partenza = int(ultimo // 900 * 900)            # da ora in avanti: si parte dal quarto d'ora in corso
         st = {"revisione": CT.REVISIONE, "inizio": partenza, "t_eseguito": partenza, "soc": 0.0,
-              "corr": {m: {} for m in MODELLI}, "errore": {}, "scarto_modi": {m: {"v": 0.0, "n": 0} for m in MODI},
+              "corr": {m: {} for m in MODELLI}, "errore": {},
               "decisione": None, "giorni": {}}
         log(f"avvio della simulazione ogni 2 ore dal {dt.datetime.fromtimestamp(partenza, CT.ROMA):%d/%m/%Y %H:%M}")
+    if st.get("decisione") and "piano" not in st["decisione"]:     # stato della R03: si decide subito con il nuovo metodo
+        log("stato della revisione precedente: nuova decisione subito con il piano a fasce di 2 ore")
+        st["decisione"], st["fascia_decisa"] = None, None
+    st.pop("scarto_modi", None)
     st["revisione"] = CT.REVISIONE
     for m in MODELLI:
         st["corr"].setdefault(m, {})
@@ -330,10 +311,11 @@ def main():
                                                         "scarica_kwh": 0.0, "tagliati_kwh": 0.0, "p0_ceduti_kwh": 0.0,
                                                         "batt_ceduti_kwh": 0.0, "modi": {m: 0 for m in MODI}, "decisioni": 0})
             c0, s0, ced0, _, _ = CT.passo("senza", pv, 0.0)
-            modo = d["modo"]
-            pi = d["piani"][modo]
-            c, s, ced, tagl, soc = CT.passo(modo, pv, st["soc"], pi.get("c", {}).get(str(t), 0.0), pi.get("s", {}).get(str(t), 0.0),
-                                            pi.get("f", {}).get(str(t), "I"))
+            voce = d["piano"].get(str(t), [0, 0.0])                     # oltre il piano: Fully fed to grid
+            m_cod, val = voce[0], voce[1]
+            cap = voce[2] if len(voce) > 2 else CO.P_CMD_KW
+            modo = MODI[m_cod]
+            c, s, ced, tagl, soc = CO.esegui_quarto(m_cod, val, pv, st["soc"], cap)
             st["soc"] = soc
             gi["quarti"] += 1
             gi["fv_kwh"] += pv
@@ -346,16 +328,6 @@ def main():
             gi["tagliati_kwh"] += tagl
             gi["modi"][modo] += 1
             gi["soc_fine"] = soc
-            # controfattuali: le altre modalita' con lo stesso punto di partenza della decisione
-            for m in MODI:
-                cf = d["cf"][m]
-                p = d["piani"][m]
-                _, _, cedm, _, cf["soc"] = CT.passo(m, pv, cf["soc"], p.get("c", {}).get(str(t), 0.0), p.get("s", {}).get(str(t), 0.0),
-                                                    p.get("f", {}).get(str(t), "I"))
-                if str(t) in d["atteso_q"][m]:
-                    cf["eur"] += cedm * pr
-                    cf["atteso"] += d["atteso_q"][m][str(t)]
-                    cf["n"] += 1
             # apprendimento della previsione: errore per modello e orizzonte, correzione per ora del giorno
             h = str(ora_di(t))
             # errore per orizzonte: confronto con le previsioni di tutte le decisioni delle ultime 24 ore
@@ -382,7 +354,7 @@ def main():
             fq = os.path.join(OUT, "giorni", giorno_di(t) + ".json")
             reg = carica_json(fq, {"giorno": giorno_di(t), "quarti": []})
             reg["quarti"].append({"t": t, "fv": round(pv, 4), "prev": d["prev_ovest"].get(str(t)), "prezzo": round(pr, 5), "modo": modo,
-                                  "fascia": pi.get("f", {}).get(str(t), "") if modo == "tou" else "",
+                                  "valore": round(val, 3),
                                   "carica": round(c, 4), "scarica": round(s, 4), "ceduto": round(ced, 4), "ceduto0": round(ced0, 4),
                                   "tagliato": round(tagl, 4), "soc": round(soc, 3)})
             salva_json(fq, reg, compatto=True)
@@ -392,20 +364,15 @@ def main():
     # ---------------- 2. nuova decisione a ogni fascia di 2 ore
     fascia = ora.strftime("%Y-%m-%d ") + f"{ora.hour // 2 * 2:02d}"
     if st.get("fascia_decisa") != fascia:
-        # chiusura della decisione precedente: scarto atteso/ottenuto di ogni modalita'
-        if d:
-            for m in MODI:
-                cf = d["cf"][m]
-                if cf["n"] > 0:
-                    sm = st["scarto_modi"][m]
-                    diff = (cf["eur"] - cf["atteso"]) / cf["n"]          # EUR per quarto d'ora
-                    sm["v"] = round(diff if sm["n"] == 0 else sm["v"] + ALFA_MODO * (diff - sm["v"]), 6)
-                    sm["n"] += 1
+        t_inizio_calcoli = time.perf_counter()
         t_dati = st["t_eseguito"]
         cart_giro = os.path.join(OUT, "meteo", ora.strftime("%Y%m%d_%H%M") + ".json")
         meteo, errori_meteo = meteo_modelli(luogo, cart_giro)
-        prezzi = prezzi_quarti(t_dati, t_dati + 3 * 86400)
-        quarti = sorted(prezzi)
+        # orizzonte: fino a fine domani (prezzi noti dove ci sono, altrimenti previsti dallo storico)
+        g_fine = (dt.date.fromisoformat(giorno_di(t_dati)) + dt.timedelta(days=2)).isoformat()
+        t_fine = CT.mezzanotte(g_fine)[0]
+        noti = prezzi_quarti(t_dati, t_fine)
+        quarti = list(range(int(t_dati), int(t_fine), 900))
         if not meteo or len(quarti) < 4:
             log(f"decisione rimandata: meteo {'ok' if meteo else 'non disponibile ' + str(errori_meteo)}, quarti con prezzo {len(quarti)}")
         else:
@@ -439,20 +406,37 @@ def main():
             att = np.array([1 + (fattore_att - 1) * math.exp(-max(0, t - t_dati) / TAU_ATTUALITA_S) for t in quarti])
             sud = sud * att
             ovest = sud * CT.SCALA * rapp
-            pr = np.array([prezzi[t] for t in quarti])
-            prog = programmi(ovest, pr, st["soc"], quarti)
-            nq_ora = len(quarti)
-            punteggi = {m: prog[m]["atteso_eur"] + st["scarto_modi"][m]["v"] * nq_ora for m in MODI}
-            modo = max(MODI, key=lambda m: (round(punteggi[m], 4), -MODI.index(m)))
+            # incertezza: dispersione tra i modelli + errore medio misurato dell'orizzonte (piano Ovest)
+            with np.errstate(all="ignore"):
+                disp = np.nanstd(np.vstack([prev_s[m] for m in prev_s]), axis=0) if len(prev_s) > 1 else np.zeros(len(quarti))
+            def mae_medio(t):
+                v = [st["errore"].get(m, {}).get(fascia_orizzonte(t - t_dati), {}).get("mae") for m in prev_s]
+                v = [x for x in v if x is not None]
+                return float(np.mean(v)) if v else np.nan
+            mae = np.array([mae_medio(t) for t in quarti])
+            mae = np.where(np.isnan(mae), 0.15 * sud, mae)                       # senza misure: 15 % della previsione
+            sigma = np.sqrt(np.nan_to_num(disp) ** 2 + np.where(sud > 0.002, mae, 0) ** 2) * CT.SCALA * rapp
+            pr, noto = CO.prezzi_orizzonte(quarti, noti)
+            theta = CO.carica_theta()
+            contesto = {"t_dati": int(t_dati), "soc": round(st["soc"], 4), "quarti": quarti,
+                        "p50": [round(float(v), 5) for v in ovest], "sigma": [round(float(v), 5) for v in sigma],
+                        "prezzi": [round(float(v), 6) for v in pr], "noto": [bool(v) for v in noto]}
+            salva_json(os.path.join(OUT, "contesti", f"{int(t_dati)}.json"), contesto, compatto=True)
+            ris = CO.decidi(contesto, theta, tempo_s=TEMPO_DECISIONE_S, seme=int(t_dati) % 100000,
+                            precedente=(d or {}).get("piano"))
+            piano, stab = CO.stabilita(contesto, theta, ris["piano"], (d or {}).get("piano"))
+            modo = MODI[piano[str(quarti[0])][0]]
             d = {"t_decisione": int(adesso), "fascia": fascia, "t_dati": t_dati, "modo": modo, "soc": round(st["soc"], 3),
-                 "piani": {m: prog[m]["piano"] for m in MODI}, "atteso_q": {m: prog[m]["atteso_q"] for m in MODI},
-                 "cf": {m: {"soc": st["soc"], "eur": 0.0, "atteso": 0.0, "n": 0} for m in MODI},
+                 "piano": piano, "atteso_eur": ris["atteso_eur"],
                  "prev_grezza": {m: {str(t): round(float(v), 5) for t, v in zip(quarti, prev_grezza[m][:]) if not np.isnan(v)}
                                  for m in prev_grezza},
                  "prev_sud": {str(t): round(float(v), 5) for t, v in zip(quarti, sud)},
                  "prev_ovest": {str(t): round(float(v), 5) for t, v in zip(quarti, ovest)},
                  "rapporto": {str(t): round(float(v), 4) for t, v in zip(quarti, rapp)}}
             st["decisione"] = d
+            t_fine_calcoli = adesso + (time.perf_counter() - t_inizio_calcoli)      # ora di fine = ora di "invio" del piano
+            d["t_fine"] = int(t_fine_calcoli)
+            salva_piani(contesto, ris["piano"], piano, t_fine_calcoli, adesso, stab)
             st["fascia_decisa"] = fascia
             arch = [x for x in st.get("prev_archivio", []) if x["t_dati"] > t_dati - 86400]
             arch.append({"t_dati": t_dati, "prev": d["prev_grezza"]})
@@ -466,17 +450,22 @@ def main():
             reg = carica_json(fd, [])
             reg.append({"ora": ora.isoformat(timespec="minutes"), "dati_fino_a": dt.datetime.fromtimestamp(t_dati, CT.ROMA).isoformat(timespec="minutes"),
                         "soc_kwh": round(st["soc"], 2), "modo": modo, "nome_modo": NOMI_MODI[modo],
-                        "atteso_eur": {m: round(prog[m]["atteso_eur"], 3) for m in MODI},
-                        "scarto_imparato_eur": {m: round(st["scarto_modi"][m]["v"] * nq_ora, 3) for m in MODI},
-                        "punteggio_eur": {m: round(punteggi[m], 3) for m in MODI},
+                        "atteso_eur": ris["atteso_eur"], "punteggi_semi": ris["punteggi_semi"],
+                        "fine_calcoli": dt.datetime.fromtimestamp(t_fine_calcoli, CT.ROMA).isoformat(timespec="seconds"), "stabilita": stab,
+                        "generazioni": ris["generazioni"], "valutazioni": ris["valutazioni"], "secondi": ris["secondi"],
+                        "ore_prezzo_previsto": int((~noto).sum() // 4), "theta": theta,
                         "orizzonte_fino_a": dt.datetime.fromtimestamp(quarti[-1] + 900, CT.ROMA).isoformat(timespec="minutes"),
                         "previsione_kwh": round(float(ovest.sum()), 2), "modelli": sorted(meteo), "modelli_errore": errori_meteo,
-                        "modello_per_orizzonte": scelta, "correzione_ultime_letture": round(fattore_att, 3),
-                        "fasce_tou": testo_fasce(prog["tou"]["piano"], quarti)})
+                        "modello_per_orizzonte": scelta, "correzione_ultime_letture": round(fattore_att, 3)})
             salva_json(fd, reg)
-            log(f"decisione {fascia}: {NOMI_MODI[modo]} (attesi: " +
-                ", ".join(f"{NOMI_MODI[m]} {prog[m]['atteso_eur']:.2f}" for m in MODI) + f" EUR); modelli meteo {len(meteo)}")
+            log(f"decisione {fascia}: {'piano CAMBIATO' if stab['cambio'] else 'piano spedito MANTENUTO'} ({stab['motivo']}); ora {NOMI_MODI[modo]}, ricavo atteso {ris['atteso_eur']:.2f} EUR fino a fine domani "
+                f"({ris['generazioni']} generazioni, {ris['valutazioni']} piani provati in {ris['secondi']} s; ore con prezzo previsto "
+                f"{int((~noto).sum() // 4)}); modelli meteo {len(meteo)}")
     # ---------------- 3. uscite
+    try:
+        salva_prezzi_noti(adesso)
+    except Exception as ex:                      # la pagina ne fa a meno
+        log(f"prezzi noti non salvati: {ex}")
     salva_json(fstato, st, compatto=True)
     col = ["giorno", "quarti", "decisioni", "fv_kwh", "p0_ceduti_kwh", "p0_eur", "batt_ceduti_kwh", "batt_eur", "beneficio_eur",
            "carica_kwh", "scarica_kwh", "tagliati_kwh", "soc_fine", "quarti_fully", "quarti_tou", "quarti_terzi"]
@@ -497,7 +486,7 @@ def main():
         "inizio": dt.datetime.fromtimestamp(st["inizio"], CT.ROMA).isoformat(timespec="minutes"),
         "eseguito_fino_a": dt.datetime.fromtimestamp(st["t_eseguito"], CT.ROMA).isoformat(timespec="minutes"),
         "soc_kwh": round(st["soc"], 3), "modo_attuale": (st.get("decisione") or {}).get("modo"),
-        "errore_modelli": st["errore"], "scarto_modi": st["scarto_modi"], "modelli": MODELLI})
+        "errore_modelli": st["errore"], "modelli": MODELLI, "theta": CO.carica_theta()})
     log(f"quarti d'ora eseguiti in questo giro: {eseguiti}; eseguito fino a "
         f"{dt.datetime.fromtimestamp(st['t_eseguito'], CT.ROMA):%d/%m %H:%M}; batteria {st['soc']:.1f} kWh")
 
