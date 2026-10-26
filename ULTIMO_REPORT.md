@@ -1,4 +1,4 @@
-# Report EMS Cismondi - 24/10/2026 (sabato)
+# Report EMS Cismondi - 25/10/2026 (domenica)
 
 **SOLO SIMULAZIONE**: nessun comando inviato all'inverter.
 
@@ -22,31 +22,31 @@ Cessioni (RID): prezzo zonale NORD del quarto d'ora. Usura batteria: 0.020 EUR p
 
 > Il dispacciamento non e' ancora noto ed e' calcolato a 0: i costi d'acquisto sono sottostimati della stessa quantita' per kWh. I kWh sono registrati nel dataset, quindi i costi si possono ricalcolare quando il valore sara' noto.
 
-Letture: 288, ore integrate: 24.00. FV 21.63 kWh, consumi casa 28.54 kWh.
-Reale: prelievo 10.00 kWh, immissione 0.11 kWh.  Solo autoconsumo simulato: prelievo 9.53 kWh, immissione 0.00 kWh.
-Condizione 0 (senza batteria): prelievo 18.75 kWh (4.18 EUR), immissione 11.85 kWh (2.39 EUR), netto 1.78 EUR.
-Condizione 1 (reale): acquisti 2.23 EUR, cessioni 0.02 EUR, usura batteria (8.99 kWh scaricati) inclusa: netto 2.39 EUR.
+Letture: 300, ore integrate: 25.00. FV 19.50 kWh, consumi casa 29.19 kWh.
+Reale: prelievo 9.69 kWh, immissione 0.24 kWh.  Solo autoconsumo simulato: prelievo 9.71 kWh, immissione 0.00 kWh.
+Condizione 0 (senza batteria): prelievo 19.69 kWh (4.39 EUR), immissione 10.01 kWh (2.01 EUR), netto 2.38 EUR.
+Condizione 1 (reale): acquisti 2.16 EUR, cessioni 0.05 EUR, usura batteria (10.27 kWh scaricati) inclusa: netto 2.31 EUR.
 
 | Profilo | Prelievo kWh | Immissione kWh | Costo EUR | Ricavo EUR | Usura EUR | Cambiamenti (EUR) | Maggiore acquisto kWh (EUR) | Maggiore cessione kWh (EUR) | Beneficio sulla condizione 1 EUR | Beneficio su automatico simulato EUR | Beneficio con SOC EUR | Beneficio su condizione 0 EUR | Rimpianto EUR | Finestre |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| C2 | 18.75 | 11.85 | 4.18 | 2.39 | 0.00 | 0 (0.00) | 9.22 (2.06) | 11.85 (2.39) | 0.60 | 0.52 | 0.28 | 0.00 | 0.00 | 1 |
-| C2a | 18.75 | 11.85 | 4.18 | 2.39 | 0.00 | 0 (0.00) | 9.22 (2.06) | 11.85 (2.39) | 0.60 | 0.52 | 0.28 | 0.00 | 0.00 | 1 |
-| C2b | 18.75 | 11.85 | 4.18 | 2.39 | 0.00 | 0 (0.00) | 9.22 (2.06) | 11.85 (2.39) | 0.60 | 0.52 | 0.28 | 0.00 | 0.00 | 1 |
-| C2c | 18.75 | 11.85 | 4.18 | 2.39 | 0.00 | 0 (0.00) | 9.22 (2.06) | 11.85 (2.39) | 0.60 | 0.52 | 0.28 | 0.00 | 0.00 | 1 |
-| C2d | 18.75 | 11.85 | 4.18 | 2.39 | 0.00 | 0 (0.00) | 9.22 (2.06) | 11.85 (2.39) | 0.60 | 0.52 | 0.28 | 0.00 | 0.00 | 1 |
-| C2e | 18.75 | 11.85 | 4.18 | 2.39 | 0.00 | 0 (0.00) | 9.22 (2.06) | 11.85 (2.39) | 0.60 | 0.52 | 0.28 | 0.00 | 0.00 | 1 |
+| C2 | 19.69 | 10.01 | 4.39 | 2.01 | 0.00 | 0 (0.00) | 9.98 (2.23) | 10.01 (2.01) | -0.07 | -0.02 | 0.02 | 0.00 | 0.01 | 1 |
+| C2a | 19.69 | 10.01 | 4.39 | 2.01 | 0.00 | 0 (0.00) | 9.98 (2.23) | 10.01 (2.01) | -0.07 | -0.02 | 0.02 | 0.00 | 0.01 | 1 |
+| C2b | 19.69 | 10.01 | 4.39 | 2.01 | 0.00 | 0 (0.00) | 9.98 (2.23) | 10.01 (2.01) | -0.07 | -0.02 | 0.02 | 0.00 | 0.01 | 1 |
+| C2c | 19.69 | 10.01 | 4.39 | 2.01 | 0.00 | 0 (0.00) | 9.98 (2.23) | 10.01 (2.01) | -0.07 | -0.02 | 0.02 | 0.00 | 0.01 | 1 |
+| C2d | 19.69 | 10.01 | 4.39 | 2.01 | 0.00 | 0 (0.00) | 9.98 (2.23) | 10.01 (2.01) | -0.07 | -0.02 | 0.02 | 0.00 | 0.01 | 1 |
+| C2e | 19.69 | 10.01 | 4.39 | 2.01 | 0.00 | 0 (0.00) | 9.98 (2.23) | 10.01 (2.01) | -0.07 | -0.02 | 0.02 | 0.00 | 0.01 | 1 |
 
 Costo netto = acquisto (prezzo fisso F0) - vendita (prezzo NORD al quarto d'ora) + usura batteria (0,02 EUR/kWh scaricato). Beneficio sulla condizione 1 = costo netto della condizione 1 (dati reali) - costo netto della condizione. Beneficio su automatico simulato = stesso confronto con l'automatico rifatto dal simulatore (controllo del simulatore). Beneficio su condizione 0 = confronto con l'impianto senza batteria. Con SOC: tiene conto del valore dell'energia rimasta in batteria a fine giornata. Rimpianto = distanza dall'ottimo calcolato a posteriori con i dati veri del giorno.
 
 ## Previsioni
-Errore medio consumi: sera prima 836.80 W, modello 791.98 W.  FV: sera prima 252.74 W, modello 222.34 W.
-Rendimenti usati: carica 0.974, scarica 0.883. Ore con SOC reale >= 90 %: -.
+Errore medio consumi: sera prima 793.34 W, modello 794.04 W.  FV: sera prima 254.97 W, modello 216.13 W.
+Rendimenti usati: carica 0.968, scarica 0.885. Ore con SOC reale >= 90 %: -.
 
 ## Carico di lavoro del Mango
-Cicli: 288. CPU per ciclo: media 0.295 s, massimo 1.940 s (qui). Calcolo del piano: massimo 1.434 s (qui).
+Cicli: 300. CPU per ciclo: media 0.290 s, massimo 1.500 s (qui). Calcolo del piano: massimo 1.359 s (qui).
 Stima sul Mango: media da tarare, massimo da tarare, piano da tarare (lanciare benchmark_mango.lua sul Mango e scrivere FATTORE_MANGO in config.lua).
-Memoria Lua massima 49318.00 kB. Scritture nella memoria interna 1435.45 kB al giorno.
-Chiamate che il Mango farebbe in un giorno: Huawei 864 (limite 950), GME 3, meteo 30, GitHub 22; dati ricevuti circa 1301.18 kB.
+Memoria Lua massima 46771.73 kB. Scritture nella memoria interna 1503.46 kB al giorno.
+Chiamate che il Mango farebbe in un giorno: Huawei 900 (limite 950), GME 3, meteo 32, GitHub 26; dati ricevuti circa 1360.06 kB.
 
 ## Periodi di carica e scarica forzata (profili)
 | Profilo | Inizio | Fine | Azione | SOC | Energia kWh | Motivo |
