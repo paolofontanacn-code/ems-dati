@@ -1,6 +1,6 @@
 {
- "aggiornato": "2026-10-26T08:45:15+01:00",
- "revisione": "R03",
+ "aggiornato": "2026-10-26T14:45:12+01:00",
+ "revisione": "R06",
  "inizio": "2026-10-23T22:00+02:00",
  "eseguito_fino_a": "2026-10-26T08:15+01:00",
  "soc_kwh": 0.143,
@@ -63,24 +63,19 @@
    }
   }
  },
- "scarto_modi": {
-  "fully": {
-   "v": -0.008523,
-   "n": 17
-  },
-  "tou": {
-   "v": -0.003368,
-   "n": 17
-  },
-  "terzi": {
-   "v": -0.001133,
-   "n": 17
-  }
- },
  "modelli": [
   "italia_meteo_arpae_icon_2i",
   "meteofrance_seamless",
   "icon_seamless",
   "ecmwf_ifs025"
- ]
+ ],
+ "theta": {
+  "valore_finale": 1.0,
+  "k_scenari": 1.0,
+  "peso_lati": 0.25,
+  "costo_cambio": 0.0,
+  "fz_basso": 0.35,
+  "fz_alto": 0.65,
+  "fz_scarica": 1.0
+ }
 }
