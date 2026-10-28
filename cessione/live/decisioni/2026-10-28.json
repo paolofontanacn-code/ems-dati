@@ -1,0 +1,55 @@
+[
+ {
+  "ora": "2026-10-28T01:29+01:00",
+  "dati_fino_a": "2026-10-28T01:00+01:00",
+  "soc_kwh": 0.0,
+  "modo": "tou",
+  "nome_modo": "TOU",
+  "atteso_eur": 27.417,
+  "punteggi_semi": {
+   "lineare - Third-party": 27.299,
+   "lineare - TOU": 27.207,
+   "Fully fed to grid": 23.455,
+   "fuzzy - Third-party": 24.431,
+   "fuzzy - TOU": 24.566,
+   "piano precedente": 27.359
+  },
+  "fine_calcoli": "2026-10-28T01:30:52+01:00",
+  "stabilita": {
+   "guadagno_eur": 0.0,
+   "soglia_eur": 0.1,
+   "ricavo_4h_piano_spedito_eur": 0.0,
+   "cambio": false,
+   "motivo": "guadagno sotto la soglia: per le prossime 4 ore resta il piano spedito"
+  },
+  "generazioni": 1123,
+  "valutazioni": 134880,
+  "secondi": 38.9,
+  "ore_prezzo_previsto": 24,
+  "theta": {
+   "valore_finale": 1.0,
+   "k_scenari": 1.0,
+   "peso_lati": 0.25,
+   "costo_cambio": 0.0,
+   "fz_basso": 0.35,
+   "fz_alto": 0.65,
+   "fz_scarica": 1.0
+  },
+  "orizzonte_fino_a": "2026-10-30T00:00+01:00",
+  "previsione_kwh": 92.99,
+  "modelli": [
+   "ecmwf_ifs025",
+   "icon_seamless",
+   "meteofrance_seamless"
+  ],
+  "modelli_errore": {
+   "italia_meteo_arpae_icon_2i": "<urlopen error _ssl.c:993: The handshake operation timed out>"
+  },
+  "modello_per_orizzonte": {
+   "0-2h": "ecmwf_ifs025",
+   "2-12h": "meteofrance_seamless",
+   "oltre 12h": "meteofrance_seamless"
+  },
+  "correzione_ultime_letture": 1.0
+ }
+]
