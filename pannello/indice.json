@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-28T01:29:40+01:00",
+ "aggiornato": "2026-10-28T07:16:10+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -181,7 +181,7 @@
  "oggi": "2026-10-28",
  "piano": "2026-10-28",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 28/10/2026 00:28:22 UTC",
+  "Controllo di rete del giro su GitHub - 28/10/2026 06:15:24 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -218,10 +218,6 @@
   "202610"
  ],
  "registro": [
-  "2026-10-25 00:00:00  Giorno 20261024 chiuso: costo netto condizione 0 1.78 EUR, condizione 1 (reale) 2.39 EUR; beneficio sulla 1: C2 0.60, C2a 0.60, C2b 0.60, C2c 0.60, C2d 0.60, C2e 0.60 EUR",
-  "2026-10-25 00:00:00  GitHub: inviati 11 file",
-  "2026-10-25 02:30:40  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-10-25 02:30:40  Token Huawei rinnovato.",
   "2026-10-25 02:30:46  GitHub: rigioco 2026-10-25 00:05:00 -> 2026-10-25 02:10:00 (25 letture dallo storico)",
   "2026-10-25 06:15:30  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-10-25 06:15:31  Token Huawei rinnovato.",
@@ -297,6 +293,10 @@
   "2026-10-28 01:28:29  Token Huawei rinnovato.",
   "2026-10-28 01:28:39  GitHub: rigioco 2026-10-27 21:35:00 -> 2026-10-28 01:05:00 (42 letture dallo storico)",
   "2026-10-28 00:00:00  Giorno 20261027 chiuso: costo netto condizione 0 0.02 EUR, condizione 1 (reale) 0.29 EUR; beneficio sulla 1: C2 0.27, C2a -0.20, C2b 0.27, C2c 0.27, C2d -0.20, C2e -0.20 EUR",
-  "2026-10-28 00:00:00  GitHub: inviati 11 file"
+  "2026-10-28 00:00:00  GitHub: inviati 11 file",
+  "2026-10-28 07:15:32  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-10-28 07:15:33  Token Huawei rinnovato.",
+  "2026-10-28 07:15:38  GitHub: rigioco 2026-10-28 01:05:00 -> 2026-10-28 06:55:00 (70 letture dallo storico)",
+  "2026-10-28 04:00:00  Coefficienti da GitHub: applicati, 288 valori di profilo"
  ]
 }
