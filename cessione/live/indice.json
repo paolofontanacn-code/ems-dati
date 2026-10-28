@@ -1,8 +1,8 @@
 {
- "aggiornato": "2026-10-28T20:08:40+01:00",
+ "aggiornato": "2026-10-29T00:13:45+01:00",
  "revisione": "R06",
  "inizio": "2026-10-23T22:00+02:00",
- "eseguito_fino_a": "2026-10-28T19:45+01:00",
+ "eseguito_fino_a": "2026-10-28T23:45+01:00",
  "soc_kwh": 19.74,
  "modo_attuale": "tou",
  "errore_modelli": {
