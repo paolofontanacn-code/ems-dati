@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-29T00:13:48+01:00",
+ "aggiornato": "2026-10-29T03:51:34+01:00",
  "revisione": "R06",
  "parametri": {
   "p_cismondi_kw": 11.0,
@@ -20,7 +20,7 @@
   44.397454,
   7.477188
  ],
- "giorni": 45,
+ "giorni": 46,
  "note": [],
  "meteo_errore": null
 }

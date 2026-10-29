@@ -1,4 +1,4 @@
-# Report EMS Cismondi - 27/10/2026 (feriale)
+# Report EMS Cismondi - 28/10/2026 (feriale)
 
 **SOLO SIMULAZIONE**: nessun comando inviato all'inverter.
 
@@ -22,44 +22,48 @@ Cessioni (RID): prezzo zonale NORD del quarto d'ora. Usura batteria: 0.020 EUR p
 
 > Il dispacciamento non e' ancora noto ed e' calcolato a 0: i costi d'acquisto sono sottostimati della stessa quantita' per kWh. I kWh sono registrati nel dataset, quindi i costi si possono ricalcolare quando il valore sara' noto.
 
-Letture: 288, ore integrate: 24.00. FV 24.42 kWh, consumi casa 24.41 kWh.
-Reale: prelievo 5.05 kWh, immissione 4.73 kWh.  Solo autoconsumo simulato: prelievo 4.58 kWh, immissione 4.29 kWh.
-Condizione 0 (senza batteria): prelievo 18.06 kWh (4.03 EUR), immissione 18.07 kWh (4.01 EUR), netto 0.02 EUR.
-Condizione 1 (reale): acquisti 1.13 EUR, cessioni 1.10 EUR, usura batteria (13.20 kWh scaricati) inclusa: netto 0.29 EUR.
+Letture: 288, ore integrate: 24.00. FV 22.42 kWh, consumi casa 19.18 kWh.
+Reale: prelievo 2.53 kWh, immissione 1.76 kWh.  Solo autoconsumo simulato: prelievo 2.60 kWh, immissione 1.49 kWh.
+Condizione 0 (senza batteria): prelievo 12.36 kWh (2.76 EUR), immissione 15.61 kWh (4.04 EUR), netto -1.29 EUR.
+Condizione 1 (reale): acquisti 0.56 EUR, cessioni 0.51 EUR, usura batteria (10.00 kWh scaricati) inclusa: netto 0.26 EUR.
 
 | Profilo | Prelievo kWh | Immissione kWh | Costo EUR | Ricavo EUR | Usura EUR | Cambiamenti (EUR) | Maggiore acquisto kWh (EUR) | Maggiore cessione kWh (EUR) | Beneficio sulla condizione 1 EUR | Beneficio su automatico simulato EUR | Beneficio con SOC EUR | Beneficio su condizione 0 EUR | Rimpianto EUR | Finestre |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| C2 | 18.06 | 18.07 | 4.03 | 4.01 | 0.00 | 0 (0.00) | 13.48 (3.00) | 13.78 (3.00) | 0.27 | 0.27 | 0.09 | 0.00 | 0.23 | 1 |
-| C2a | 19.73 | 18.07 | 4.40 | 4.01 | 0.00 | 1 (0.10) | 15.15 (3.38) | 13.78 (3.00) | -0.20 | -0.20 | -0.10 | -0.47 | 0.42 | 2 |
-| C2b | 18.06 | 18.07 | 4.03 | 4.01 | 0.00 | 0 (0.00) | 13.48 (3.00) | 13.78 (3.00) | 0.27 | 0.27 | 0.09 | 0.00 | 0.23 | 1 |
-| C2c | 18.06 | 18.07 | 4.03 | 4.01 | 0.00 | 0 (0.00) | 13.48 (3.00) | 13.78 (3.00) | 0.27 | 0.27 | 0.09 | 0.00 | 0.23 | 1 |
-| C2d | 19.73 | 18.07 | 4.40 | 4.01 | 0.00 | 1 (0.10) | 15.15 (3.38) | 13.78 (3.00) | -0.20 | -0.20 | -0.10 | -0.47 | 0.42 | 2 |
-| C2e | 19.73 | 18.07 | 4.40 | 4.01 | 0.00 | 1 (0.10) | 15.15 (3.38) | 13.78 (3.00) | -0.20 | -0.20 | -0.10 | -0.47 | 0.42 | 2 |
+| C2 | 12.36 | 15.61 | 2.76 | 4.04 | 0.00 | 0 (0.00) | 9.76 (2.18) | 14.12 (3.61) | 1.55 | 1.63 | 0.97 | 0.00 | 0.16 | 1 |
+| C2a | 20.35 | 23.61 | 4.54 | 6.84 | 0.20 | 1 (0.10) | 17.75 (3.96) | 22.12 (6.40) | 2.26 | 2.35 | 1.69 | 0.72 | 0.11 | 2 |
+| C2b | 21.76 | 23.36 | 4.85 | 6.76 | 0.20 | 2 (0.20) | 19.16 (4.27) | 21.86 (6.33) | 1.77 | 1.85 | 1.20 | 0.22 | 0.29 | 3 |
+| C2c | 21.47 | 23.07 | 4.78 | 6.67 | 0.20 | 2 (0.20) | 18.87 (4.20) | 21.57 (6.24) | 1.75 | 1.83 | 1.18 | 0.20 | 0.31 | 3 |
+| C2d | 20.35 | 23.61 | 4.54 | 6.84 | 0.20 | 1 (0.10) | 17.75 (3.96) | 22.12 (6.40) | 2.26 | 2.35 | 1.69 | 0.72 | 0.17 | 2 |
+| C2e | 20.35 | 23.61 | 4.54 | 6.84 | 0.20 | 1 (0.10) | 17.75 (3.96) | 22.12 (6.40) | 2.26 | 2.35 | 1.69 | 0.72 | 0.17 | 2 |
 
 Costo netto = acquisto (prezzo fisso F0) - vendita (prezzo NORD al quarto d'ora) + usura batteria (0,02 EUR/kWh scaricato). Beneficio sulla condizione 1 = costo netto della condizione 1 (dati reali) - costo netto della condizione. Beneficio su automatico simulato = stesso confronto con l'automatico rifatto dal simulatore (controllo del simulatore). Beneficio su condizione 0 = confronto con l'impianto senza batteria. Con SOC: tiene conto del valore dell'energia rimasta in batteria a fine giornata. Rimpianto = distanza dall'ottimo calcolato a posteriori con i dati veri del giorno.
 
 ## Previsioni
-Errore medio consumi: sera prima 581.79 W, modello 582.68 W.  FV: sera prima 194.24 W, modello 222.17 W.
-Rendimenti usati: carica 0.971, scarica 0.883. Ore con SOC reale >= 90 %: 3.33.
+Errore medio consumi: sera prima 630.46 W, modello 625.25 W.  FV: sera prima 154.24 W, modello 130.36 W.
+Rendimenti usati: carica 0.972, scarica 0.883. Ore con SOC reale >= 90 %: 3.50.
 
 ## Carico di lavoro del Mango
-Cicli: 288. CPU per ciclo: media 0.290 s, massimo 1.391 s (qui). Calcolo del piano: massimo 1.291 s (qui).
+Cicli: 288. CPU per ciclo: media 1.031 s, massimo 9.249 s (qui). Calcolo del piano: massimo 9.234 s (qui).
 Stima sul Mango: media da tarare, massimo da tarare, piano da tarare (lanciare benchmark_mango.lua sul Mango e scrivere FATTORE_MANGO in config.lua).
-Memoria Lua massima 46662.39 kB. Scritture nella memoria interna 1450.82 kB al giorno.
-Chiamate che il Mango farebbe in un giorno: Huawei 864 (limite 950), GME 3, meteo 28, GitHub 26; dati ricevuti circa 1282.14 kB.
+Memoria Lua massima 43493.20 kB. Scritture nella memoria interna 1513.75 kB al giorno.
+Chiamate che il Mango farebbe in un giorno: Huawei 864 (limite 950), GME 3, meteo 29, GitHub 26; dati ricevuti circa 1288.24 kB.
 
 ## Periodi di carica e scarica forzata (profili)
 | Profilo | Inizio | Fine | Azione | SOC | Energia kWh | Motivo |
 |---|---|---|---|---|---|---|
-| C2a | 00:00 | 22:15 | SCARICA_5000 | 20.00 -> 20.00 | carica 0.00, scarica 0.00 | piano -4.41 EUR fino a fine prezzi; vantaggio su AUTO 0.026 EUR |
-| C2d | 00:00 | 22:15 | SCARICA_5000 | 20.00 -> 20.00 | carica 0.00, scarica 0.00 | piano -4.41 EUR fino a fine prezzi; vantaggio su AUTO 0.026 EUR |
-| C2e | 00:00 | 22:15 | SCARICA_5000 | 20.00 -> 20.00 | carica 0.00, scarica 0.00 | piano -4.41 EUR fino a fine prezzi; vantaggio su AUTO 0.026 EUR |
+| C2b | 00:00 | 04:00 | SCARICA_5000 | 20.00 -> 20.00 | carica 0.00, scarica 0.00 | piano -4.41 EUR fino a fine prezzi; vantaggio su AUTO 0.026 EUR |
+| C2c | 00:00 | 06:00 | SCARICA_5000 | 20.00 -> 20.00 | carica 0.00, scarica 0.00 | piano -4.41 EUR fino a fine prezzi; vantaggio su AUTO 0.026 EUR |
+| C2a | 00:00 | 17:15 | CARICA_RETE_1000 | 30.79 -> 95.00 | carica 9.92, scarica 0.00 | piano -3.56 EUR fino a fine prezzi; vantaggio su AUTO 0.117 EUR |
+| C2b | 04:00 | 17:15 | CARICA_RETE_2000 | 20.00 -> 95.00 | carica 11.59, scarica 0.00 | piano -2.18 EUR fino a fine prezzi; vantaggio su AUTO 0.132 EUR |
+| C2c | 06:00 | 17:15 | CARICA_RETE_3000 | 20.00 -> 95.00 | carica 11.59, scarica 0.00 | piano -1.21 EUR fino a fine prezzi; vantaggio su AUTO 0.130 EUR |
+| C2d | 00:00 | 17:15 | CARICA_RETE_1000 | 30.79 -> 95.00 | carica 9.92, scarica 0.00 | piano -3.56 EUR fino a fine prezzi; vantaggio su AUTO 0.117 EUR (stesso piano di C2a) |
+| C2e | 00:00 | 17:15 | CARICA_RETE_1000 | 30.79 -> 95.00 | carica 9.92, scarica 0.00 | piano -3.56 EUR fino a fine prezzi; vantaggio su AUTO 0.117 EUR (stesso piano di C2a) |
 | C2 | 00:00 | 00:00 | SCARICA_5000 | 20.00 -> 20.00 | carica 0.00, scarica 0.00 | piano -4.41 EUR fino a fine prezzi; vantaggio su AUTO 0.026 EUR |
-| C2a | 22:15 | 00:00 | CARICA_RETE_1000 | 20.00 -> 30.79 | carica 1.67, scarica 0.00 | piano -3.56 EUR fino a fine prezzi; vantaggio su AUTO 0.117 EUR |
-| C2b | 00:00 | 00:00 | SCARICA_5000 | 20.00 -> 20.00 | carica 0.00, scarica 0.00 | piano -4.41 EUR fino a fine prezzi; vantaggio su AUTO 0.026 EUR |
-| C2c | 00:00 | 00:00 | SCARICA_5000 | 20.00 -> 20.00 | carica 0.00, scarica 0.00 | piano -4.41 EUR fino a fine prezzi; vantaggio su AUTO 0.026 EUR |
-| C2d | 22:15 | 00:00 | CARICA_RETE_1000 | 20.00 -> 30.79 | carica 1.67, scarica 0.00 | piano -3.56 EUR fino a fine prezzi; vantaggio su AUTO 0.117 EUR (stesso piano di C2a) |
-| C2e | 22:15 | 00:00 | CARICA_RETE_1000 | 20.00 -> 30.79 | carica 1.67, scarica 0.00 | piano -3.56 EUR fino a fine prezzi; vantaggio su AUTO 0.117 EUR (stesso piano di C2a) |
+| C2a | 17:15 | 00:00 | SCARICA_5000 | 95.00 -> 20.00 | carica 0.00, scarica 9.94 | piano -2.66 EUR fino a fine prezzi; vantaggio su AUTO 0.134 EUR |
+| C2b | 17:15 | 00:00 | SCARICA_5000 | 95.00 -> 20.00 | carica 0.00, scarica 9.94 | piano -2.63 EUR fino a fine prezzi; vantaggio su AUTO 0.134 EUR |
+| C2c | 17:15 | 00:00 | SCARICA_5000 | 95.00 -> 20.00 | carica 0.00, scarica 9.94 | piano -2.62 EUR fino a fine prezzi; vantaggio su AUTO 0.134 EUR |
+| C2d | 17:15 | 00:00 | SCARICA_5000 | 95.00 -> 20.00 | carica 0.00, scarica 9.94 | piano -2.62 EUR fino a fine prezzi; vantaggio su AUTO 0.134 EUR |
+| C2e | 17:15 | 00:00 | SCARICA_5000 | 95.00 -> 20.00 | carica 0.00, scarica 9.94 | piano -2.62 EUR fino a fine prezzi; vantaggio su AUTO 0.134 EUR |
 
 ## Segnalazioni
 - Dispacciamento non noto (calcolato a 0): inserirlo in config.lua quando disponibile.
