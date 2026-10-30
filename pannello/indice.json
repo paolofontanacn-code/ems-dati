@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-30T16:19:46+01:00",
+ "aggiornato": "2026-10-30T21:07:46+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -187,9 +187,9 @@
   }
  ],
  "oggi": "2026-10-30",
- "piano": "2026-10-30",
+ "piano": "2026-10-31",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 30/10/2026 15:18:55 UTC",
+  "Controllo di rete del giro su GitHub - 30/10/2026 20:07:09 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -226,11 +226,6 @@
   "202610"
  ],
  "registro": [
-  "2026-10-27 01:23:32  Token Huawei rinnovato.",
-  "2026-10-27 01:23:43  GitHub: rigioco 2026-10-26 21:20:00 -> 2026-10-27 01:00:00 (44 letture dallo storico)",
-  "2026-10-27 00:00:00  Giorno 20261026 chiuso: costo netto condizione 0 0.02 EUR, condizione 1 (reale) 1.58 EUR; beneficio sulla 1: C2 1.09, C2a 1.09, C2b 1.09, C2c 1.09, C2d 1.09, C2e 1.09 EUR",
-  "2026-10-27 00:00:00  GitHub: inviati 11 file",
-  "2026-10-27 06:33:39  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-10-27 06:33:40  Token Huawei rinnovato.",
   "2026-10-27 06:33:44  GitHub: rigioco 2026-10-27 01:00:00 -> 2026-10-27 06:10:00 (62 letture dallo storico)",
   "2026-10-27 04:00:00  Coefficienti da GitHub: applicati, 288 valori di profilo",
@@ -305,6 +300,11 @@
   "2026-10-30 16:19:10  GitHub: rigioco 2026-10-30 09:10:00 -> 2026-10-30 15:55:00 (81 letture dallo storico)",
   "2026-10-30 13:30:00  Prezzi GME del 20261031 salvati: 24 ore, NORD da 0.2268 a 0.3000 EUR/kWh, con quarti d'ora",
   "2026-10-30 13:30:00  Richiesta delle previsioni di 20261031 inviata a GitHub",
-  "2026-10-30 14:00:00  GitHub: inviati 2 file"
+  "2026-10-30 14:00:00  GitHub: inviati 2 file",
+  "2026-10-30 21:07:16  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-10-30 21:07:17  Token Huawei rinnovato.",
+  "2026-10-30 21:07:23  GitHub: rigioco 2026-10-30 15:55:00 -> 2026-10-30 20:45:00 (58 letture dallo storico)",
+  "2026-10-30 16:00:00  Previsioni di GitHub per 20261031 non accettate (non migliore del Mango): uso le mie",
+  "2026-10-30 16:15:00  Piano della sera per 20261031 salvato"
  ]
 }
