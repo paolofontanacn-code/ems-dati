@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-10-31T00:45:57+01:00",
+ "aggiornato": "2026-10-31T06:29:39+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -193,7 +193,7 @@
  "oggi": "2026-10-31",
  "piano": "2026-10-31",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 30/10/2026 23:45:07 UTC",
+  "Controllo di rete del giro su GitHub - 31/10/2026 05:28:53 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -230,10 +230,6 @@
   "202610"
  ],
  "registro": [
-  "2026-10-27 11:57:20  GitHub: rigioco 2026-10-27 06:10:00 -> 2026-10-27 11:35:00 (65 letture dallo storico)",
-  "2026-10-27 17:32:35  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-10-27 17:32:36  Token Huawei rinnovato.",
-  "2026-10-27 17:32:42  GitHub: rigioco 2026-10-27 11:35:00 -> 2026-10-27 17:10:00 (67 letture dallo storico)",
   "2026-10-27 13:30:00  Prezzi GME del 20261028 salvati: 24 ore, NORD da 0.2323 a 0.3495 EUR/kWh, con quarti d'ora",
   "2026-10-27 13:30:00  Richiesta delle previsioni di 20261028 inviata a GitHub",
   "2026-10-27 14:00:00  GitHub: inviati 2 file",
@@ -309,6 +305,10 @@
   "2026-10-31 00:45:17  Token Huawei rinnovato.",
   "2026-10-31 00:45:28  GitHub: rigioco 2026-10-30 20:45:00 -> 2026-10-31 00:25:00 (44 letture dallo storico)",
   "2026-10-31 00:00:00  Giorno 20261030 chiuso: costo netto condizione 0 2.54 EUR, condizione 1 (reale) 2.77 EUR; beneficio sulla 1: C2 0.23, C2a 0.23, C2b 0.23, C2c 0.23, C2d 0.23, C2e 0.23 EUR",
-  "2026-10-31 00:00:00  GitHub: inviati 11 file"
+  "2026-10-31 00:00:00  GitHub: inviati 11 file",
+  "2026-10-31 06:29:03  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-10-31 06:29:04  Token Huawei rinnovato.",
+  "2026-10-31 06:29:09  GitHub: rigioco 2026-10-31 00:25:00 -> 2026-10-31 06:05:00 (68 letture dallo storico)",
+  "2026-10-31 04:00:00  Coefficienti da GitHub: applicati, 288 valori di profilo"
  ]
 }
