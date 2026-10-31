@@ -1,11 +1,11 @@
-# Ultimo addestramento - 31/10/2026 21:17
+# Ultimo addestramento - 01/11/2026 00:42
 
-Dati: 4323 quarti d'ora su 48 giorni (2026-09-12 - 2026-10-30).
+Dati: 4419 quarti d'ora su 49 giorni (2026-09-12 - 2026-10-31).
 
 | Verifica sugli ultimi giorni | Errore medio consumi W | Errore medio FV W | Esito |
 |---|---|---|---|
-| Previsioni del Mango (registrate) | 616 | 205 | riferimento |
-| Modello completo (GitHub) | 575 | 211 | ACCETTATO |
-| Coefficienti formato Mango | 573 | - | ACCETTATI |
+| Previsioni del Mango (registrate) | 605 | 192 | riferimento |
+| Modello completo (GitHub) | 618 | 189 | non accettato |
+| Coefficienti formato Mango | 581 | - | ACCETTATI |
 
-Pompa di calore (W per grado sotto 18 C, quadrato/10, x vento/10, x sole/1000, sopra 24 C): 14.2, 19.7, 46.3, -144.9, 62.8
+Pompa di calore (W per grado sotto 18 C, quadrato/10, x vento/10, x sole/1000, sopra 24 C): 27.7, 13.5, 26.2, -86.4, 237.6
