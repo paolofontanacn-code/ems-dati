@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-01T14:14:02+01:00",
+ "aggiornato": "2026-11-01T19:33:39+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -195,9 +195,9 @@
   }
  ],
  "oggi": "2026-11-01",
- "piano": "2026-11-01",
+ "piano": "2026-11-02",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 01/11/2026 13:13:18 UTC",
+  "Controllo di rete del giro su GitHub - 01/11/2026 18:32:48 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -234,11 +234,6 @@
   "202610"
  ],
  "registro": [
-  "2026-10-29 00:11:35  Token Huawei rinnovato.",
-  "2026-10-29 00:11:43  GitHub: rigioco 2026-10-28 19:45:00 -> 2026-10-28 23:50:00 (49 letture dallo storico)",
-  "2026-10-29 03:49:45  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-10-29 03:49:45  Token Huawei rinnovato.",
-  "2026-10-29 03:49:57  GitHub: rigioco 2026-10-28 23:50:00 -> 2026-10-29 03:25:00 (43 letture dallo storico)",
   "2026-10-29 00:00:00  Giorno 20261028 chiuso: costo netto condizione 0 -1.29 EUR, condizione 1 (reale) 0.26 EUR; beneficio sulla 1: C2 1.55, C2a 2.26, C2b 1.77, C2c 1.75, C2d 2.26, C2e 2.26 EUR",
   "2026-10-29 00:00:00  GitHub: inviati 11 file",
   "2026-10-29 10:51:11  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
@@ -313,6 +308,11 @@
   "2026-11-01 14:13:29  GitHub: rigioco 2026-11-01 06:30:00 -> 2026-11-01 13:50:00 (88 letture dallo storico)",
   "2026-11-01 13:30:00  Prezzi GME del 20261102 salvati: 24 ore, NORD da 0.2299 a 0.3386 EUR/kWh, con quarti d'ora",
   "2026-11-01 13:30:00  Richiesta delle previsioni di 20261102 inviata a GitHub",
-  "2026-11-01 14:13:57  GitHub: inviati 2 file"
+  "2026-11-01 14:13:57  GitHub: inviati 2 file",
+  "2026-11-01 19:32:54  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-01 19:32:55  Token Huawei rinnovato.",
+  "2026-11-01 19:33:01  GitHub: rigioco 2026-11-01 13:50:00 -> 2026-11-01 19:10:00 (64 letture dallo storico)",
+  "2026-11-01 14:00:00  Previsioni di GitHub per 20261102 non accettate (non migliore del Mango): uso le mie",
+  "2026-11-01 14:15:00  Piano della sera per 20261102 salvato"
  ]
 }
