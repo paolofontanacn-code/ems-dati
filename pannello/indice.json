@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-01T06:54:32+01:00",
+ "aggiornato": "2026-11-01T14:14:02+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -197,7 +197,7 @@
  "oggi": "2026-11-01",
  "piano": "2026-11-01",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 01/11/2026 05:54:02 UTC",
+  "Controllo di rete del giro su GitHub - 01/11/2026 13:13:18 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -234,12 +234,6 @@
   "202610"
  ],
  "registro": [
-  "2026-10-28 20:06:01  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-10-28 20:06:01  Token Huawei rinnovato.",
-  "2026-10-28 20:06:10  GitHub: rigioco 2026-10-28 14:10:00 -> 2026-10-28 19:45:00 (67 letture dallo storico)",
-  "2026-10-28 14:15:00  Previsioni di GitHub per 20261029 non accettate (non migliore del Mango): uso le mie",
-  "2026-10-28 14:30:00  Piano della sera per 20261029 salvato",
-  "2026-10-29 00:11:34  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-10-29 00:11:35  Token Huawei rinnovato.",
   "2026-10-29 00:11:43  GitHub: rigioco 2026-10-28 19:45:00 -> 2026-10-28 23:50:00 (49 letture dallo storico)",
   "2026-10-29 03:49:45  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
@@ -313,6 +307,12 @@
   "2026-11-01 06:54:08  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-01 06:54:09  Token Huawei rinnovato.",
   "2026-11-01 06:54:13  GitHub: rigioco 2026-11-01 00:20:00 -> 2026-11-01 06:30:00 (74 letture dallo storico)",
-  "2026-11-01 04:00:00  Coefficienti da GitHub: applicati, 288 valori di profilo"
+  "2026-11-01 04:00:00  Coefficienti da GitHub: applicati, 288 valori di profilo",
+  "2026-11-01 14:13:24  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-01 14:13:24  Token Huawei rinnovato.",
+  "2026-11-01 14:13:29  GitHub: rigioco 2026-11-01 06:30:00 -> 2026-11-01 13:50:00 (88 letture dallo storico)",
+  "2026-11-01 13:30:00  Prezzi GME del 20261102 salvati: 24 ore, NORD da 0.2299 a 0.3386 EUR/kWh, con quarti d'ora",
+  "2026-11-01 13:30:00  Richiesta delle previsioni di 20261102 inviata a GitHub",
+  "2026-11-01 14:13:57  GitHub: inviati 2 file"
  ]
 }
