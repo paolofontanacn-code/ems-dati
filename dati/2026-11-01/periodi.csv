@@ -1,0 +1,8 @@
+profilo,inizio,fine,durata_min,azione,categoria,motivo,soc_inizio,soc_fine,carica_fv_kwh,carica_rete_kwh,scarica_kwh,prelievo_kwh,immissione_kwh,nord_medio,costo_medio,euro_netto
+C2a,2026-11-01T00:00:00+01:00,2026-11-01T22:00:00+01:00,1320,SCARICA_5000,scarica,piano -3.58 EUR fino a fine prezzi; vantaggio su AUTO 0.160 EUR,20,20,0,0,0,23.332667,0,0.26688,0.222841,-5.199482
+C2,2026-11-01T00:00:00+01:00,2026-11-02T00:00:00+01:00,1440,SCARICA_5000,scarica,piano -3.92 EUR fino a fine prezzi; vantaggio su AUTO 0.130 EUR,20.825813,20.825813,0,0,0,26.794125,0,0.265366,0.222841,-5.970838
+C2a,2026-11-01T22:00:00+01:00,2026-11-02T00:00:00+01:00,120,CARICA_RETE_1000,carica,piano -5.98 EUR fino a fine prezzi; vantaggio su AUTO 0.138 EUR,20,32.430422,0,1.916667,0,5.378125,0,0.247926,0.222841,-1.198468
+C2b,2026-11-01T00:00:00+01:00,2026-11-02T00:00:00+01:00,1440,SCARICA_5000,scarica,piano -3.58 EUR fino a fine prezzi; vantaggio su AUTO 0.160 EUR,20,20,0,0,0,26.794125,0,0.265366,0.222841,-5.970838
+C2c,2026-11-01T00:00:00+01:00,2026-11-02T00:00:00+01:00,1440,SCARICA_5000,scarica,piano -3.58 EUR fino a fine prezzi; vantaggio su AUTO 0.160 EUR,20,20,0,0,0,26.794125,0,0.265366,0.222841,-5.970838
+C2d,2026-11-01T00:00:00+01:00,2026-11-02T00:00:00+01:00,1440,SCARICA_5000,scarica,piano -3.58 EUR fino a fine prezzi; vantaggio su AUTO 0.160 EUR,20,20,0,0,0,26.794125,0,0.265366,0.222841,-5.970838
+C2e,2026-11-01T00:00:00+01:00,2026-11-02T00:00:00+01:00,1440,SCARICA_5000,scarica,piano -3.58 EUR fino a fine prezzi; vantaggio su AUTO 0.160 EUR,20,20,0,0,0,26.794125,0,0.265366,0.222841,-5.970838
