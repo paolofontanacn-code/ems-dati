@@ -1,4 +1,4 @@
-# Ultimo addestramento - 04/11/2026 12:32
+# Ultimo addestramento - 04/11/2026 19:52
 
 Dati: 4707 quarti d'ora su 52 giorni (2026-09-12 - 2026-11-03).
 
@@ -10,3 +10,4 @@ Dati: 4707 quarti d'ora su 52 giorni (2026-09-12 - 2026-11-03).
 
 Pompa di calore (W per grado sotto 18 C, quadrato/10, x vento/10, x sole/1000, sopra 24 C): 41.0, 3.7, 0.0, -0.0, 337.1
 Previsioni per 20261104: non accettate (non migliore del Mango).
+Previsioni per 20261105: non accettate (non migliore del Mango).
