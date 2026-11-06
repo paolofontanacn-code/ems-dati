@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-06T03:22:06+01:00",
+ "aggiornato": "2026-11-06T10:50:14+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -217,7 +217,7 @@
  "oggi": "2026-11-06",
  "piano": "2026-11-06",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 06/11/2026 02:21:20 UTC",
+  "Controllo di rete del giro su GitHub - 06/11/2026 09:49:25 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -254,10 +254,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-01 23:23:45  GitHub: rigioco 2026-11-01 19:10:00 -> 2026-11-01 23:00:00 (46 letture dallo storico)",
-  "2026-11-02 02:47:31  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-02 02:47:32  Token Huawei rinnovato.",
-  "2026-11-02 02:47:42  GitHub: rigioco 2026-11-01 23:00:00 -> 2026-11-02 02:25:00 (41 letture dallo storico)",
   "2026-11-02 00:00:00  Giorno 20261101 chiuso: costo netto condizione 0 5.97 EUR, condizione 1 (reale) 5.97 EUR; beneficio sulla 1: C2 0.00, C2a -0.53, C2b 0.00, C2c 0.00, C2d 0.00, C2e 0.00 EUR",
   "2026-11-02 00:00:00  GitHub: inviati 11 file",
   "2026-11-02 10:23:17  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
@@ -333,6 +329,10 @@
   "2026-11-06 03:21:29  Token Huawei rinnovato.",
   "2026-11-06 03:21:40  GitHub: rigioco 2026-11-05 22:35:00 -> 2026-11-06 03:00:00 (53 letture dallo storico)",
   "2026-11-06 00:00:00  Giorno 20261105 chiuso: costo netto condizione 0 4.70 EUR, condizione 1 (reale) 4.66 EUR; beneficio sulla 1: C2 -0.04, C2a -0.04, C2b -0.04, C2c -0.04, C2d -0.04, C2e -0.04 EUR",
-  "2026-11-06 00:00:00  GitHub: inviati 11 file"
+  "2026-11-06 00:00:00  GitHub: inviati 11 file",
+  "2026-11-06 10:49:43  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-06 10:49:44  Token Huawei rinnovato.",
+  "2026-11-06 10:49:54  GitHub: rigioco 2026-11-06 03:00:00 -> 2026-11-06 10:25:00 (89 letture dallo storico)",
+  "2026-11-06 04:00:00  Coefficienti da GitHub: applicati, 288 valori di profilo"
  ]
 }

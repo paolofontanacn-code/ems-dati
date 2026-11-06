@@ -50,5 +50,57 @@
    "oltre 12h": "italia_meteo_arpae_icon_2i"
   },
   "correzione_ultime_letture": 1.0
+ },
+ {
+  "ora": "2026-11-06T10:50+01:00",
+  "dati_fino_a": "2026-11-06T10:30+01:00",
+  "soc_kwh": 4.49,
+  "modo": "terzi",
+  "nome_modo": "Third-party dispatch",
+  "atteso_eur": 16.894,
+  "punteggi_semi": {
+   "lineare - Third-party": 16.654,
+   "lineare - TOU": 16.249,
+   "Fully fed to grid": 13.485,
+   "fuzzy - Third-party": 14.09,
+   "fuzzy - TOU": 13.793,
+   "piano precedente": 16.821
+  },
+  "fine_calcoli": "2026-11-06T10:50:22+01:00",
+  "stabilita": {
+   "guadagno_eur": 0.015,
+   "soglia_eur": 0.1,
+   "ricavo_4h_piano_spedito_eur": 0.0,
+   "cambio": false,
+   "motivo": "guadagno sotto la soglia: per le prossime 4 ore resta il piano spedito"
+  },
+  "generazioni": 475,
+  "valutazioni": 57120,
+  "secondi": 5.9,
+  "ore_prezzo_previsto": 24,
+  "theta": {
+   "valore_finale": 0.7127,
+   "k_scenari": 1.0274,
+   "peso_lati": 0.311,
+   "costo_cambio": 0.0,
+   "fz_basso": 0.2609,
+   "fz_alto": 0.9243,
+   "fz_scarica": 1.5
+  },
+  "orizzonte_fino_a": "2026-11-08T00:00+01:00",
+  "previsione_kwh": 48.41,
+  "modelli": [
+   "ecmwf_ifs025",
+   "icon_seamless",
+   "italia_meteo_arpae_icon_2i",
+   "meteofrance_seamless"
+  ],
+  "modelli_errore": {},
+  "modello_per_orizzonte": {
+   "0-2h": "icon_seamless",
+   "2-12h": "meteofrance_seamless",
+   "oltre 12h": "ecmwf_ifs025"
+  },
+  "correzione_ultime_letture": 1.183
  }
 ]
