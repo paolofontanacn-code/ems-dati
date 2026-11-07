@@ -1,7 +1,7 @@
+-- Revisione R07 - 31/10/2026 - tolte le medie del PUN per fascia (si usa solo il prezzo fisso F0)
 -- prezzi_acquisto.lua - costo del kWh prelevato e valore del kWh ceduto
 --   costo = [PREZZO_FISSO_A x (1 + PERDITE) + DISPACCIAMENTO + TRASPORTO + ONERI + ACCISE] x (1 + IVA), uguale per
 --   tutti i profili (prezzo fisso F0); cessione = NORD x (1 - IMPOSTA_CESSIONI)
---   Le medie del PUN per fascia restano calcolate solo come informazione.
 local T = require "lib_tempo"
 local M = {}
 
@@ -13,49 +13,8 @@ function M.valore_cessione(c, nord)
   return nord * (1 - c.IMPOSTA_CESSIONI)
 end
 
--- aggiorna le medie mensili del PUN per fascia con i prezzi orari di un giorno (una sola volta per giorno)
--- archivio: stato.pun_fasce = { ["AAAAMM"] = { F1 = {s=, n=}, F2 = ..., F3 = ..., giorni = { ["AAAAMMGG"] = true } } }
-function M.aggiungi_giorno(stato, prezzi)
-  stato.pun_fasce = stato.pun_fasce or {}
-  local g = prezzi.giorno
-  local mese = g:sub(1, 6)
-  local m = stato.pun_fasce[mese] or { F1 = { s = 0, n = 0 }, F2 = { s = 0, n = 0 }, F3 = { s = 0, n = 0 }, giorni = {} }
-  stato.pun_fasce[mese] = m
-  if m.giorni[g] then return end
-  local m0 = T.mezzanotte(g)
-  for h, x in ipairs(prezzi.ore) do
-    local f = T.calendario(m0 + (h - 1) * 3600 + 60).fascia
-    m[f].s = m[f].s + x.pun
-    m[f].n = m[f].n + 1
-  end
-  m.giorni[g] = true
-  -- tiene solo gli ultimi 3 mesi
-  local mesi = {}
-  for k in pairs(stato.pun_fasce) do mesi[#mesi + 1] = k end
-  table.sort(mesi)
-  for i = 1, #mesi - 3 do stato.pun_fasce[mesi[i]] = nil end
-end
-
--- PUN medio della fascia del mese (stima con i dati disponibili). Ritorna valore, nota
-function M.pun_fascia(stato, mese, fascia, pun_ora)
-  local m = (stato.pun_fasce or {})[mese]
-  if m and m[fascia].n > 0 then return m[fascia].s / m[fascia].n, "media mese" end
-  -- mese precedente, stessa fascia
-  local a, mm = tonumber(mese:sub(1, 4)), tonumber(mese:sub(5, 6))
-  mm = mm - 1
-  if mm == 0 then a, mm = a - 1, 12 end
-  local prec = (stato.pun_fasce or {})[string.format("%04d%02d", a, mm)]
-  if prec and prec[fascia].n > 0 then return prec[fascia].s / prec[fascia].n, "media mese precedente" end
-  if m then
-    local s, n = 0, 0
-    for _, f in ipairs({ "F1", "F2", "F3" }) do s, n = s + m[f].s, n + m[f].n end
-    if n > 0 then return s / n, "media mese tutte le fasce" end
-  end
-  return pun_ora, "PUN orario (nessuna media disponibile)"
-end
-
 -- costo d'acquisto di ogni profilo per un istante t (prezzo fisso: uguale per tutti)
-function M.costi(c, stato, t, pun)
+function M.costi(c, t)
   local cal = T.calendario(t)
   local v = M.costo_da_energia(c, c.PREZZO_FISSO_A)
   local r = {}

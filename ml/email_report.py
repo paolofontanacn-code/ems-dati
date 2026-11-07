@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Revisione R08 - 07/11/2026 - solo la condizione 2 (tolte 2a..2e, carica dalla rete)
+# Revisione R07 - 31/10/2026 - tolte le simulazioni vecchie (F0/F0R): solo le condizioni attuali a prezzo fisso F0
 """
 email_report.py - invia ogni giorno, una volta sola, il resoconto dell'ultimo giorno chiuso (Gmail, SMTP SSL).
   mittente:     GMAIL_UTENTE (variabile d'ambiente, predefinito il primo destinatario)
@@ -15,9 +17,7 @@ import sys
 from email.message import EmailMessage
 
 PAGINA = "https://paolofontanacn-code.github.io/ems-dati/"
-NOMI = {"F0": "senza carica da rete (vecchia)", "F0R": "con carica da rete (vecchia)",
-        "C2": "condizione 2 (senza carica AC)", "C2a": "condizione 2a (AC 1 kW)", "C2b": "condizione 2b (AC 2 kW)",
-        "C2c": "condizione 2c (AC 3 kW)", "C2d": "condizione 2d (AC 4 kW)", "C2e": "condizione 2e (AC 5 kW)"}
+NOMI = {"C2": "condizione 2 (senza carica AC)"}          # R08: tolte le condizioni con carica dalla rete
 
 
 def num(v):
@@ -60,7 +60,8 @@ def main():
         return
     data = f"{g[6:]}/{g[4:6]}/{g[:4]}"
     iso = f"{g[:4]}-{g[4:6]}-{g[6:]}"
-    profili = [k[:-len("_beneficio_eur")] for k in r if k.endswith("_beneficio_eur") and not k.endswith("_vs_zero_eur")]
+    profili = [k[:-len("_beneficio_eur")] for k in r if k.endswith("_beneficio_eur") and not k.endswith("_vs_zero_eur")
+               and k[:-len("_beneficio_eur")] in NOMI]          # R07: solo le condizioni attuali (prezzo fisso F0)
     zc, zr = num(r.get("zero_costo_eur")), num(r.get("zero_ricavo_eur"))
     zero = None if zc is None else zc - (zr or 0)
     L = [f"EMS Cismondi - resoconto di {r.get('tipo_giorno') or ''} {data} (SOLO SIMULAZIONE)", "",

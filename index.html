@@ -1,4 +1,6 @@
 <!doctype html>
+<!-- Revisione R08 - 07/11/2026 - tolte le condizioni con carica dalla rete (2a…2e); giorni dal 12/09 al 16/10: rigioco della condizione 2 con le previsioni che il sistema avrebbe avuto; pannello «Stima consumi: bravura» (indice di bravura della logica fuzzy rispetto al Mango e alla settimana prima) -->
+<!-- Revisione R07 - 31/10/2026 - tolte le simulazioni vecchie con prezzi di acquisto diversi dal prezzo fisso (F0/F0R, A, B, C): nei giorni vecchi solo dati reali; nel grafico delle potenze il consumo stimato con la logica fuzzy autoapprendente; costo d'acquisto con dispacciamento 0,017 EUR/kWh -->
 <!-- Revisione R05 - 26/10/2026 - meteo (radiazione, temperatura, nuvolosita') nel grafico delle potenze, ognuno con la sua scala; in alto revisione della pagina e revisione installata (file versione.json) -->
 <!-- Revisione R01 - 23/10/2026 - numero di revisione in alto nella pagina -->
 <html lang="it">
@@ -92,17 +94,19 @@ pre { font-size: 12px; overflow-x: auto; margin: 0; white-space: pre; }
     <dd>Dati reali misurati da Huawei, finché l'inverter lavora in automatico. Al costo si aggiunge l'usura della batteria sui kWh scaricati misurati. Quando saranno attivi i comandi verso l'inverter (fase 2), la condizione 1 tornerà a essere calcolata dal simulatore.</dd>
     <dt>Condizione 2 – ottimizzazione dei profili di carica/scarica, senza carica AC</dt>
     <dd>Il programma decide ogni quarto d'ora se lasciare l'automatico, ritardare la carica, caricare dal FV o scaricare la batteria, guardando prezzi, previsioni meteo e consumi. La batteria non si carica mai dalla rete.</dd>
-    <dt>Condizioni 2a, 2b, 2c, 2d, 2e – come la 2, con carica AC dalla rete</dt>
-    <dd>Carica della batteria dalla rete fino a 1 kW (2a), 2 kW (2b), 3 kW (2c), 4 kW (2d), 5 kW (2e), a qualsiasi ora: l'energia acquistata costa uguale di giorno e di notte. Il programma può usare anche potenze più basse di quella massima.</dd>
+    <dt>Condizioni con carica dalla rete (2a…2e)</dt>
+    <dd>Tolte dalla revisione R08 (07/11/2026): non si simulano più e non si mostrano.</dd>
+    <dt>Rigioco della condizione 2 sui giorni prima della simulazione</dt>
+    <dd>Dal 12/09/2026 (inizio del monitoraggio) al giorno prima dell'avvio della simulazione, la condizione 2 è rigiocata con i dati reali di quei giorni e con le previsioni che il sistema avrebbe avuto: meteo previsto (archivio delle previsioni Open-Meteo), consumi stimati con la logica fuzzy addestrata solo sui giorni precedenti, decisione ogni ora (nella simulazione vera ogni quarto d'ora). La batteria virtuale parte dal 50 % il primo giorno.</dd>
     <dt>Controllo: automatico simulato</dt>
     <dd>La modalità automatica dell'inverter rifatta dal simulatore. Serve a controllare il simulatore: deve restare vicina alla condizione 1 (reale).</dd>
   </dl>
   <h2>Prezzi e costi usati</h2>
   <ul class="spiega">
-    <li>Acquisto (tutte le condizioni): prezzo fisso F0 = [0,12 × (1 + perdite 10 %) + dispacciamento (0, non noto) + trasporto 0,014730 + oneri di sistema 0,033153 + accise 0,0227] × (1 + IVA 10 %) ≈ 0,2228 €/kWh.</li>
+    <li>Acquisto (tutte le condizioni): prezzo fisso F0 = [0,12 × (1 + perdite 10 %) + dispacciamento 0,017 + trasporto 0,014730 + oneri di sistema 0,033153 + accise 0,0227] × (1 + IVA 10 %) ≈ 0,2415 €/kWh (fino al 30/10/2026 dispacciamento 0: ≈ 0,2228 €/kWh).</li>
     <li>Vendita: prezzo zonale NORD del quarto d'ora (GME), senza imposta.</li>
     <li>Usura della batteria: 0,02 € per kWh scaricato.</li>
-    <li>Condizioni 2…2e: 0,10 € per ogni cambiamento di comando; al massimo 14 periodi forzati al giorno e scarica forzata al massimo 1 ciclo (15 kWh) al giorno.</li>
+    <li>Condizione 2: 0,10 € per ogni cambiamento di comando; al massimo 14 periodi forzati al giorno e scarica forzata al massimo 1 ciclo (15 kWh) al giorno.</li>
   </ul>
   <h2>Come leggere i benefici</h2>
   <p class="spiega">Costo netto = acquisti − vendite + usura (+ cambiamenti). Beneficio = costo netto della condizione di confronto − costo netto della condizione della riga: positivo vuol dire che la condizione della riga costa meno. Nella fase 2 l'automatismo sceglierà, tra le condizioni, la più conveniente da inviare all'inverter (non ancora attivo).</p>
@@ -131,10 +135,11 @@ const PANNELLI = [
   ["periodi", "Periodi di carica/scarica"],
   ["piano", "Piano calcolato"],
   ["giornaliero", "Giorno per giorno"],
+  ["bravura", "Stima consumi: bravura"],
   ["registro", "Registro ultimo giro"],
 ];
-const REV_PAGINA = "R05";
-const PREDEFINITI = ["tabella", "potenze", "soc", "prezzi", "giornaliero"];
+const REV_PAGINA = "R08";
+const PREDEFINITI = ["tabella", "potenze", "soc", "prezzi", "giornaliero", "bravura"];
 function leggiScelte() {
   try { const v = JSON.parse(localStorage.getItem("ems_pannelli")); if (Array.isArray(v)) return new Set(v); } catch (e) {}
   return new Set(PREDEFINITI);
@@ -191,15 +196,12 @@ function sezione(id, titolo, spiega) {
 }
 function larghezza(el) { const cs = getComputedStyle(el); return Math.max(260, Math.floor(el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight))); }
 
-// ---------------------------------------------------------------- condizioni simulate (lette dai dati: C2…C2e; F0, F0R, A, B, C nei giorni vecchi)
+// ---------------------------------------------------------------- condizioni simulate (C2…C2e, acquisto a prezzo fisso F0)
 const USURA = 0.02;   // €/kWh scaricato
-const NOMI_PROFILI = { C2: "Condizione 2 – senza carica AC", C2a: "Condizione 2a – carica AC 1 kW", C2b: "Condizione 2b – carica AC 2 kW",
-  C2c: "Condizione 2c – carica AC 3 kW", C2d: "Condizione 2d – carica AC 4 kW", C2e: "Condizione 2e – carica AC 5 kW",
-  F0: "Vecchia: senza carica da rete", F0R: "Vecchia: con carica da rete", A: "Vecchia A (prezzo fisso)", B: "Vecchia B (PUN per fascia)", C: "Vecchia C (PUN orario)" };
+const NOMI_PROFILI = { C2: "Condizione 2 – senza carica AC" };      // R08: tolte le condizioni con carica dalla rete (2a…2e)
 const NOMI_BREVI = { C2: "2", C2a: "2a", C2b: "2b", C2c: "2c", C2d: "2d", C2e: "2e" };
 // colori Okabe-Ito (distinguibili anche da chi non vede bene i colori) + tratteggio diverso per ogni condizione
-const COLORE_FISSO = { C2: "#0072B2", C2a: "#D55E00", C2b: "#009E73", C2c: "#CC79A7", C2d: "#E69F00", C2e: "#56B4E9",
-  F0: "#0072B2", F0R: "#D55E00", A: "#0072B2", B: "#D55E00", C: "#009E73" };
+const COLORE_FISSO = { C2: "#0072B2", C2a: "#D55E00", C2b: "#009E73", C2c: "#CC79A7", C2d: "#E69F00", C2e: "#56B4E9" };
 const TRATTO_FISSO = { C2: null, C2a: [8, 3], C2b: [2, 3], C2c: [8, 3, 2, 3], C2d: [12, 4], C2e: [4, 4] };
 let PROF = [];
 const nomeP = p => NOMI_PROFILI[p] || p;
@@ -207,7 +209,7 @@ const coloreP = p => COLORE_FISSO[p] || "#0072B2";
 const trattoP = p => TRATTO_FISSO[p] || undefined;
 function profiliDi(righe) {
   const r = righe[0] || {};
-  return Object.keys(r).filter(k => /^[A-Za-z0-9]+_azione$/.test(k)).map(k => k.slice(0, -7));
+  return Object.keys(r).filter(k => /^[A-Za-z0-9]+_azione$/.test(k)).map(k => k.slice(0, -7)).filter(p => p in NOMI_PROFILI);   // R07: solo prezzo fisso F0
 }
 
 // curve nascoste dalla legenda: restano nascoste anche cambiando giorno (memoria del browser)
@@ -267,7 +269,7 @@ function nomeAzione(a) {
 }
 function legendaAzioni() {
   return `<div class="legenda-azioni"><span><i style="background:${css("--carica")}"></i>carica da FV</span>
-    <span><i style="background:${css("--rete_c")}"></i>carica da rete (AC, fino alla potenza della condizione)</span><span><i style="background:${css("--scarica")}"></i>scarica forzata</span>
+    <span><i style="background:${css("--scarica")}"></i>scarica forzata</span>
     <span><i style="background:${css("--rit")}"></i>carica ritardata</span><span>(vuoto = automatico)</span></div>`;
 }
 // strisce delle azioni dei profili: grafico sottile sotto quello principale, stesso asse dei tempi
@@ -343,7 +345,8 @@ const col = (righe, k, f = 1) => righe.map(r => { const v = num(r[k]); return v 
 function pTabella(d, g) {
   const s = sezione("tabella", "Euro e kWh del giorno", d.info.tipo === "oggi" ? "Giorno in corso: totali parziali fino all'ultima lettura." :
     d.info.tipo === "storico" ? "Giorno prima dell'avvio della simulazione: solo energia reale." :
-    "Netto = acquisti − cessioni + usura batteria (+ 0,10 € per ogni cambiamento nelle condizioni 2…2e). Beneficio = differenza di netto (positivo = la condizione della riga costa meno).");
+    d.info.vecchio ? "Giorno simulato con le versioni precedenti (prezzi di acquisto diversi dal prezzo fisso): solo energia reale." :
+    "Netto = acquisti − cessioni + usura batteria (+ 0,10 € per ogni cambiamento nella condizione 2). Beneficio = differenza di netto (positivo = la condizione della riga costa meno).");
   const R = d.righe, k = 300 / 3.6e6;
   const kwh = n => R.reduce((a, r) => a + (num(r[n]) || 0), 0) * k;
   const somma = n => R.reduce((a, r) => a + (num(r[n]) || 0), 0);
@@ -355,7 +358,7 @@ function pTabella(d, g) {
     <div class="tessera"><span>Consumo casa</span><b>${fmt(car, 1)}</b><span>kWh</span></div>
     <div class="tessera"><span>Prelievo reale</span><b>${fmt(pr, 1)}</b><span>kWh</span></div>
     <div class="tessera"><span>Immissione reale</span><b>${fmt(im, 1)}</b><span>kWh</span></div></div>`;
-  if (d.info.tipo !== "storico") {
+  if (d.info.tipo !== "storico" && !d.info.vecchio) {
     const zero = gg && gg.zero_netto_eur !== "" && gg.zero_netto_eur != null ? num(gg.zero_netto_eur)
       : (R.some(r => r.zero_costo_eur !== undefined) ? somma("zero_costo_eur") - somma("zero_ricavo_eur") : null);
     h += `<div class="tab"><table><tr><th>Condizione</th><th>Netto €</th><th>Beneficio sulla condizione 1 €</th><th>Beneficio sull'automatico simulato €</th><th>Beneficio sulla condizione 0 €</th><th>Prelievo kWh</th><th>Immissione kWh</th><th>Cambiamenti</th></tr>`;
@@ -380,7 +383,7 @@ function pTabella(d, g) {
       h += riga(nomeP(p), coloreP(p), sc, dif(c1, sc), dif(auto, sc), dif(zero, sc),
                 somma(p + "_prel_kwh"), somma(p + "_imm_kwh"), ult ? ult[p + "_comandi_oggi"] : null);
     }
-    h += `</table></div><p class="spiega">Acquisto: prezzo fisso F0 0,12 €/kWh + perdite, trasporto, oneri, accise, IVA (dispacciamento non noto: 0) = ${fmt(num((R.find(r => r.costo_acquisto) || {}).costo_acquisto), 4)} €/kWh. Cessione: prezzo zonale NORD del quarto d'ora. Usura batteria: 0,02 €/kWh scaricato. La condizione 1 comprende l'usura sui kWh scaricati misurati. Beneficio positivo = la condizione della riga costa meno di quella della colonna. Descrizione delle condizioni: pannello «Aiuto».</p>`;
+    h += `</table></div><p class="spiega">Acquisto: prezzo fisso F0 0,12 €/kWh + perdite, dispacciamento, trasporto, oneri, accise, IVA = ${fmt(num((R.find(r => r.costo_acquisto) || {}).costo_acquisto), 4)} €/kWh. Cessione: prezzo zonale NORD del quarto d'ora. Usura batteria: 0,02 €/kWh scaricato. La condizione 1 comprende l'usura sui kWh scaricati misurati. Beneficio positivo = la condizione della riga costa meno di quella della colonna. Descrizione delle condizioni: pannello «Aiuto».</p>`;
   }
   s.insertAdjacentHTML("beforeend", h);
 }
@@ -395,13 +398,24 @@ function meteoRighe(d) {
 }
 const OKABE = { arancio: "#E69F00", celeste: "#56B4E9", verde: "#009E73", giallo: "#F0E442", blu: "#0072B2", vermiglio: "#D55E00", rosa: "#CC79A7" };
 
-function pPotenze(d) {
-  const s = sezione("potenze", "Potenze reali (misurate da Huawei) e meteo", "Rete: sopra lo zero immissione, sotto lo zero prelievo. Batteria: sopra lo zero in carica. Meteo (Open-Meteo, linee tratteggiate): radiazione W/m², temperatura °C, nuvolosità %, ognuno con la sua scala a destra. Clic su una voce della legenda per nasconderla: resta nascosta anche cambiando giorno.");
-  const R = d.righe, x = R.map(r => +r.ts), m = meteoRighe(d);
+async function pPotenze(d) {
+  const s = sezione("potenze", "Potenze reali (misurate da Huawei) e meteo", "Rete: sopra lo zero immissione, sotto lo zero prelievo. Batteria: sopra lo zero in carica. Consumo stimato (fuzzy, tratteggio): stima del giorno prima con la logica fuzzy autoapprendente (comportamento, riscaldamento e acqua calda della pompa di calore, temperatura esterna con l'inerzia della casa, consumi dei giorni prima). Meteo (Open-Meteo, linee tratteggiate): radiazione W/m², temperatura °C, nuvolosità %, ognuno con la sua scala a destra. Clic su una voce della legenda per nasconderla: resta nascosta anche cambiando giorno.");
+  // R07: consumo stimato con la logica fuzzy (previsioni/fuzzy/AAAA-MM-GG.json, scritto da ml/consumi_fuzzy.py)
+  let fz = null, info = null;
+  try { fz = await scarica(`previsioni/fuzzy/${d.info.g}.json`, "json"); } catch (e) {}
+  try { info = await scarica("modelli/consumi_fuzzy.json", "json"); } catch (e) {}
+  const R = [...d.righe];
+  if (fz && R.length) {                       // giorno in corso: l'asse arriva fino alla fine della stima
+    const ultimo = +R[R.length - 1].ts, fine = fz.inizio + fz.carico_w.length * fz.passo_s;
+    for (let t = Math.floor(ultimo / 900) * 900 + 900; t < fine; t += 900) R.push({ ts: t });
+  }
+  const x = R.map(r => +r.ts), m = meteoRighe({ ...d, righe: R });
+  const stima = fz ? x.map(t => { const k = Math.floor((t - fz.inizio) / fz.passo_s); return k >= 0 && k < fz.carico_w.length ? fz.carico_w[k] : null; }) : null;
   const serie = [
     { label: "FV", stroke: css("--fv"), dati: col(R, "fv_w") },
     { label: "Consumo", stroke: css("--carico"), dati: col(R, "carico_w") },
-    { label: "Rete", stroke: css("--rete"), dati: R.map(r => (num(r.immissione_w) || 0) - (num(r.prelievo_w) || 0)) },
+    ...(stima ? [{ label: "Consumo stimato (fuzzy)", stroke: css("--carico"), dash: [6, 3], width: 1.8, dati: stima }] : []),
+    { label: "Rete", stroke: css("--rete"), dati: R.map(r => r.immissione_w == null && r.prelievo_w == null ? null : (num(r.immissione_w) || 0) - (num(r.prelievo_w) || 0)) },
   ];
   if (d.info.tipo !== "storico") serie.push({ label: "Batteria", stroke: css("--batt"), dati: col(R, "batteria_w") });
   const assi = [];
@@ -414,6 +428,10 @@ function pPotenze(d) {
     assi.push({ scale: sc, side: 1, size: 48, show: larghezza(s) >= 700, stroke: colore, grid: { show: false }, values: (u, v) => v.map(a => vf(a, v.length > 1 && Math.abs(v[1] - v[0]) < 1 ? 1 : 0)) });
   }
   if (!assi.length) s.querySelector(".spiega").insertAdjacentHTML("beforeend", " Meteo non disponibile per questo giorno.");
+  const sp = s.querySelector(".spiega");
+  if (fz) sp.insertAdjacentHTML("beforeend", ` Stima fuzzy di questo giorno: ${fz.fonte || ""}${fz.mae_w != null ? `, errore medio ${fmt(fz.mae_w, 0)} W` : ""}.`);
+  else sp.insertAdjacentHTML("beforeend", " Stima fuzzy dei consumi non disponibile per questo giorno.");
+  if (info && info.verifica) sp.insertAdjacentHTML("beforeend", ` Ultima verifica (ultimi ${info.verifica.giorni} giorni): errore medio fuzzy ${fmt(info.verifica.mae_fuzzy, 0)} W, previsioni del Mango ${fmt(info.verifica.mae_mango, 0)} W, modello completo ${fmt(info.verifica.mae_ml, 0)} W; per le decisioni si usa: ${info.verifica.scelta || "–"}. Inerzia della casa stimata: ${fmt(info.parametri && info.parametri.inerzia_ore, 0)} ore.`);
   grafico(s, x, serie, { unita: "W", altezza: 300, assi, scale: { ghi: { range: (u, a, b) => [0, Math.max(100, b || 0)] }, temp: {}, nuv: { range: [0, 100] } } });
 }
 
@@ -442,15 +460,11 @@ function pPrezzi(d) {
   const R = d.righe, x = R.map(r => +r.ts);
   const az = {};
   for (const p of PROF) az[p] = R.map(r => r[p + "_azione"]);
-  const vecchi = R.some(r => r.costo_A !== undefined);
-  const serie = vecchi
-    ? [{ label: "Acquisto A", stroke: css("--A"), dati: col(R, "costo_A"), dec: 3 }, { label: "Acquisto B", stroke: css("--B"), dati: col(R, "costo_B"), dec: 3 },
-       { label: "Acquisto C", stroke: css("--C"), dati: col(R, "costo_C"), dec: 3 }]
-    : [{ label: "Acquisto F0", stroke: css("--A"), dati: col(R, "costo_acquisto"), dec: 4 }];
+  const serie = [{ label: "Acquisto F0", stroke: css("--A"), dati: col(R, "costo_acquisto"), dec: 4 }];
   serie.push({ label: "NORD orario", stroke: css("--tenue"), dash: [3, 3], dati: col(R, "nord"), dec: 3 },
              { label: "NORD quarto d'ora", stroke: css("--tenue"), dati: col(R, "nord_15"), dec: 3 },
              { label: "Cessione", stroke: css("--rete"), dati: col(R, "valore_cessione"), dec: 3 });
-  grafico(s, x, serie, { unita: "€/kWh", dec: 2, altezza: 280, id: vecchi ? "vecchi" : "" });
+  grafico(s, x, serie, { unita: "€/kWh", dec: 2, altezza: 280 });
   corsie(s, x, az, PROF);
   s.insertAdjacentHTML("beforeend", legendaAzioni());
 }
@@ -512,7 +526,7 @@ async function pPiano() {
   if (!indice.piano) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun piano ancora calcolato (i prezzi del giorno dopo arrivano dalle 13:30).</p>`); return; }
   const P = csv(await scarica("pannello/piano.csv"));
   s.querySelector("h2").textContent = "Piano calcolato per il " + new Date(indice.piano + "T12:00:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
-  s.insertAdjacentHTML("beforeend", `<p class="spiega">Quello che ogni condizione (2…2e) prevede di fare, con le previsioni e i prezzi noti al momento del calcolo. Il piano viene ricalcolato durante il giorno.</p>`);
+  s.insertAdjacentHTML("beforeend", `<p class="spiega">Quello che la condizione 2 prevede di fare, con le previsioni e i prezzi noti al momento del calcolo. Il piano viene ricalcolato durante il giorno.</p>`);
   const per = {};
   for (const r of P) (per[r.profilo] = per[r.profilo] || []).push(r);
   const profili = Object.keys(per);
@@ -533,7 +547,7 @@ async function pPiano() {
 
 let giornaliero = [];
 function pGiornaliero() {
-  const s = sezione("giornaliero", "Giorno per giorno", "Energia di ogni giorno (anche prima dell'avvio della simulazione) e beneficio cumulato delle condizioni 2…2e sulla condizione 1 (reale), sul controllo automatico simulato e sulla condizione 0.");
+  const s = sezione("giornaliero", "Giorno per giorno", "Energia di ogni giorno (anche prima dell'avvio della simulazione) e beneficio cumulato della condizione 2 sulla condizione 1 (reale), sul controllo automatico simulato e sulla condizione 0.");
   const G = giornaliero; if (!G.length) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun dato.</p>`); return; }
   const x = G.map(r => Date.parse(r.giorno + "T12:00:00") / 1000);
   grafico(s, x, [
@@ -542,7 +556,7 @@ function pGiornaliero() {
     { label: "Prelievo kWh", stroke: css("--rete"), dati: G.map(r => num(r.prel_kwh)), dec: 1 },
   ], { unita: "kWh", altezza: 220, giorni: true });
   const sim = G.filter(r => r.tipo === "simulato");
-  const profili = Object.keys(G[0] || {}).filter(k => k.endsWith("_beneficio_eur") && !k.endsWith("_vs_zero_eur")).map(k => k.slice(0, -14))
+  const profili = Object.keys(G[0] || {}).filter(k => k.endsWith("_beneficio_eur") && !k.endsWith("_vs_zero_eur")).map(k => k.slice(0, -14)).filter(p => p in NOMI_PROFILI)
     .filter(p => sim.some(r => r[p + "_beneficio_eur"] !== "" && r[p + "_beneficio_eur"] != null));
   if (sim.length && profili.length) {
     const xs = sim.map(r => Date.parse(r.giorno + "T12:00:00") / 1000);
@@ -563,8 +577,50 @@ function pGiornaliero() {
     if (conC1.length)
       s.insertAdjacentHTML("beforeend", `<p class="spiega">Totale beneficio sulla condizione 1: ` +
         conC1.map(p => `${NOMI_BREVI[p] ? "condizione " + NOMI_BREVI[p] : nomeP(p)} ${fmt(tot(p, "_beneficio_vs_c1_eur"))} €`).join(" · ") + `.</p>`);
-    s.insertAdjacentHTML("beforeend", `<p class="spiega">Le voci «Vecchia» sono le simulazioni delle versioni precedenti (F0/F0R, A/B/C), con regole diverse: non confrontabili con le condizioni 2…2e.</p>`);
   }
+}
+
+// ---------------------------------------------------------------- R08: rigioco della condizione 2 (giorni prima della simulazione)
+async function pRigioco(g) {
+  let r;
+  try { r = await scarica(`rigioco/${g}.json`, "json"); } catch (e) { return; }
+  const s = sezione("rigioco", "Rigioco della condizione 2", `Giorno prima dell'avvio della simulazione, rigiocato con i dati reali e con le previsioni che il sistema avrebbe avuto: meteo ${r.meteo}, consumi stimati con la logica fuzzy addestrata sui soli giorni prima (errore medio ${fmt(r.mae_consumi_previsti_w, 0)} W), decisione ${r.decisione} (nella simulazione vera ogni quarto d'ora). Batteria virtuale all'inizio: ${fmt(r.soc_inizio.C2, 0)} %. La condizione 1 (reale) è senza usura: nello storico non ci sono i dati della batteria.`);
+  const t = r.totali, cl = v => v > 0.005 ? "pos" : v < -0.005 ? "neg" : "";
+  const riga = (nome, netto, prel, imm, cambi) => `<tr><td><b>${nome}</b></td><td>${fmt(netto)}</td><td class="${cl(t.c1_netto_eur - netto)}">${fmt(t.c1_netto_eur - netto)}</td>
+    <td class="${cl(t.auto_netto_eur - netto)}">${fmt(t.auto_netto_eur - netto)}</td><td class="${cl(t.c0_netto_eur - netto)}">${fmt(t.c0_netto_eur - netto)}</td><td>${fmt(prel, 1)}</td><td>${fmt(imm, 1)}</td><td>${cambi ?? "–"}</td></tr>`;
+  s.insertAdjacentHTML("beforeend", `<div class="tab"><table><tr><th>Condizione</th><th>Netto €</th><th>Beneficio sulla condizione 1 €</th><th>Beneficio sull'automatico simulato €</th><th>Beneficio sulla condizione 0 €</th><th>Prelievo kWh</th><th>Immissione kWh</th><th>Cambiamenti</th></tr>
+    ${riga("Condizione 0 – senza batteria", t.c0_netto_eur, t.zero.prel, t.zero.imm)}
+    ${riga("Condizione 1 – reale (senza usura)", t.c1_netto_eur, t.c1_prel_kwh, t.c1_imm_kwh)}
+    ${riga("Controllo: automatico simulato", t.auto_netto_eur, t.auto.prel, t.auto.imm)}
+    ${riga("Condizione 2 – rigioco", t.c2_netto_eur, t.c2.prel, t.c2.imm, r.comandi)}</table></div>`);
+  const Q = r.quarti, x = Q.map(q => q.t);
+  grafico(s, x, [
+    { label: "SOC condizione 2 (rigioco) %", stroke: coloreP("C2"), width: 2, dati: Q.map(q => q.soc), dec: 0 },
+    { label: "SOC automatico simulato %", stroke: css("--auto"), dash: [6, 4], dati: Q.map(q => q.auto_soc), dec: 0 },
+  ], { unita: "%", altezza: 200, id: "rigioco_soc", scale: { y: { range: [0, 100] } } });
+  const az = { C2: Q.map(q => q.azione) };
+  corsie(s, x, az, ["C2"]);
+  s.insertAdjacentHTML("beforeend", legendaAzioni());
+}
+
+// ---------------------------------------------------------------- R08: indice di bravura della stima fuzzy dei consumi
+async function pBravura() {
+  const s = sezione("bravura", "Stima consumi: bravura della logica fuzzy", "Indice di bravura di ogni giorno = 1 − errore della stima fuzzy ÷ errore di un riferimento: sopra lo zero la fuzzy sbaglia meno del riferimento. Riferimenti: previsioni del Mango registrate la sera prima, e «stesso giorno della settimana prima» (i consumi reali di 7 giorni prima). Linee: media degli ultimi 7 giorni; punti: giorno per giorno. Se nel tempo l'indice sale, il sistema impara: l'indice non dipende da quanto consuma la casa nella stagione.");
+  let info;
+  try { info = await scarica("modelli/consumi_fuzzy.json", "json"); } catch (e) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Dati non ancora disponibili (si preparano a ogni giro di GitHub).</p>`); return; }
+  const B = (info.bravura || []).filter(b => b.giorno);
+  if (!B.length) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Ancora nessun giorno con stima fuzzy e consumi reali.</p>`); return; }
+  const x = B.map(b => Date.parse(b.giorno + "T12:00:00") / 1000);
+  grafico(s, x, [
+    { label: "sul Mango (media 7 giorni)", stroke: "#0072B2", width: 2.4, dati: B.map(b => b.indice_vs_mango_media7), dec: 2 },
+    { label: "sul Mango (giorno)", stroke: "#0072B2", width: 0, points: { show: true, size: 6, fill: "#0072B2" }, dati: B.map(b => b.indice_vs_mango), dec: 2 },
+    { label: "sulla settimana prima (media 7 giorni)", stroke: "#D55E00", dash: [8, 4], width: 2.4, dati: B.map(b => b.indice_vs_settimana_prima_media7), dec: 2 },
+    { label: "sulla settimana prima (giorno)", stroke: "#D55E00", width: 0, points: { show: true, size: 6, fill: "#D55E00" }, dati: B.map(b => b.indice_vs_settimana_prima), dec: 2 },
+  ], { unita: "indice", dec: 2, altezza: 240, giorni: true, id: "bravura" });
+  const u = B[B.length - 1], cr = info.carichi_ripetitivi;
+  s.insertAdjacentHTML("beforeend", `<p class="spiega">Ultimo giorno (${u.giorno}): errore fuzzy ${fmt(u.mae_fuzzy, 0)} W, Mango ${fmt(u.mae_mango, 0)} W, settimana prima ${fmt(u.mae_settimana_prima, 0)} W.
+    Parametri scelti dall'automiglioramento: inerzia della casa ${fmt(info.parametri && info.parametri.inerzia_ore, 0)} ore, consumi delle ore dei giorni prima ${info.parametri && info.parametri.ore_dei_giorni_prima ? "usati" : "non usati (non fanno sbagliare meno)"}.
+    ${cr ? `Carichi ripetitivi (quarti d'ora sopra ${fmt(cr.soglia_w, 0)} W, ultimi ${cr.giorni} giorni): ora più frequente ${(() => { const e = Object.entries(cr.quota_giorni_per_ora).sort((a, b) => b[1] - a[1])[0]; return e ? e[0] + ":00 nel " + fmt(e[1] * 100, 0) + " % dei giorni" : "–"; })()}; ${cr.quasi_certi_ore.length ? "quasi certi alle ore " + cr.quasi_certi_ore.join(", ") : "nessuno quasi certo (soglia 25 giorni su 30): la stima resta livellata"}.` : ""}</p>`);
 }
 
 function pRegistro() {
@@ -590,16 +646,20 @@ async function mostra() {
   try { d = await datiGiorno(g); } catch (e) { $("principale").innerHTML = `<section class="errore">Dati del giorno non leggibili: ${e.message}</section>`; return; }
   if (mia !== generazione) return;
   PROF = d.info.tipo === "storico" ? [] : profiliDi(d.righe);
-  const solo = info.tipo === "storico";
-  const avviso = id => { const s = sezione(id, PANNELLI.find(p => p[0] === id)[1]); s.insertAdjacentHTML("beforeend", `<p class="vuoto">Non disponibile per i giorni prima dell'avvio della simulazione.</p>`); };
+  // R07: giorni simulati con le versioni vecchie (prezzi di acquisto diversi dal fisso): solo dati reali
+  const vecchio = info.tipo !== "storico" && !PROF.length;
+  if (vecchio) d.info = { ...d.info, vecchio: true };
+  const solo = info.tipo === "storico" || vecchio;
+  const avviso = id => { const s = sezione(id, PANNELLI.find(p => p[0] === id)[1]); s.insertAdjacentHTML("beforeend", `<p class="vuoto">${vecchio ? "Giorno simulato con le versioni precedenti (prezzi di acquisto diversi dal prezzo fisso): si mostrano solo i dati reali." : "Non disponibile per i giorni prima dell'avvio della simulazione."}</p>`); };
   for (const [id] of PANNELLI) {
     if (!scelte.has(id)) continue;
     try {
-      if (id === "tabella") pTabella(d, g);
-      else if (id === "potenze") pPotenze(d);
+      if (id === "tabella") { pTabella(d, g); if (info.tipo === "storico") await pRigioco(g); }
+      else if (id === "potenze") await pPotenze(d);
       else if (id === "meteo") pMeteo(d);
       else if (id === "giornaliero") pGiornaliero();
       else if (id === "registro") pRegistro();
+      else if (id === "bravura") await pBravura();
       else if (id === "piano") await pPiano();
       else if (solo) avviso(id);
       else if (id === "soc") pSoc(d);

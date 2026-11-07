@@ -510,3 +510,128 @@ tolto il riassunto a testo e la colonna "Piano").
   con la R05 nella prova precedente -0,12 e +2,25 EUR. La R06 non cambia il codice della decisione. La ricerca evolutiva e'
   a tempo (6 s nella prova): sullo stesso contesto ha fatto 275, 254 e 233 generazioni in tre prove, quindi i piani
   possono cambiare da una prova all'altra. Non verificato che sia l'unica causa della differenza.
+
+## Prossima revisione (R07) - Cismondi (27/10/2026, richieste dell'utente, NIENTE CODICE finche' non richiesto)
+- Prezzi di acquisto: non servono simulazioni con prezzi di acquisto diversi dal prezzo fisso (F0).
+  Stato attuale (verificato nel codice): le condizioni simulate C2...C2e usano gia' tutte il prezzo fisso F0
+  (config.lua). Restano: le medie mensili del PUN per fascia calcolate "solo come informazione" (prezzi_acquisto.lua)
+  e, nella pagina, le simulazioni delle versioni precedenti dei giorni vecchi (F0/F0R, A, B, C "Vecchia ...").
+  Da decidere cosa togliere.
+- Stima dei consumi nel grafico delle potenze (index.html): curva dei consumi stimati, calcolata con LOGICA FUZZY
+  autoapprendente e automigliorante, che puo' partire subito dai dati pregressi di consumo reale (storico).
+  Nella logica fuzzy:
+  - variabilita' dovuta alla pompa di calore, ripetuta per il RISCALDAMENTO e per l'ACQUA CALDA SANITARIA (ACS);
+  - incidenza sul consumo stimato di: consumi pregressi, temperatura esterna, inerzia termica di tutta la casa.
+  Stato attuale (verificato nel codice): previsione dei consumi del Mango (modelli.lua: profilo per quarto d'ora e tipo
+  di giorno + pompa di calore con regressione giornaliera su gradi sotto 18 C con media delle ultime 3 ore, vento,
+  sole) e modello di GitHub (ml/addestra.py: gradient boosting, accettato solo se sbaglia meno sugli ultimi 7 giorni).
+  Nessuna logica fuzzy per i consumi. I consumi previsti oggi si vedono nel pannello "Previsto e reale", non in
+  "Potenze".
+  Risposte dell'utente (27/10/2026): la stima fuzzy si AFFIANCA alle attuali: si confrontano e per le decisioni si usa
+  quella che sbaglia meno. Dati della pompa di calore: c'e' solo il consumo TOTALE della casa (riscaldamento e ACS non
+  sono misurati a parte: la logica fuzzy li deve riconoscere dall'andamento del consumo totale).
+  ACS (27/10/2026, utente): orari di produzione non noti, ma l'andamento e' in parte ripetitivo: la logica fuzzy deve
+  imparare dai dati gli orari e l'ampiezza tipici dei cicli ACS.
+- Prezzi di acquisto (27/10/2026, utente): TOGLIERE tutte le simulazioni e tutto quanto, nelle simulazioni, si riferisce
+  a prezzi di acquisto diversi dal prezzo fisso F0. Trovato nel codice (27/10/2026):
+  - mango/prezzi_acquisto.lua: medie mensili del PUN per fascia (aggiungi_giorno, PUN medio della fascia) e il PUN
+    passato a PA.costi; chiamate in mango/ems_sim.lua (righe ~101, 210, 312, 614-615);
+  - mango/gme.lua: lettura del PUN orario oltre al NORD (il NORD resta: e' il prezzo di vendita);
+  - index.html: nomi, colori e grafici delle simulazioni vecchie (F0/F0R, A, B, C "Vecchia ...", costo_A/B/C nel
+    pannello prezzi);
+  - ml/email_report.py: nomi delle simulazioni vecchie (F0, F0R).
+  Il prezzo NORD di vendita (cessione) resta.
+  Confermato (28/10/2026): nei giorni vecchi della pagina di Cismondi restano visibili solo i dati reali.
+- Costo di acquisto (28/10/2026, utente): DISPACCIAMENTO = 0,017 EUR/kWh (oggi 0, "non noto" in mango/config.lua).
+  Nuovo costo del kWh prelevato = [0,12 x 1,10 + 0,017 + 0,014730 + 0,033153 + 0,0227] x 1,10 = circa 0,2415 EUR/kWh
+  (oggi circa 0,2228). Le altre voci restano.
+  Confermato (28/10/2026): 0,017 EUR/kWh e' senza IVA e senza perdite (si somma e poi si applica l'IVA del 10 %).
+
+## Revisione R07 (31/10/2026) - realizzata su richiesta ("crea codice e file di installazione per simulazione")
+- Prezzi: tolto tutto quello che si riferiva a prezzi di acquisto diversi dal fisso F0 (PUN per fascia, PUN dal GME,
+  colonne pun, simulazioni vecchie in pagina ed email). Dispacciamento 0,017 EUR/kWh.
+- Consumi con logica fuzzy (ml/consumi_fuzzy.py, chiamato da ml/addestra.py). Prova sui dati veri del repository
+  (copia del 31/10/2026, ultimi 7 giorni, errore medio dei consumi): fuzzy 532 W, modello completo 575 W, previsioni
+  del Mango 616 W -> nella prova la fuzzy e' stata scelta per le decisioni. Attenzione: fuzzy e modello completo sono
+  verificati con il meteo MISURATO dei giorni di prova, le previsioni del Mango erano fatte con il meteo PREVISTO
+  (stesso metodo di verifica gia' usato per il modello completo); il confronto e' quindi favorevole ai primi due.
+  Inerzia della casa scelta nella prova: 12 ore (provate 3, 6, 12, 24, 48). La stima e' liscia: non riproduce i picchi
+  brevi (cicli della pompa di calore di 2-3 kW).
+- Stime fuzzy per la pagina: previsioni/fuzzy/AAAA-MM-GG.json (giorno prima: si aggiorna fino all'inizio del giorno;
+  giorni passati: rigiocati fuori campione col meteo misurato, al massimo 7 per giro, ultimi 21 giorni).
+
+## Prossima revisione (R08) - annotazioni (NIENTE CODICE finche' non richiesto)
+- Verifica della logica fuzzy con il meteo PREVISTO (31/10/2026, utente: si), per confrontarla con le previsioni del
+  Mango a parita' di condizioni. Dato disponibile: richieste/richiesta_AAAAMMGG.json con il meteo previsto la sera prima.
+  Confermato (31/10/2026): anche il modello completo di GitHub si verifica con il meteo previsto (tre modelli
+  confrontati allo stesso modo).
+- Cismondi (07/11/2026, utente): ELIMINARE dalla simulazione la carica da rete, cioe' le condizioni 2a, 2b, 2c, 2d, 2e
+  (carica AC dalla rete fino a 1-5 kW). Resta la condizione 2 (senza carica AC). Da applicare in config.lua (PROFILI,
+  PROFILI_CARICA_RETE_W), pagina index.html, email.
+- Tesi "Analisi dei metodi di ricostruzione delle curve di carico" (Dabbicco, PoliTo 2022), allegata dall'utente il
+  07/11/2026 con la richiesta "studia e applichiamo i concetti". Concetti della tesi:
+  1. oltre agli ingressi "temporali" servono le potenze medie dell'ora (e del minuto) di giorni precedenti;
+  2. ripetitivita' settimanale piu' forte di quella giornaliera: meglio lo stesso giorno della settimana prima (o di due
+     settimane prima) che il giorno prima;
+  3. media di piu' modelli: nessun vantaggio nella tesi;
+  4. carichi ripetitivi (impulsi notturni, gradini serali...): si ricostruisce un andamento tipo (NON la media dei giorni:
+     se un carico c'e' 2 giorni su 4 la media ne dimezza l'ampiezza) e lo si inserisce nella previsione solo quando e'
+     quasi certo (tesi: carico presente 25 giorni su 30 si', 16 su 30 no);
+  5. un carico inserito all'ora sbagliata raddoppia l'errore; le oscillazioni incerte della previsione vanno livellate;
+  6. su intervalli brevi, con i dati prima e dopo noti, la ricostruzione con l'andamento tipo funziona bene (simile alla
+     correzione in giornata).
+  Verifica sui dati veri di Cismondi (repository al 07/11/2026, 51 giorni dal 15/09 al 06/11, medie orarie dei consumi):
+  - profilo orario del giorno prima: errore medio 449 W, correlazione 0,15; stesso giorno della settimana prima: 415 W,
+    0,23; due settimane prima: 431 W, 0,23 -> come nella tesi la settimana prima va un po' meglio, ma la ripetitivita'
+    dei consumi di Cismondi e' bassa;
+  - quarti d'ora sopra 2 kW (cicli della pompa di calore?): al massimo nel 43 % dei giorni (ore 7 e 20), 41 % alle 19,
+    sotto il 15 % di notte -> nessun carico ripetitivo "quasi certo" secondo il criterio della tesi.
+  Applicazioni da decidere con l'utente.
+- Simulazione delle condizioni esistenti sui dati pregressi del 2026 (07/11/2026, domanda dell'utente). Verificato:
+  lo storico Huawei importato va dal 12/09/2026 (memoria del Mango: importazione finita il 08/09 dopo 3 giorni vuoti di
+  fila = Huawei non restituisce dati prima, con l'account API). Dal 17/10 la simulazione gira davvero; dal 12/09 al 16/10
+  ci sono solo i dati reali (fv, carico, contatore a 5 minuti; senza SOC). Prima del 12/09/2026: nessun dato nel
+  repository. Da decidere con l'utente.
+- Verifica dell'apprendimento della logica fuzzy (07/11/2026, domanda dell'utente "come quantifichiamo il
+  miglioramento?"). La R07 non e' ancora installata (sul repository c'e' la R06): sul sistema vero la fuzzy non ha
+  ancora girato. Prova fatta qui, "giorno per giorno" sui dati veri (copia del repository al 07/11): per ogni giorno
+  dal 27/09 al 06/11 addestramento SOLO sui giorni prima (con la scelta automatica di inerzia e oblio sui 7 giorni
+  prima) e stima del giorno. Risultati (errore medio sui consumi a quarti d'ora):
+  - 19 giorni con le previsioni registrate del Mango (19/10-06/11): fuzzy 558 W, Mango 624 W; fuzzy migliore in 16
+    giorni su 19;
+  - con il meteo previsto la sera prima (richieste) o con il meteo del dataset i risultati sono quasi uguali (il meteo
+    del dataset e' quello usato dal Mango in quel momento, da previsioni Open-Meteo);
+  - l'errore in W CRESCE nel tempo (27/09-16/10: 362 W; 17/10-06/11: 560 W) pur con piu' giorni di addestramento,
+    perche' i consumi crescono con il riscaldamento: l'errore in W da solo non misura l'apprendimento.
+  Proposta per misurare il miglioramento: indice di bravura giornaliero = 1 - errore del modello / errore di
+  riferimento (riferimento: previsioni del Mango e "stesso giorno della settimana prima"), seguito nel tempo
+  (media mobile su 7 giorni): se l'indice sale, il sistema impara. Da decidere con l'utente.
+- Dati prima del 12/09/2026 (07/11/2026, utente: impianto e batteria c'erano gia', recupero da esportazione FusionSolar).
+  Da verificare con l'utente: se il portale FusionSolar mostra ancora la curva del giorno (es. un giorno di agosto) e
+  con quale passo (5 minuti, ora, giorno) esporta. Dati che servono per giorno: ora, potenza FV, consumo della casa,
+  contatore (prelievo/immissione); utili batteria e SOC. Poi (su richiesta) importazione nello storico e rigioco.
+  Risposta dell'utente (07/11/2026): prima del 12/09/2026 l'impianto NON era sul monitoraggio: nessun dato. La
+  simulazione dei dati pregressi e' possibile solo dal 12/09/2026.
+  Risposta dell'utente (07/11/2026): rigioco dal 12/09 al 16/10 con la condizione 2 usando le previsioni che il sistema
+  avrebbe avuto (meteo previsto, come nella realta').
+
+## Revisione R08 (07/11/2026) - realizzata su richiesta ("crea documentazione completa e gli ultimi files")
+Scelte dell'utente: 11a (rigioco col meteo previsto), 14b (R08 completa con le opzioni consigliate per i punti aperti:
+consumi delle ore dei giorni prima nella fuzzy, carichi ripetitivi non inseriti, indice di bravura con grafico),
+15a (manuale PDF nello zip).
+Prove fatte qui (copia del repository al 07/11/2026):
+- addestramento con verifica col meteo previsto (7 giorni, 672 quarti d'ora tutti con meteo previsto): Mango 740 W,
+  modello completo 765 W (non accettato), coefficienti 724 W, fuzzy 641 W (accettata: usata per le decisioni).
+  L'automiglioramento NON ha scelto i consumi delle ore dei giorni prima (non fanno sbagliare meno).
+- carichi ripetitivi (ultimi 30 giorni, quarti sopra 2 kW): ora piu' frequente le 19 nel 53 % dei giorni; nessuno
+  quasi certo.
+- rigioco 18/09-16/10 (27 giorni; 18 e 19/09 saltati per pochi dati prima): qui l'archivio delle previsioni Open-Meteo
+  non era raggiungibile, quindi la prova e' stata fatta col meteo misurato; su GitHub va verificato al primo giro.
+  Somme dei 27 giorni (netto = acquisti - cessioni + usura + cambi; piu' basso e' meglio): senza batteria 5,46 EUR,
+  automatico simulato 0,53 EUR, condizione 2 -0,75 EUR (condizione 2 meglio dell'automatico in 11 giorni su 27),
+  reale senza usura -2,93 EUR (non confrontabile: senza usura della batteria).
+- Ambiente di prova dell'installazione completa ricreato (07/11/2026, richiesta dell'utente): mock_servizi.py,
+  mock_github.py, prova_unico.sh (zip Ambiente_prova_EMS_R08.zip). Prova della R08: installazione da zero riuscita
+  (storico finto di 20 giorni importato, "INSTALLAZIONE RIUSCITA"), aggiornamento riuscito, tutti i 18 passi di
+  ems.yml con esito 0 in entrambi i giri, rigioco della condizione 2 fatto con l'archivio delle previsioni (finto) in
+  104 s per 15 giorni, versione.json R08 nel repository.

@@ -1,7 +1,8 @@
--- gme.lua - prezzi MGP dal servizio API del GME: NORD e PUN, orari (decisioni) e a 15 minuti (registro)
+-- Revisione R07 - 31/10/2026 - letto solo il prezzo NORD (tolto il PUN: l'acquisto e' a prezzo fisso)
+-- gme.lua - prezzi MGP dal servizio API del GME: NORD, orari (decisioni) e a 15 minuti (registro)
 -- File salvato: prezzi_AAAAMMGG.json con valori in EUR/kWh
---   ore[h]    = { nord = ..., pun = ... }   h = ora GME 1..23/24/25
---   quarti[q] = { nord = ..., pun = ... }   q = quarto GME 1..92/96/100 (se disponibili)
+--   ore[h]    = { nord = ... }   h = ora GME 1..23/24/25
+--   quarti[q] = { nord = ... }   q = quarto GME 1..92/96/100 (se disponibili)
 local J = require "lib_json"
 local H = require "lib_http"
 local Z = require "lib_zip"
@@ -76,9 +77,9 @@ local function richiedi(c, token, giorno, gran, cartella_prezzi, log)
     -- dati orari reali del GME (verificato il 18/10/2026): "Period" vale "0" e l'ora e' in "Hour" (1..24)
     if gran == "PT60" and (not p or p < 1) then p = numero(campo(x, "Hour")) end
     local prezzo = numero(campo(x, "Price"))
-    if (fd == "" or fd == giorno) and (zona == c.ZONA or zona == "PUN") and p and p >= 1 and prezzo then
+    if (fd == "" or fd == giorno) and zona == c.ZONA and p and p >= 1 and prezzo then
       per[math.floor(p)] = per[math.floor(p)] or {}
-      per[math.floor(p)][zona == "PUN" and "pun" or "nord"] = prezzo / 1000      -- EUR/MWh -> EUR/kWh
+      per[math.floor(p)].nord = prezzo / 1000      -- EUR/MWh -> EUR/kWh
     end
   end
   for n in pairs(note) do log("Nota GME (" .. gran .. "): " .. n) end
@@ -91,8 +92,8 @@ function M.scarica(c, cartella, cartella_prezzi, giorno, log)
   local n_ore = T.ore_del_giorno(giorno)
   local ore = richiedi(c, token, giorno, "PT60", cartella_prezzi, log)
   for h = 1, n_ore do
-    if not (ore[h] and ore[h].nord and ore[h].pun) then
-      error(string.format("prezzo NORD o PUN dell'ora %d mancante (attese %d ore): dati del %s non usati", h, n_ore, giorno), 0)
+    if not (ore[h] and ore[h].nord) then
+      error(string.format("prezzo NORD dell'ora %d mancante (attese %d ore): dati del %s non usati", h, n_ore, giorno), 0)
     end
   end
   if ore[n_ore + 1] then error("ore in eccesso nei dati GME del " .. giorno, 0) end
@@ -109,10 +110,10 @@ function M.scarica(c, cartella, cartella_prezzi, giorno, log)
               zona = c.ZONA, ore = {}, quarti = {} }
   local mx, mn = -1e9, 1e9
   for h = 1, n_ore do
-    d.ore[h] = { nord = ore[h].nord, pun = ore[h].pun }
+    d.ore[h] = { nord = ore[h].nord }
     mx, mn = math.max(mx, ore[h].nord), math.min(mn, ore[h].nord)
   end
-  for k = 1, #quarti do d.quarti[k] = { nord = quarti[k].nord, pun = quarti[k].pun } end
+  for k = 1, #quarti do d.quarti[k] = { nord = quarti[k].nord } end
   F.scrivi(M.file(cartella_prezzi, giorno), J.encode(d))
   log(string.format("Prezzi GME del %s salvati: %d ore, NORD da %.4f a %.4f EUR/kWh%s", giorno, n_ore, mn, mx,
     (#d.quarti > 0) and ", con quarti d'ora" or ""))

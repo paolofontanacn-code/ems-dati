@@ -1,6 +1,52 @@
 EMS Cismondi - elenco delle revisioni
 (le consegne precedenti al 23/10/2026 non sono numerate)
 
+R08 - 07/11/2026  (comprende la R07, mai installata)
+  Cismondi:
+  - Tolte le condizioni con carica dalla rete (2a, 2b, 2c, 2d, 2e): resta la condizione 2 (mango/config.lua, pagina,
+    email).
+  - Rigioco della condizione 2 sui giorni prima dell'avvio della simulazione (dal 12/09/2026, inizio del monitoraggio,
+    al 16/10/2026) con le previsioni che il sistema avrebbe avuto: meteo previsto (archivio delle previsioni
+    Open-Meteo; se non risponde, meteo misurato e il giorno e' segnato), consumi con la logica fuzzy addestrata sui soli
+    giorni prima, FV dalla radiazione prevista, decisione ogni ora con lo stesso ottimizzatore del Mango (nuovi
+    ml/rigioco_c2.py e mango/rigioco.lua; nuovo passo nel workflow ems.yml; uscite in rigioco/). Nella pagina, nei
+    giorni "solo reale": tabella e SOC del rigioco.
+  - Verifica dei modelli dei consumi con il METEO PREVISTO la sera prima (richieste del Mango) per modello completo,
+    coefficienti e logica fuzzy, come le previsioni del Mango.
+  - Logica fuzzy (dalla tesi Dabbicco, PoliTo 2022): consumi delle stesse ore del giorno prima e della settimana prima
+    come ingressi, usati solo se l'automiglioramento li trova utili; frequenza dei carichi ripetitivi misurata (non
+    inseriti: nessuno quasi certo); indice di bravura giornaliero sul Mango e sulla settimana prima.
+  - Pagina index.html: nuovo pannello "Stima consumi: bravura".
+  Documentazione: EMS_Manuale_R08.pdf (nello zip).
+  File modificati: pannello_ems.py, LEGGIMI.txt, EMS_Manuale_R08.pdf (nuovo), repository/versione.json,
+  repository/index.html, repository/mango/config.lua, repository/mango/rigioco.lua (nuovo),
+  repository/ml/addestra.py, repository/ml/consumi_fuzzy.py, repository/ml/rigioco_c2.py (nuovo),
+  repository/ml/email_report.py, repository/.github/workflows/ems.yml, repository/README.md,
+  repository/REVISIONI.txt, REVISIONI.txt
+
+R07 - 31/10/2026
+  Cismondi:
+  - Acquisto solo a prezzo fisso F0: tolte le medie del PUN per fascia (mango/prezzi_acquisto.lua), la lettura del PUN
+    dal GME (mango/gme.lua), le colonne pun e pun_15 del dataset (mango/registro.lua, mango/ems_sim.lua); pagina
+    index.html ed email senza le simulazioni vecchie (F0/F0R, A, B, C): nei giorni simulati con le versioni vecchie si
+    vedono solo i dati reali.
+  - Costo di acquisto: dispacciamento 0,017 EUR/kWh (senza IVA e senza perdite) in mango/config.lua: circa 0,2415
+    EUR/kWh (prima circa 0,2228).
+  - Consumi stimati con LOGICA FUZZY autoapprendente e automigliorante (nuovo ml/consumi_fuzzy.py, usato da
+    ml/addestra.py): regole su ora, tipo di giorno, temperatura efficace (temperatura esterna filtrata con l'inerzia
+    della casa), sole, consumi del giorno prima; parti stimate per comportamento, riscaldamento e acqua calda della
+    pompa di calore (c'e' solo il consumo totale). Si riaddestra a ogni giro con tutti i dati reali (anche lo storico);
+    a ogni giro prova 10 combinazioni di inerzia e oblio e tiene la migliore sugli ultimi 7 giorni.
+    Si affianca alle stime attuali: per le decisioni del Mango si usano i consumi del modello che sbaglia meno (fuzzy,
+    modello completo o previsioni del Mango).
+  - Pagina index.html: nel grafico delle potenze la curva "Consumo stimato (fuzzy)" (stima del giorno prima; i giorni
+    passati sono rigiocati usando solo i giorni precedenti e il meteo misurato) e l'esito dell'ultima verifica.
+  File modificati: pannello_ems.py, LEGGIMI.txt, repository/versione.json, repository/index.html,
+  repository/mango/config.lua, repository/mango/prezzi_acquisto.lua, repository/mango/gme.lua,
+  repository/mango/registro.lua, repository/mango/ems_sim.lua, repository/ml/addestra.py,
+  repository/ml/consumi_fuzzy.py (nuovo), repository/ml/email_report.py, repository/README.md,
+  repository/REVISIONI.txt, REVISIONI.txt
+
 R06 - 26/10/2026
   Cessione totale 20 kW:
   - ml/cessione_live.py: a ogni simulazione (ogni 2 ore) si salvano i piani completi CALCOLATO (migliore) e SPEDITO

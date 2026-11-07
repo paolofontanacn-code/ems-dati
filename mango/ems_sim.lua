@@ -1,3 +1,4 @@
+-- Revisione R07 - 31/10/2026 - tolto il PUN (medie per fascia e colonne pun): acquisto solo a prezzo fisso F0
 -- ems_sim.lua - SIMULAZIONE EMS Cismondi sul Mango (programma principale)
 -- SOLO SIMULAZIONE: legge Huawei, GME e meteo, simula tre profili di ottimizzazione e registra tutto.
 -- Non invia alcun comando all'inverter.
@@ -98,7 +99,6 @@ local function prezzi_giorno(g, scarica_se_manca)
   stato.tentativi_prezzi[g] = T.adesso()
   local ok, r = pcall(GME.scarica, c, CARTELLA, PREZZI, g, log)
   if not ok then log("Prezzi GME del " .. g .. " non scaricati: " .. tostring(r)); return nil end
-  PA.aggiungi_giorno(stato, r)
   cache_prezzi[g] = r
   return r
 end
@@ -207,7 +207,7 @@ local function costruisci_quarti(t0, serie, con_margine)
       car = car + c.MARGINE_Z * sc
       fv = math.max(0, fv - c.MARGINE_Z * math.sqrt((sf * math.max(fv, 500)) ^ 2 + disp_meteo ^ 2))
     end
-    local costi = PA.costi(c, stato, tm, h.pun)
+    local costi = PA.costi(c, tm)
     quarti[#quarti + 1] = { t = t, giorno = cal.giorno, fv = fv, carico = car, di_giorno = fv >= c.FV_MIN_GIORNO_W,
       mezzanotte = (t == T.mezzanotte(cal.giorno)), vend = PA.valore_cessione(c, nord_cessione(h, qq)), costo = costi }
     t = t + 900
@@ -309,7 +309,7 @@ local function chiudi_giorno(g)
       local qq = prezzi.quarti and prezzi.quarti[k]
       quarti[k] = { t = m0 + (k - 1) * 900, giorno = g, fv = qd.fv / qd.n, carico = qd.car / qd.n,
         di_giorno = qd.fv / qd.n >= c.FV_MIN_GIORNO_W, mezzanotte = (k == 1), vend = PA.valore_cessione(c, nord_cessione(h, qq)),
-        costo = PA.costi(c, stato, tm, h.pun) }
+        costo = PA.costi(c, tm) }
     end
   else
     quarti = nil
@@ -611,8 +611,6 @@ local function ciclo()
   local ora_dec = T.italia(adesso).hour + T.italia(adesso).min / 60
   local domani = T.giorno(adesso, 1)
   local p_domani = prezzi_giorno(domani, ora_dec >= c.ORA_PREZZI)
-  if p_oggi then PA.aggiungi_giorno(stato, p_oggi) end
-  if p_domani then PA.aggiungi_giorno(stato, p_domani) end
 
   -- meteo e lettura dell'impianto
   aggiorna_meteo(false)
@@ -653,12 +651,12 @@ local function ciclo()
 
   local h, qq = prezzo_ora(adesso)
   if h then
-    riga.nord, riga.pun = h.nord, h.pun
-    local costi = PA.costi(c, stato, adesso, h.pun)
+    riga.nord = h.nord
+    local costi = PA.costi(c, adesso)
     riga.costo_acquisto = costi[c.PROFILI[1]]
     riga.valore_cessione = PA.valore_cessione(c, nord_cessione(h, qq))
   end
-  if qq then riga.nord_15, riga.pun_15 = qq.nord, qq.pun end
+  if qq then riga.nord_15 = qq.nord end
   riga.usura = usura
 
   local prec = stato.lettura_prec
@@ -695,7 +693,7 @@ local function ciclo()
       local tm = prec.t + dt_s / 2
       local hm, qm = prezzo_ora(tm)
       if not hm then hm, qm = h, qq end
-      local costi = hm and PA.costi(c, stato, tm, hm.pun) or nil
+      local costi = hm and PA.costi(c, tm) or nil
       local vend = hm and PA.valore_cessione(c, nord_cessione(hm, qm)) or 0
       local di_giorno = fv >= c.FV_MIN_GIORNO_W
       acc.letture, acc.ore, acc.fv, acc.carico = acc.letture + 1, acc.ore + dt, acc.fv + fv * dt / 1000, acc.carico + car * dt / 1000

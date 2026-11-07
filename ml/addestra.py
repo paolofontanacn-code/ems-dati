@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+# Revisione R08 - 07/11/2026 - verifica di modello completo e logica fuzzy con il METEO PREVISTO (richieste del Mango,
+#   come le previsioni del Mango); fuzzy con consumi delle ore dei giorni prima (scelti se aiutano); indice di bravura
+#   giornaliero e frequenza dei carichi ripetitivi nel riepilogo modelli/consumi_fuzzy.json
+# Revisione R07 - 31/10/2026 - terzo modello dei consumi: logica fuzzy autoapprendente (ml/consumi_fuzzy.py), confrontato
+#   con le previsioni del Mango e con il modello completo: per le decisioni si usa quello che sbaglia meno; stime fuzzy
+#   giornaliere per la pagina (previsioni/fuzzy/AAAA-MM-GG.json) e riepilogo modelli/consumi_fuzzy.json
 """
 addestra.py - machine learning su GitHub per l'EMS di Cismondi (SOLO SIMULAZIONE)
 
@@ -8,7 +15,10 @@ Legge i dati del repository (storico FusionSolar del giorno 0 e dataset giornali
      un modello viene ACCETTATO solo se sbaglia meno;
   4. per ogni richiesta di previsione del Mango (richieste/richiesta_AAAAMMGG.json) scrive
      previsioni/prev_AAAAMMGG.json con consumi e FV previsti per ogni quarto d'ora.
-Uscite: modelli/coefficienti_mango.json, previsioni/prev_*.json, modelli/ULTIMO_ADDESTRAMENTO.md
+  5. (R07) stima dei consumi con logica fuzzy autoapprendente e automigliorante (consumi_fuzzy.py), verificata come gli
+     altri: nelle previsioni per il Mango i consumi vengono dal modello che sbaglia meno, se sbaglia meno del Mango.
+Uscite: modelli/coefficienti_mango.json, previsioni/prev_*.json, modelli/ULTIMO_ADDESTRAMENTO.md,
+        modelli/consumi_fuzzy.json, previsioni/fuzzy/AAAA-MM-GG.json
 """
 import datetime as dt
 import glob
@@ -23,6 +33,9 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import lsq_linear
 from sklearn.ensemble import HistGradientBoostingRegressor
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import consumi_fuzzy as FZ  # noqa: E402
 
 RADICE = os.environ.get("EMS_REPO_DIR", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ROMA = ZoneInfo("Europe/Rome")
@@ -271,6 +284,182 @@ def mae(a, b):
     return float(np.mean(np.abs(a[m] - b[m]))) if m.any() else None
 
 
+# ------------------------------------------------------------------ R07: logica fuzzy, file per la pagina
+DIR_FUZZY = os.path.join(RADICE, "previsioni", "fuzzy")
+
+
+def iso(g):
+    return f"{g[:4]}-{g[4:6]}-{g[6:8]}"
+
+
+def con_meteo_richieste(test):
+    """R08: i quarti di prova con il meteo PREVISTO la sera prima (richieste/richiesta_AAAAMMGG.json del Mango);
+    dove la richiesta manca resta il meteo del dataset. Ritorna (quadro, quarti con meteo previsto)"""
+    x = test.copy()
+    n = 0
+    for d in sorted(x["data"].unique()):
+        f = os.path.join(RADICE, "richieste", f"richiesta_{d.strftime('%Y%m%d')}.json")
+        if not os.path.exists(f):
+            continue
+        try:
+            with open(f, encoding="utf-8") as h:
+                q = {int(v["ts"]): v for v in json.load(h).get("quarti", [])}
+        except (OSError, ValueError):
+            continue
+        for i in x.index[x["data"] == d]:
+            v = q.get(int(x.at[i, "ts"]))
+            if not v or v.get("temp") is None:
+                continue
+            x.at[i, "temp"] = v["temp"]
+            x.at[i, "temp_lag"] = v.get("temp_lag3h", v["temp"])
+            for k_d, k_r in (("ghi", "ghi"), ("nuvole", "nuvole"), ("vento", "vento")):
+                if v.get(k_r) is not None:
+                    x.at[i, k_d] = v[k_r]
+            n += 1
+    return prepara(x), n
+
+
+def quadro_richiesta(r):
+    q = pd.DataFrame(r.get("quarti", []))
+    x = aggiungi_calendario(pd.DataFrame({"ts": q["ts"].astype(np.int64)}))
+    x["temp"] = pd.to_numeric(q.get("temp"), errors="coerce")
+    x["ghi"] = pd.to_numeric(q.get("ghi"), errors="coerce")
+    x["carico_w"] = np.nan
+    return x
+
+
+def stima_fuzzy_richiesta(mod, df, r):
+    x = quadro_richiesta(r)
+    storia = df[df["ts"] < x["ts"].min()]
+    return FZ.stima(mod, storia, x)
+
+
+def salva_fuzzy(giorno_iso, inizio, valori, fonte, extra=None):
+    os.makedirs(DIR_FUZZY, exist_ok=True)
+    d = {"giorno": giorno_iso, "inizio": int(inizio), "passo_s": 900, "carico_w": [None if v is None else round(float(v), 1) for v in valori],
+         "fonte": fonte, "generato_il": dt.datetime.now(ROMA).isoformat(timespec="minutes")}
+    d.update(extra or {})
+    with open(os.path.join(DIR_FUZZY, giorno_iso + ".json"), "w", encoding="utf-8") as f:
+        json.dump(d, f, ensure_ascii=False)
+
+
+def scrivi_fuzzy(mod, df, r, g, oggi):
+    """stima del giorno prima: si aggiorna fino all'inizio del giorno, poi resta quella (il giorno in corso solo se manca)"""
+    dest = os.path.join(DIR_FUZZY, iso(g) + ".json")
+    if g == oggi and os.path.exists(dest):
+        return
+    x = quadro_richiesta(r)
+    p = stima_fuzzy_richiesta(mod, df, r)
+    fonte = "stima del giorno prima (meteo previsto)" if g > oggi else "stima calcolata a giorno iniziato (meteo previsto)"
+    salva_fuzzy(iso(g), x["ts"].min(), [p.get(int(t)) for t in x["ts"]], fonte,
+                {"inerzia_ore": mod["inerzia_ore"], "oblio": mod["oblio"], "ritardi": mod.get("ritardi", False)})
+
+
+def rigioca_fuzzy(df, inerzia, oblio, oggi, max_giorni=7, indietro=60, ritardi=False):
+    """giorni passati senza stima: addestramento sui soli giorni prima e meteo misurato (fuori campione);
+    errore medio dei giorni passati gia' stimati"""
+    giorni = sorted(df["data"].unique())[-indietro:]
+    fatti = 0
+    for d in reversed(giorni):                    # prima i giorni piu' recenti
+        g = d.strftime("%Y%m%d")
+        if g >= oggi:
+            continue
+        dest = os.path.join(DIR_FUZZY, iso(g) + ".json")
+        reale = df[df["data"] == d]
+        if os.path.exists(dest):
+            try:
+                with open(dest, encoding="utf-8") as h:
+                    v = json.load(h)
+                if v.get("mae_w") is None and len(reale) >= 72:
+                    mappa = {v["inizio"] + k * v["passo_s"]: x for k, x in enumerate(v["carico_w"])}
+                    v["mae_w"] = FZ.mae([mappa.get(int(t), np.nan) if mappa.get(int(t)) is not None else np.nan for t in reale["ts"]],
+                                        reale["carico_w"].to_numpy(dtype=float))
+                    v["mae_w"] = None if v["mae_w"] is None else round(v["mae_w"], 1)
+                    with open(dest, "w", encoding="utf-8") as h:
+                        json.dump(v, h, ensure_ascii=False)
+            except (OSError, ValueError):
+                pass
+            continue
+        if fatti >= max_giorni or len(reale) < 72:
+            continue
+        prima = df[df["data"] < d]
+        mod = FZ.addestra(prima, inerzia, oblio, ritardi)
+        if mod is None:
+            continue
+        t0 = int(pd.Timestamp(d).tz_localize(ROMA).timestamp())
+        n = int(round((pd.Timestamp(d + dt.timedelta(days=1)).tz_localize(ROMA).timestamp() - t0) / 900))
+        x = aggiungi_calendario(pd.DataFrame({"ts": [t0 + k * 900 for k in range(n)]}))
+        x = x.merge(reale[["ts", "temp", "ghi"]], on="ts", how="left")
+        x["temp"] = x["temp"].interpolate(limit_direction="both")
+        x["ghi"] = x["ghi"].fillna(0)
+        x["carico_w"] = np.nan
+        p = FZ.stima(mod, prima, x)
+        val = [p.get(int(t)) for t in x["ts"]]
+        e = FZ.mae([np.nan if v is None else v for v in [p.get(int(t)) for t in reale["ts"]]], reale["carico_w"].to_numpy(dtype=float))
+        salva_fuzzy(iso(g), t0, val, "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+                    {"inerzia_ore": inerzia, "oblio": oblio, "mae_w": None if e is None else round(e, 1)})
+        fatti += 1
+    if fatti:
+        log(f"Stime fuzzy rigiocate per {fatti} giorni passati")
+
+
+def bravura(df, giorni=60):
+    """R08: indice di bravura giornaliero della stima fuzzy = 1 - errore fuzzy / errore di riferimento.
+    Riferimenti: previsioni del Mango registrate (sera prima) e "stesso giorno della settimana prima" (consumo reale
+    degli stessi quarti d'ora 7 giorni prima). Indice > 0: la fuzzy sbaglia meno del riferimento. Se nel tempo l'indice
+    sale, il sistema impara (non dipende dal livello dei consumi della stagione)."""
+    out = []
+    reale = df.set_index("ts")["carico_w"]
+    for f in sorted(glob.glob(os.path.join(DIR_FUZZY, "*.json")))[-giorni:]:
+        try:
+            with open(f, encoding="utf-8") as h:
+                v = json.load(h)
+        except (OSError, ValueError):
+            continue
+        ts = [v["inizio"] + k * v["passo_s"] for k in range(len(v["carico_w"]))]
+        r = np.array([reale.get(t, np.nan) for t in ts], dtype=float)
+        if np.isfinite(r).sum() < 72:
+            continue
+        fz = np.array([np.nan if x is None else x for x in v["carico_w"]], dtype=float)
+        sett = np.array([reale.get(t - 7 * 86400, np.nan) for t in ts], dtype=float)
+        d = df[df["ts"].isin(ts)]
+        mango = d.set_index("ts")["prev_carico_sera"].reindex(ts).to_numpy(dtype=float) if "prev_carico_sera" in d else np.full(len(ts), np.nan)
+        e_fz, e_s, e_m = mae(fz, r), mae(sett, r), (mae(mango, r) if np.isfinite(mango).sum() >= 48 else None)
+        out.append({"giorno": v["giorno"], "fonte": v.get("fonte"), "mae_fuzzy": e_fz, "mae_settimana_prima": e_s, "mae_mango": e_m,
+                    "indice_vs_mango": None if (e_fz is None or not e_m) else 1 - e_fz / e_m,
+                    "indice_vs_settimana_prima": None if (e_fz is None or not e_s) else 1 - e_fz / e_s})
+    for k in ("indice_vs_mango", "indice_vs_settimana_prima"):          # media degli ultimi 7 giorni con il valore
+        for i, x in enumerate(out):
+            v7 = [y[k] for y in out[max(0, i - 6):i + 1] if y[k] is not None]
+            x[k + "_media7"] = float(np.mean(v7)) if v7 else None
+    rnd = lambda v: None if v is None else round(float(v), 3)
+    return [{k: (rnd(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v) for k, v in x.items()} for x in out]
+
+
+def salva_riepilogo_fuzzy(fz, mod, esito, scelta, df=None):
+    f = os.path.join(RADICE, "modelli", "consumi_fuzzy.json")
+    try:
+        with open(f, encoding="utf-8") as h:
+            st = json.load(h)
+    except (OSError, ValueError):
+        st = {}
+    rnd = lambda v: None if v is None else round(float(v), 1)
+    ver = {"giorni": GIORNI_PROVA, "mae_fuzzy": rnd(fz.get("mae_carico")), "mae_mango": rnd(fz.get("mae_carico_mango")),
+           "mae_ml": rnd(esito["ml"].get("mae_carico")), "scelta": scelta, "accettata": bool(fz.get("accettato")),
+           "motivo": fz.get("motivo")}
+    storico = (st.get("storico") or [])[-300:]
+    storico.append({"quando": dt.datetime.now(ROMA).isoformat(timespec="minutes"), **ver,
+                    "inerzia_ore": fz.get("inerzia_ore"), "oblio": fz.get("oblio"), "ritardi": fz.get("ritardi")})
+    st.update({"revisione": "R07", "aggiornato": dt.datetime.now(ROMA).isoformat(timespec="minutes"), "verifica": ver,
+               "parametri": {"inerzia_ore": fz.get("inerzia_ore"), "oblio": fz.get("oblio"), "ore_dei_giorni_prima": fz.get("ritardi")},
+               "prove_automiglioramento": fz.get("prove", []), "storico": storico,
+               "incidenze": FZ.incidenze(mod) if mod else None,
+               "bravura": bravura(df) if df is not None else [],
+               "carichi_ripetitivi": FZ.carichi_ripetitivi(df) if df is not None else None})
+    with open(f, "w", encoding="utf-8") as h:
+        json.dump(st, h, ensure_ascii=False, indent=1)
+
+
 # ------------------------------------------------------------------ principale
 def main():
     os.makedirs(os.path.join(RADICE, "modelli"), exist_ok=True)
@@ -290,6 +479,10 @@ def main():
     test = df[df["data"].isin(prova_giorni)]
     train = df[~df["data"].isin(prova_giorni)]
     rif_car = test["prev_carico_sera"].fillna(test["prev_carico_mod"]) if "prev_carico_sera" in test else None
+    test_prev, n_prev = con_meteo_richieste(test)          # R08: verifica con il meteo previsto la sera prima
+    righe_md.append(f"Verifica con il meteo PREVISTO la sera prima (richieste del Mango) in {n_prev} quarti d'ora su {len(test)}; "
+                    "negli altri il meteo del dataset (quello usato dal Mango in quel momento).")
+    righe_md.append("")
     rif_fv = test["prev_fv_sera"].fillna(test["prev_fv_mod"]) if "prev_fv_sera" in test else None
     ha_rif = rif_car is not None and rif_car.notna().sum() >= 96
 
@@ -303,11 +496,11 @@ def main():
     else:
         mc = modello().fit(tc[FEAT_CARICO], tc["carico_w"])
         mf = modello().fit(tf[FEAT_FV], tf["fv_w"]) if len(tf) > 200 else None
-        tt = test.dropna(subset=FEAT_CARICO)
+        tt = test_prev.dropna(subset=FEAT_CARICO)
         p_car = mc.predict(tt[FEAT_CARICO])
         e_ml = mae(p_car, tt["carico_w"].to_numpy())
         e_rif = mae(rif_car.loc[tt.index].to_numpy(dtype=float), tt["carico_w"].to_numpy())
-        tfv = test.dropna(subset=FEAT_FV)
+        tfv = test_prev.dropna(subset=FEAT_FV)
         e_ml_fv = mae(np.clip(mf.predict(tfv[FEAT_FV]), 0, P_NOMINALE_FV), tfv["fv_w"].to_numpy()) if mf is not None and len(tfv) else None
         e_rif_fv = mae(rif_fv.loc[tfv.index].to_numpy(dtype=float), tfv["fv_w"].to_numpy()) if len(tfv) else None
         acc = e_ml is not None and e_rif is not None and e_ml < e_rif * MARGINE_ACCETTAZIONE
@@ -315,7 +508,7 @@ def main():
                        "mae_fv_mango": e_rif_fv, "motivo": "migliore delle previsioni del Mango" if acc else "non migliore del Mango"}
         coef_t = coefficienti_mango(train)
         if coef_t:
-            pc, pf = prevedi_mango(coef_t, test)
+            pc, pf = prevedi_mango(coef_t, test_prev)
             e_m = mae(pc, test["carico_w"].to_numpy())
             acc_m = e_m is not None and e_rif is not None and e_m < e_rif * MARGINE_ACCETTAZIONE
             esito["mango"] = {"accettato": bool(acc_m), "mae_carico": e_m, "mae_carico_mango": e_rif,
@@ -327,6 +520,38 @@ def main():
                      f"| Modello completo (GitHub) | {e_ml and round(e_ml)} | {e_ml_fv and round(e_ml_fv)} | {'ACCETTATO' if acc else 'non accettato'} |",
                      f"| Coefficienti formato Mango | {esito['mango'].get('mae_carico') and round(esito['mango']['mae_carico'])} | - | "
                      f"{'ACCETTATI' if esito['mango']['accettato'] else 'non accettati'} |", ""]
+
+    # ---------------- R07: logica fuzzy (autoapprendimento + automiglioramento sugli stessi giorni di prova)
+    fz = {"accettato": False, "motivo": "", "mae_carico": None}
+    try:
+        migliore, prove = FZ.scegli(train, test, test_prev) if len(train.dropna(subset=["carico_w"])) >= 96 * 5 else (None, [])
+        if migliore:
+            e_fz, iner, obl, rit = migliore
+            e_rif_fz = mae(rif_car.to_numpy(dtype=float), test["carico_w"].to_numpy()) if ha_rif else None
+            acc_fz = e_rif_fz is not None and e_fz < e_rif_fz * MARGINE_ACCETTAZIONE
+            fz = {"accettato": bool(acc_fz), "mae_carico": e_fz, "mae_carico_mango": e_rif_fz, "inerzia_ore": iner, "oblio": obl, "ritardi": rit,
+                  "prove": prove, "motivo": ("migliore delle previsioni del Mango" if acc_fz else
+                                              ("non migliore del Mango" if e_rif_fz is not None else "previsioni del Mango non disponibili per il confronto"))}
+            riga = f"| Logica fuzzy (inerzia casa {iner} h, oblio {obl}{', ore dei giorni prima' if rit else ''}) | {round(e_fz)} | - | {'ACCETTATA' if acc_fz else 'non accettata'} |"
+            if righe_md and righe_md[-1] == "" and righe_md[-2].startswith("|"):
+                righe_md.insert(len(righe_md) - 1, riga)        # dentro la tabella della verifica
+            else:
+                righe_md.append(riga)
+        else:
+            fz["motivo"] = "dati insufficienti (servono almeno 5 giorni di addestramento)"
+    except Exception as ex:                                   # la stima fuzzy non deve fermare il resto
+        fz["motivo"] = f"errore: {ex}"
+        log(f"Logica fuzzy: errore {ex}")
+    esito["fuzzy"] = {k: v for k, v in fz.items() if k != "prove"}
+    # modello dei consumi per le decisioni del Mango: il migliore tra quelli accettati (altrimenti le previsioni del Mango)
+    cand = []
+    if esito["ml"].get("accettato"):
+        cand.append(("modello completo", esito["ml"]["mae_carico"]))
+    if fz.get("accettato"):
+        cand.append(("logica fuzzy", fz["mae_carico"]))
+    scelta_carico = min(cand, key=lambda x: x[1])[0] if cand else "previsioni del Mango"
+    righe_md.append(f"Consumi per le decisioni: {scelta_carico}.")
+    log(f"Consumi per le decisioni: {scelta_carico}")
 
     # coefficienti finali (tutti i dati) e modelli finali
     coef = coefficienti_mango(df)
@@ -344,11 +569,25 @@ def main():
     tutti_f = df.dropna(subset=FEAT_FV + ["fv_w"])
     mc_all = modello().fit(tutti_c[FEAT_CARICO], tutti_c["carico_w"]) if len(tutti_c) > 96 * 3 else None
     mf_all = modello().fit(tutti_f[FEAT_FV], tutti_f["fv_w"]) if len(tutti_f) > 200 else None
+    mod_fz = None
+    try:
+        if fz.get("inerzia_ore") is not None:
+            mod_fz = FZ.addestra(df, fz["inerzia_ore"], fz["oblio"], fz.get("ritardi", False))
+    except Exception as ex:
+        log(f"Logica fuzzy (modello finale): errore {ex}")
+    oggi = dt.datetime.now(ROMA).strftime("%Y%m%d")
     for f in sorted(glob.glob(os.path.join(RADICE, "richieste", "richiesta_*.json"))):
         g = os.path.basename(f)[len("richiesta_"):-len(".json")]
         dest = os.path.join(RADICE, "previsioni", f"prev_{g}.json")
-        if g < dt.datetime.now(ROMA).strftime("%Y%m%d"):
+        if g < oggi:
             continue
+        with open(f, encoding="utf-8") as h:
+            r0 = json.load(h)
+        if mod_fz is not None:
+            try:
+                scrivi_fuzzy(mod_fz, df, r0, g, oggi)
+            except Exception as ex:
+                log(f"Stima fuzzy per {g}: errore {ex}")
         if os.path.exists(dest):
             # si rifa' solo se la versione precedente non era stata accettata
             try:
@@ -361,8 +600,22 @@ def main():
             r = json.load(h)
         q = pd.DataFrame(r.get("quarti", []))
         out = {"giorno": g, "accettato": False, "motivo": esito["ml"]["motivo"] or "modello non disponibile",
-               "generato_il": dt.datetime.now(ROMA).isoformat(), "carico_w": {}, "fv_w": {}}
-        if mc_all is not None and len(q):
+               "generato_il": dt.datetime.now(ROMA).isoformat(), "carico_w": {}, "fv_w": {}, "modello_carico": scelta_carico}
+        if scelta_carico == "logica fuzzy" and mod_fz is not None and len(q):
+            # R07: consumi dalla logica fuzzy; FV dal modello completo solo se accettato
+            pfz = stima_fuzzy_richiesta(mod_fz, df, r)
+            out["carico_w"] = {str(int(qq)): round(float(pfz[int(t)]), 1) for qq, t in zip(q["q"], q["ts"]) if int(t) in pfz}
+            out["accettato"] = bool(out["carico_w"])
+            out["motivo"] = "consumi: logica fuzzy (" + fz["motivo"] + ")"
+            if mf_all is not None and esito["ml"].get("accettato"):
+                x = aggiungi_calendario(pd.DataFrame({"ts": q["ts"]}))
+                x["temp"], x["ghi"], x["nuvole"] = q.get("temp"), q.get("ghi"), q.get("nuvole")
+                okf = x[FEAT_FV].notna().all(axis=1)
+                pf = np.full(len(x), np.nan)
+                pf[okf.to_numpy()] = np.clip(mf_all.predict(x.loc[okf, FEAT_FV]), 0, P_NOMINALE_FV)
+                pf[(x["ghi"].fillna(0) <= 0).to_numpy()] = 0
+                out["fv_w"] = {str(int(qq)): round(float(pf[k]), 1) for k, qq in enumerate(q["q"]) if not math.isnan(pf[k])}
+        elif mc_all is not None and len(q):
             x = pd.DataFrame({"ts": q["ts"]})
             x = aggiungi_calendario(x)
             x["temp"] = q.get("temp")
@@ -384,10 +637,23 @@ def main():
                 if not math.isnan(pf[k]):
                     out["fv_w"][str(int(qq))] = round(float(pf[k]), 1)
             out["accettato"] = bool(esito["ml"]["accettato"])
+            if scelta_carico == "previsioni del Mango":
+                out["carico_w"] = {}                              # R07: consumi del Mango (sbagliano meno)
         with open(dest, "w", encoding="utf-8") as h:
             json.dump(out, h, ensure_ascii=False)
         log(f"Previsioni per {g}: {'accettate' if out['accettato'] else 'non accettate'} ({out['motivo']})")
         righe_md.append(f"Previsioni per {g}: {'accettate' if out['accettato'] else 'non accettate'} ({out['motivo']}).")
+
+    # R07: stime fuzzy dei giorni passati (rigiocate fuori campione, per la pagina) e riepilogo
+    if fz.get("inerzia_ore") is not None:
+        try:
+            rigioca_fuzzy(df, fz["inerzia_ore"], fz["oblio"], oggi, ritardi=fz.get("ritardi", False))
+        except Exception as ex:
+            log(f"Stime fuzzy dei giorni passati: errore {ex}")
+    try:
+        salva_riepilogo_fuzzy(fz, mod_fz, esito, scelta_carico, df)
+    except Exception as ex:
+        log(f"Riepilogo fuzzy: errore {ex}")
 
     with open(os.path.join(RADICE, "modelli", "ULTIMO_ADDESTRAMENTO.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(righe_md) + "\n")

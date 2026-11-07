@@ -1,3 +1,4 @@
+-- Revisione R07 - 31/10/2026 - tolte le colonne pun e pun_15 del dataset
 -- registro.lua - file CSV (dataset per l'IA, periodi, riepilogo) e report giornaliero
 -- Le righe si accumulano in RAM e ogni ora vengono aggiunte ai file nella memoria interna.
 local F = require "lib_file"
@@ -16,7 +17,7 @@ local function colonne_dataset(profili)
     "fv_w", "carico_w", "inverter_w", "batteria_w", "soc", "contatore_w", "prelievo_w", "immissione_w",
     "modo_reale_cod", "modo_reale", "stato_batteria_cod", "stato_batteria", "chiamate_huawei",
     -- prezzi (EUR/kWh)
-    "nord", "pun", "nord_15", "pun_15", "costo_acquisto", "valore_cessione", "usura",
+    "nord", "nord_15", "costo_acquisto", "valore_cessione", "usura",
     -- meteo
     "temp_c", "temp_lag3h_c", "umidita", "nuvole", "ghi_wm2", "vento", "pioggia", "ghi_disp", "temp_disp", "n_modelli_meteo",
     -- previsioni

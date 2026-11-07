@@ -1,3 +1,4 @@
+# Revisione R08 - 07/11/2026 - nuovo passo: rigioco della condizione 2 sui giorni passati (ml/rigioco_c2.py)
 # Revisione R04 - 24/10/2026 - salvataggio con nuovi tentativi; decisione della cessione fino a 90 s
 # EMS Cismondi - SOLO SIMULAZIONE: ogni 30 minuti GitHub esegue lo stesso programma del Mango sui dati Huawei
 # a 5 minuti, misura il carico di lavoro che avrebbe il Mango e riaddestra i modelli.
@@ -112,6 +113,16 @@ jobs:
         run: |
           python ml/cessione_live.py
           python ml/cessione_totale.py
+
+      # Revisione R08 - 07/11/2026: rigioco della condizione 2 sui giorni prima dell'avvio della simulazione (12/09-16/10)
+      - name: Rigioco condizione 2 (giorni prima della simulazione)
+        continue-on-error: true
+        timeout-minutes: 8
+        env:
+          EMS_REPO_DIR: ${{ github.workspace }}
+          EMS_DATI: ${{ github.workspace }}/memoria_mango
+          EMS_TEMPO_RIGIOCO: "300"
+        run: python ml/rigioco_c2.py
 
       - name: Token cifrato e pulizia delle credenziali
         if: always()

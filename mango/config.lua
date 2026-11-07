@@ -1,3 +1,5 @@
+-- Revisione R08 - 07/11/2026 - tolte le condizioni con carica dalla rete (2a..2e): resta la condizione 2
+-- Revisione R07 - 31/10/2026 - dispacciamento 0,017 EUR/kWh: costo del kWh prelevato circa 0,2415 EUR
 -- Revisione R05 - 26/10/2026 - scarica forzata modulabile 2-5 kW (livelli 2, 3, 4, 5 kW; sotto 2 kW la batteria si ferma)
 -- config.lua - CONFIGURAZIONE della simulazione EMS sul Mango (impianto Cismondi)
 -- SOLO SIMULAZIONE: il programma legge l'impianto ma non invia alcun comando all'inverter.
@@ -8,7 +10,7 @@ return {
   --   energia = PREZZO_FISSO_A: prezzo fisso monorario F0 (contratto a prezzo fisso, decisione del 21/10/2026)
   PREZZO_FISSO_A = 0.12,               -- EUR/kWh
   PERDITE = 0.10,                       -- 10 % bassa tensione (ARERA 117/2022/R/eel, TIS tab. 4), su energia e spread
-  DISPACCIAMENTO = 0.0,                 -- EUR/kWh  >>> VALORE NON NOTO: inserirlo appena disponibile (bolletta) <<<
+  DISPACCIAMENTO = 0.017,               -- EUR/kWh, senza IVA e senza perdite (dato dell'utente, 28/10/2026)
   TRASPORTO = 0.014730,                 -- EUR/kWh quota variabile, domestico non residente, IV trim. 2026
   ONERI = 0.033153,                     -- EUR/kWh quota variabile oneri di sistema, IV trim. 2026
   ACCISE = 0.0227,                      -- EUR/kWh, domestico non residente
@@ -17,14 +19,12 @@ return {
   IMPOSTA_CESSIONI = 0.0,               -- 21/10/2026: le imposte sulle cessioni non si considerano
   PREZZI_QUARTO_ORA = true,             -- cessione valutata al prezzo NORD del quarto d'ora (MGP a 15 minuti)
   ZONA = "NORD",
-  -- condizioni simulate con ottimizzazione (22/10/2026), tutte con acquisto a prezzo fisso F0:
-  --   C2 senza carica AC dalla rete; C2a..C2e con carica AC dalla rete fino a 1..5 kW, a qualsiasi ora
+  -- condizione simulata con ottimizzazione, acquisto a prezzo fisso F0: C2 senza carica dalla rete.
+  -- R08 (07/11/2026): tolte le condizioni 2a..2e con carica AC dalla rete (decisione dell'utente)
   -- (condizione 0 = senza batteria e condizione 1 = reale misurato sono calcolate a parte)
-  PROFILI = { "C2", "C2a", "C2b", "C2c", "C2d", "C2e" },
-  PROFILI_CARICA_RETE_W = { C2 = 0, C2a = 1000, C2b = 2000, C2c = 3000, C2d = 4000, C2e = 5000 },
-  PROFILI_NOME = { C2 = "condizione 2 (senza carica AC)", C2a = "condizione 2a (carica AC 1 kW)",
-                   C2b = "condizione 2b (carica AC 2 kW)", C2c = "condizione 2c (carica AC 3 kW)",
-                   C2d = "condizione 2d (carica AC 4 kW)", C2e = "condizione 2e (carica AC 5 kW)" },
+  PROFILI = { "C2" },
+  PROFILI_CARICA_RETE_W = { C2 = 0 },
+  PROFILI_NOME = { C2 = "condizione 2 (senza carica AC)" },
 
   -- ================================================================ BATTERIA (LUNA2000 15 kWh)
   CAPACITA_KWH = 15.0,
