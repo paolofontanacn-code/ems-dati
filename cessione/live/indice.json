@@ -1,10 +1,10 @@
 {
- "aggiornato": "2026-11-06T23:22:55+01:00",
+ "aggiornato": "2026-11-07T03:22:03+01:00",
  "revisione": "R06",
  "inizio": "2026-10-23T22:00+02:00",
- "eseguito_fino_a": "2026-11-06T23:00+01:00",
+ "eseguito_fino_a": "2026-11-07T03:00+01:00",
  "soc_kwh": 0.0,
- "modo_attuale": "fully",
+ "modo_attuale": "terzi",
  "errore_modelli": {
   "italia_meteo_arpae_icon_2i": {
    "2-12h": {
@@ -70,12 +70,12 @@
   "ecmwf_ifs025"
  ],
  "theta": {
-  "valore_finale": 0.7127,
-  "k_scenari": 1.0274,
-  "peso_lati": 0.311,
+  "valore_finale": 1.352,
+  "k_scenari": 0.8788,
+  "peso_lati": 0.4383,
   "costo_cambio": 0.0,
-  "fz_basso": 0.2609,
-  "fz_alto": 0.9243,
-  "fz_scarica": 1.5
+  "fz_basso": 0.2135,
+  "fz_alto": 0.7423,
+  "fz_scarica": 1.3328
  }
 }
