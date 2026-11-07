@@ -1,11 +1,11 @@
 {
  "revisione": "R07",
- "aggiornato": "2026-11-07T21:12+01:00",
+ "aggiornato": "2026-11-08T00:56+01:00",
  "verifica": {
   "giorni": 7,
-  "mae_fuzzy": 640.7,
-  "mae_mango": 739.5,
-  "mae_ml": 765.1,
+  "mae_fuzzy": 643.1,
+  "mae_mango": 742.1,
+  "mae_ml": 743.7,
   "scelta": "logica fuzzy",
   "accettata": true,
   "motivo": "migliore delle previsioni del Mango"
@@ -20,73 +20,73 @@
    "inerzia_ore": 3,
    "oblio": 0.98,
    "ritardi": false,
-   "mae_w": 642.9
+   "mae_w": 648.6
   },
   {
    "inerzia_ore": 3,
    "oblio": 0.98,
    "ritardi": true,
-   "mae_w": 656.0
+   "mae_w": 661.2
   },
   {
    "inerzia_ore": 3,
    "oblio": 0.995,
    "ritardi": false,
-   "mae_w": 645.1
+   "mae_w": 652.0
   },
   {
    "inerzia_ore": 3,
    "oblio": 0.995,
    "ritardi": true,
-   "mae_w": 658.5
+   "mae_w": 665.0
   },
   {
    "inerzia_ore": 6,
    "oblio": 0.98,
    "ritardi": false,
-   "mae_w": 648.4
+   "mae_w": 653.2
   },
   {
    "inerzia_ore": 6,
    "oblio": 0.98,
    "ritardi": true,
-   "mae_w": 661.1
+   "mae_w": 665.2
   },
   {
    "inerzia_ore": 6,
    "oblio": 0.995,
    "ritardi": false,
-   "mae_w": 650.3
+   "mae_w": 656.4
   },
   {
    "inerzia_ore": 6,
    "oblio": 0.995,
    "ritardi": true,
-   "mae_w": 663.5
+   "mae_w": 669.4
   },
   {
    "inerzia_ore": 12,
    "oblio": 0.98,
    "ritardi": false,
-   "mae_w": 647.3
+   "mae_w": 648.5
   },
   {
    "inerzia_ore": 12,
    "oblio": 0.98,
    "ritardi": true,
-   "mae_w": 659.9
+   "mae_w": 660.2
   },
   {
    "inerzia_ore": 12,
    "oblio": 0.995,
    "ritardi": false,
-   "mae_w": 648.3
+   "mae_w": 651.4
   },
   {
    "inerzia_ore": 12,
    "oblio": 0.995,
    "ritardi": true,
-   "mae_w": 661.7
+   "mae_w": 664.3
   },
   {
    "inerzia_ore": 24,
@@ -98,43 +98,43 @@
    "inerzia_ore": 24,
    "oblio": 0.98,
    "ritardi": true,
-   "mae_w": 656.0
+   "mae_w": 655.2
   },
   {
    "inerzia_ore": 24,
    "oblio": 0.995,
    "ritardi": false,
-   "mae_w": 646.2
+   "mae_w": 647.9
   },
   {
    "inerzia_ore": 24,
    "oblio": 0.995,
    "ritardi": true,
-   "mae_w": 658.1
+   "mae_w": 659.7
   },
   {
    "inerzia_ore": 48,
    "oblio": 0.98,
    "ritardi": false,
-   "mae_w": 640.7
+   "mae_w": 643.1
   },
   {
    "inerzia_ore": 48,
    "oblio": 0.98,
    "ritardi": true,
-   "mae_w": 651.5
+   "mae_w": 653.3
   },
   {
    "inerzia_ore": 48,
    "oblio": 0.995,
    "ritardi": false,
-   "mae_w": 642.8
+   "mae_w": 646.6
   },
   {
    "inerzia_ore": 48,
    "oblio": 0.995,
    "ritardi": true,
-   "mae_w": 654.1
+   "mae_w": 657.6
   }
  ],
  "storico": [
@@ -176,36 +176,126 @@
    "inerzia_ore": 48,
    "oblio": 0.98,
    "ritardi": false
+  },
+  {
+   "quando": "2026-11-08T00:56+01:00",
+   "giorni": 7,
+   "mae_fuzzy": 643.1,
+   "mae_mango": 742.1,
+   "mae_ml": 743.7,
+   "scelta": "logica fuzzy",
+   "accettata": true,
+   "motivo": "migliore delle previsioni del Mango",
+   "inerzia_ore": 48,
+   "oblio": 0.98,
+   "ritardi": false
   }
  ],
  "incidenze": {
   "riscaldamento_w_per_temperatura_efficace": {
    "-5.0": 0.0,
    "0.0": 0.0,
-   "5.0": 364.3,
-   "10.0": 234.8,
-   "15.0": 91.5,
-   "20.0": 26.7
+   "5.0": 372.2,
+   "10.0": 229.5,
+   "15.0": 88.6,
+   "20.0": 25.5
   },
   "ore_dei_giorni_prima_w": null,
   "acqua_calda_kwh_giorno_per_temperatura": {
-   "0.0": 5.27,
-   "10.0": 2.7,
-   "20.0": 2.5
+   "0.0": 5.06,
+   "10.0": 2.76,
+   "20.0": 2.44
   },
   "pregresso_w_per_rapporto_giorno_prima": {
-   "0.7": 423.7,
-   "1.0": 539.3,
-   "1.3": 607.6
+   "0.7": 431.8,
+   "1.0": 543.3,
+   "1.3": 621.4
   },
   "comportamento_kwh_giorno": {
-   "lavoro": 2.57,
-   "sabato": 4.98,
-   "festa": 4.6
+   "lavoro": 2.48,
+   "sabato": 5.24,
+   "festa": 4.53
   },
   "nota": "valori medi delle regole; la separazione tra le parti e' una stima (c'e' solo il consumo totale)"
  },
  "bravura": [
+  {
+   "giorno": "2026-10-08",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 382.267,
+   "mae_settimana_prima": 453.955,
+   "mae_mango": null,
+   "indice_vs_mango": null,
+   "indice_vs_settimana_prima": 0.158,
+   "indice_vs_mango_media7": null,
+   "indice_vs_settimana_prima_media7": 0.158
+  },
+  {
+   "giorno": "2026-10-09",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 362.594,
+   "mae_settimana_prima": 483.685,
+   "mae_mango": null,
+   "indice_vs_mango": null,
+   "indice_vs_settimana_prima": 0.25,
+   "indice_vs_mango_media7": null,
+   "indice_vs_settimana_prima_media7": 0.204
+  },
+  {
+   "giorno": "2026-10-10",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 476.042,
+   "mae_settimana_prima": 708.649,
+   "mae_mango": null,
+   "indice_vs_mango": null,
+   "indice_vs_settimana_prima": 0.328,
+   "indice_vs_mango_media7": null,
+   "indice_vs_settimana_prima_media7": 0.246
+  },
+  {
+   "giorno": "2026-10-11",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 427.037,
+   "mae_settimana_prima": 620.347,
+   "mae_mango": null,
+   "indice_vs_mango": null,
+   "indice_vs_settimana_prima": 0.312,
+   "indice_vs_mango_media7": null,
+   "indice_vs_settimana_prima_media7": 0.262
+  },
+  {
+   "giorno": "2026-10-12",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 437.39,
+   "mae_settimana_prima": 445.969,
+   "mae_mango": null,
+   "indice_vs_mango": null,
+   "indice_vs_settimana_prima": 0.019,
+   "indice_vs_mango_media7": null,
+   "indice_vs_settimana_prima_media7": 0.213
+  },
+  {
+   "giorno": "2026-10-13",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 271.562,
+   "mae_settimana_prima": 504.226,
+   "mae_mango": null,
+   "indice_vs_mango": null,
+   "indice_vs_settimana_prima": 0.461,
+   "indice_vs_mango_media7": null,
+   "indice_vs_settimana_prima_media7": 0.255
+  },
+  {
+   "giorno": "2026-10-14",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 334.281,
+   "mae_settimana_prima": 356.16,
+   "mae_mango": null,
+   "indice_vs_mango": null,
+   "indice_vs_settimana_prima": 0.061,
+   "indice_vs_mango_media7": null,
+   "indice_vs_settimana_prima_media7": 0.227
+  },
   {
    "giorno": "2026-10-15",
    "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
@@ -215,7 +305,7 @@
    "indice_vs_mango": null,
    "indice_vs_settimana_prima": 0.133,
    "indice_vs_mango_media7": null,
-   "indice_vs_settimana_prima_media7": 0.133
+   "indice_vs_settimana_prima_media7": 0.224
   },
   {
    "giorno": "2026-10-16",
@@ -226,7 +316,7 @@
    "indice_vs_mango": null,
    "indice_vs_settimana_prima": 0.194,
    "indice_vs_mango_media7": null,
-   "indice_vs_settimana_prima_media7": 0.163
+   "indice_vs_settimana_prima_media7": 0.216
   },
   {
    "giorno": "2026-10-19",
@@ -237,7 +327,7 @@
    "indice_vs_mango": 0.064,
    "indice_vs_settimana_prima": 0.283,
    "indice_vs_mango_media7": 0.064,
-   "indice_vs_settimana_prima_media7": 0.203
+   "indice_vs_settimana_prima_media7": 0.209
   },
   {
    "giorno": "2026-10-20",
@@ -248,7 +338,7 @@
    "indice_vs_mango": 0.017,
    "indice_vs_settimana_prima": 0.179,
    "indice_vs_mango_media7": 0.041,
-   "indice_vs_settimana_prima_media7": 0.197
+   "indice_vs_settimana_prima_media7": 0.19
   },
   {
    "giorno": "2026-10-21",
@@ -259,7 +349,7 @@
    "indice_vs_mango": -0.014,
    "indice_vs_settimana_prima": -0.131,
    "indice_vs_mango_media7": 0.022,
-   "indice_vs_settimana_prima_media7": 0.132
+   "indice_vs_settimana_prima_media7": 0.169
   },
   {
    "giorno": "2026-10-22",
@@ -448,24 +538,24 @@
    "3": 0.17,
    "4": 0.07,
    "5": 0.13,
-   "6": 0.37,
-   "7": 0.43,
+   "6": 0.33,
+   "7": 0.4,
    "8": 0.23,
    "9": 0.3,
-   "10": 0.27,
+   "10": 0.3,
    "11": 0.37,
-   "12": 0.23,
-   "13": 0.3,
+   "12": 0.27,
+   "13": 0.33,
    "14": 0.2,
    "15": 0.27,
-   "16": 0.13,
-   "17": 0.17,
+   "16": 0.1,
+   "17": 0.2,
    "18": 0.3,
    "19": 0.53,
-   "20": 0.47,
+   "20": 0.5,
    "21": 0.27,
    "22": 0.4,
-   "23": 0.13
+   "23": 0.17
   },
   "quasi_certi_ore": []
  }

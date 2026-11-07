@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-07T21:12:30+01:00",
+ "aggiornato": "2026-11-08T00:56:28+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -215,13 +215,17 @@
   },
   {
    "g": "2026-11-07",
+   "tipo": "simulato"
+  },
+  {
+   "g": "2026-11-08",
    "tipo": "oggi"
   }
  ],
- "oggi": "2026-11-07",
+ "oggi": "2026-11-08",
  "piano": "2026-11-08",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 07/11/2026 20:11:48 UTC",
+  "Controllo di rete del giro su GitHub - 07/11/2026 23:55:52 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -258,11 +262,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-04 04:13:25  Token Huawei rinnovato.",
-  "2026-11-04 04:13:38  GitHub: rigioco 2026-11-03 23:55:00 -> 2026-11-04 03:50:00 (47 letture dallo storico)",
-  "2026-11-04 00:00:00  Giorno 20261103 chiuso: costo netto condizione 0 2.19 EUR, condizione 1 (reale) 2.86 EUR; beneficio sulla 1: C2 0.67, C2a 0.67, C2b 0.67, C2c 0.67, C2d 0.67, C2e 0.67 EUR",
-  "2026-11-04 00:00:00  GitHub: inviati 11 file",
-  "2026-11-04 12:31:32  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-04 12:31:32  Token Huawei rinnovato.",
   "2026-11-04 12:31:40  GitHub: rigioco 2026-11-04 03:50:00 -> 2026-11-04 12:10:00 (100 letture dallo storico)",
   "2026-11-04 04:00:00  Coefficienti da GitHub: applicati, 288 valori di profilo",
@@ -337,6 +336,11 @@
   "2026-11-07 21:11:58  Token Huawei rinnovato.",
   "2026-11-07 21:12:06  GitHub: rigioco 2026-11-07 16:30:00 -> 2026-11-07 20:50:00 (52 letture dallo storico)",
   "2026-11-07 16:45:00  Previsioni di GitHub per 20261108 ricevute e accettate",
-  "2026-11-07 17:00:00  Piano della sera per 20261108 salvato"
+  "2026-11-07 17:00:00  Piano della sera per 20261108 salvato",
+  "2026-11-08 00:55:59  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-08 00:56:00  Token Huawei rinnovato.",
+  "2026-11-08 00:56:10  GitHub: rigioco 2026-11-07 20:50:00 -> 2026-11-08 00:35:00 (45 letture dallo storico)",
+  "2026-11-08 00:00:00  Giorno 20261107 chiuso: costo netto condizione 0 3.98 EUR, condizione 1 (reale) 4.16 EUR; beneficio sulla 1: C2 0.18 EUR",
+  "2026-11-08 00:00:00  GitHub: inviati 11 file"
  ]
 }
