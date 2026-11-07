@@ -1,6 +1,6 @@
 {
  "revisione": "R07",
- "aggiornato": "2026-11-07T10:33+01:00",
+ "aggiornato": "2026-11-07T16:55+01:00",
  "verifica": {
   "giorni": 7,
   "mae_fuzzy": 640.7,
@@ -150,6 +150,19 @@
    "inerzia_ore": 48,
    "oblio": 0.98,
    "ritardi": false
+  },
+  {
+   "quando": "2026-11-07T16:55+01:00",
+   "giorni": 7,
+   "mae_fuzzy": 640.7,
+   "mae_mango": 739.5,
+   "mae_ml": 765.1,
+   "scelta": "logica fuzzy",
+   "accettata": true,
+   "motivo": "migliore delle previsioni del Mango",
+   "inerzia_ore": 48,
+   "oblio": 0.98,
+   "ritardi": false
   }
  ],
  "incidenze": {
@@ -181,6 +194,83 @@
  },
  "bravura": [
   {
+   "giorno": "2026-10-24",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 683.625,
+   "mae_settimana_prima": 869.681,
+   "mae_mango": 777.737,
+   "indice_vs_mango": 0.121,
+   "indice_vs_settimana_prima": 0.214,
+   "indice_vs_mango_media7": 0.121,
+   "indice_vs_settimana_prima_media7": 0.214
+  },
+  {
+   "giorno": "2026-10-25",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 654.45,
+   "mae_settimana_prima": 713.097,
+   "mae_mango": 699.77,
+   "indice_vs_mango": 0.065,
+   "indice_vs_settimana_prima": 0.082,
+   "indice_vs_mango_media7": 0.093,
+   "indice_vs_settimana_prima_media7": 0.148
+  },
+  {
+   "giorno": "2026-10-26",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 478.532,
+   "mae_settimana_prima": 428.365,
+   "mae_mango": 509.335,
+   "indice_vs_mango": 0.06,
+   "indice_vs_settimana_prima": -0.117,
+   "indice_vs_mango_media7": 0.082,
+   "indice_vs_settimana_prima_media7": 0.06
+  },
+  {
+   "giorno": "2026-10-27",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 526.9,
+   "mae_settimana_prima": 670.812,
+   "mae_mango": 537.84,
+   "indice_vs_mango": 0.02,
+   "indice_vs_settimana_prima": 0.215,
+   "indice_vs_mango_media7": 0.067,
+   "indice_vs_settimana_prima_media7": 0.098
+  },
+  {
+   "giorno": "2026-10-28",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 582.413,
+   "mae_settimana_prima": 647.455,
+   "mae_mango": 612.283,
+   "indice_vs_mango": 0.049,
+   "indice_vs_settimana_prima": 0.1,
+   "indice_vs_mango_media7": 0.063,
+   "indice_vs_settimana_prima_media7": 0.099
+  },
+  {
+   "giorno": "2026-10-29",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 456.708,
+   "mae_settimana_prima": 634.203,
+   "mae_mango": 549.896,
+   "indice_vs_mango": 0.169,
+   "indice_vs_settimana_prima": 0.28,
+   "indice_vs_mango_media7": 0.081,
+   "indice_vs_settimana_prima_media7": 0.129
+  },
+  {
+   "giorno": "2026-10-30",
+   "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
+   "mae_fuzzy": 530.432,
+   "mae_settimana_prima": 617.014,
+   "mae_mango": 621.012,
+   "indice_vs_mango": 0.146,
+   "indice_vs_settimana_prima": 0.14,
+   "indice_vs_mango_media7": 0.09,
+   "indice_vs_settimana_prima_media7": 0.131
+  },
+  {
    "giorno": "2026-10-31",
    "fonte": "ricalcolata dopo, sui soli giorni prima e con il meteo misurato",
    "mae_fuzzy": 640.198,
@@ -189,7 +279,7 @@
    "indice_vs_mango": 0.085,
    "indice_vs_settimana_prima": 0.186,
    "indice_vs_mango_media7": 0.085,
-   "indice_vs_settimana_prima_media7": 0.186
+   "indice_vs_settimana_prima_media7": 0.127
   },
   {
    "giorno": "2026-11-01",
@@ -199,8 +289,8 @@
    "mae_mango": 872.844,
    "indice_vs_mango": 0.257,
    "indice_vs_settimana_prima": 0.176,
-   "indice_vs_mango_media7": 0.171,
-   "indice_vs_settimana_prima_media7": 0.181
+   "indice_vs_mango_media7": 0.112,
+   "indice_vs_settimana_prima_media7": 0.14
   },
   {
    "giorno": "2026-11-02",
@@ -210,8 +300,8 @@
    "mae_mango": 865.255,
    "indice_vs_mango": 0.253,
    "indice_vs_settimana_prima": 0.18,
-   "indice_vs_mango_media7": 0.199,
-   "indice_vs_settimana_prima_media7": 0.181
+   "indice_vs_mango_media7": 0.14,
+   "indice_vs_settimana_prima_media7": 0.183
   },
   {
    "giorno": "2026-11-03",
@@ -221,8 +311,8 @@
    "mae_mango": 695.229,
    "indice_vs_mango": 0.087,
    "indice_vs_settimana_prima": 0.223,
-   "indice_vs_mango_media7": 0.171,
-   "indice_vs_settimana_prima_media7": 0.191
+   "indice_vs_mango_media7": 0.15,
+   "indice_vs_settimana_prima_media7": 0.184
   },
   {
    "giorno": "2026-11-04",
@@ -233,7 +323,7 @@
    "indice_vs_mango": 0.112,
    "indice_vs_settimana_prima": 0.154,
    "indice_vs_mango_media7": 0.159,
-   "indice_vs_settimana_prima_media7": 0.184
+   "indice_vs_settimana_prima_media7": 0.191
   },
   {
    "giorno": "2026-11-05",
@@ -244,7 +334,7 @@
    "indice_vs_mango": 0.054,
    "indice_vs_settimana_prima": 0.013,
    "indice_vs_mango_media7": 0.142,
-   "indice_vs_settimana_prima_media7": 0.155
+   "indice_vs_settimana_prima_media7": 0.153
   },
   {
    "giorno": "2026-11-06",
