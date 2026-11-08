@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-08T19:30:46+01:00",
+ "aggiornato": "2026-11-08T23:29:37+01:00",
  "revisione": "R06",
  "inizio": "2026-10-23T22:00+02:00",
  "eseguito_fino_a": "2026-11-07T09:45+01:00",
@@ -70,12 +70,12 @@
   "ecmwf_ifs025"
  ],
  "theta": {
-  "valore_finale": 1.3156,
-  "k_scenari": 1.132,
-  "peso_lati": 0.45,
-  "costo_cambio": 0.0058,
-  "fz_basso": 0.3103,
-  "fz_alto": 0.8179,
-  "fz_scarica": 1.1419
+  "valore_finale": 1.4288,
+  "k_scenari": 1.1669,
+  "peso_lati": 0.4159,
+  "costo_cambio": 0.0041,
+  "fz_basso": 0.2547,
+  "fz_alto": 0.7561,
+  "fz_scarica": 0.6093
  }
 }
