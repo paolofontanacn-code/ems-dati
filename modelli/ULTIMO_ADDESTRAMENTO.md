@@ -1,15 +1,15 @@
-# Ultimo addestramento - 08/11/2026 23:28
+# Ultimo addestramento - 09/11/2026 02:57
 
-Dati: 5052 quarti d'ora su 56 giorni (2026-09-12 - 2026-11-07).
+Dati: 5148 quarti d'ora su 57 giorni (2026-09-12 - 2026-11-08).
 
 Verifica con il meteo PREVISTO la sera prima (richieste del Mango) in 633 quarti d'ora su 633; negli altri il meteo del dataset (quello usato dal Mango in quel momento).
 
 | Verifica sugli ultimi giorni | Errore medio consumi W | Errore medio FV W | Esito |
 |---|---|---|---|
-| Previsioni del Mango (registrate) | 742 | 144 | riferimento |
-| Modello completo (GitHub) | 744 | 133 | non accettato |
-| Coefficienti formato Mango | 713 | - | ACCETTATI |
-| Logica fuzzy (inerzia casa 48 h, oblio 0.98) | 643 | - | ACCETTATA |
+| Previsioni del Mango (registrate) | 710 | 159 | riferimento |
+| Modello completo (GitHub) | 668 | 167 | ACCETTATO |
+| Coefficienti formato Mango | 674 | - | ACCETTATI |
+| Logica fuzzy (inerzia casa 48 h, oblio 0.98) | 630 | - | ACCETTATA |
 
 Consumi per le decisioni: logica fuzzy.
-Pompa di calore (W per grado sotto 18 C, quadrato/10, x vento/10, x sole/1000, sopra 24 C): 41.7, 4.8, 0.0, -0.0, 348.3
+Pompa di calore (W per grado sotto 18 C, quadrato/10, x vento/10, x sole/1000, sopra 24 C): 41.5, 4.8, 0.0, -0.0, 345.4
