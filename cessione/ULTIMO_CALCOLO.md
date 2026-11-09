@@ -1,4 +1,4 @@
-# Cessione totale 20 kW - ottimo teorico, ultimo calcolo 09/11/2026 10:40 (R06)
+# Cessione totale 20 kW - ottimo teorico, ultimo calcolo 09/11/2026 21:41 (R06)
 
 Giorni calcolati: 57 (validi 52). Note: 0.
 
