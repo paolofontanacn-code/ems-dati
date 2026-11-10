@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-10T12:44:00+01:00",
+ "aggiornato": "2026-11-10T20:40:43+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -233,7 +233,7 @@
  "oggi": "2026-11-10",
  "piano": "2026-11-10",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 10/11/2026 11:43:20 UTC",
+  "Controllo di rete del giro su GitHub - 10/11/2026 19:39:54 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -270,12 +270,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-06 13:30:00  Richiesta delle previsioni di 20261107 inviata a GitHub",
-  "2026-11-06 14:00:00  GitHub: inviati 2 file",
-  "2026-11-06 23:22:08  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-06 23:22:09  Token Huawei rinnovato.",
-  "2026-11-06 23:22:18  GitHub: rigioco 2026-11-06 18:05:00 -> 2026-11-06 23:00:00 (59 letture dallo storico)",
-  "2026-11-06 18:15:00  Previsioni di GitHub per 20261107 non accettate (non migliore del Mango): uso le mie",
   "2026-11-06 18:30:00  Piano della sera per 20261107 salvato",
   "2026-11-07 03:20:44  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-07 03:20:45  Token Huawei rinnovato.",
@@ -349,6 +343,12 @@
   "2026-11-10 04:00:00  Coefficienti da GitHub: applicati, 288 valori di profilo",
   "2026-11-10 12:43:28  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-10 12:43:29  Token Huawei rinnovato.",
-  "2026-11-10 12:43:35  GitHub: rigioco 2026-11-10 04:05:00 -> 2026-11-10 12:20:00 (99 letture dallo storico)"
+  "2026-11-10 12:43:35  GitHub: rigioco 2026-11-10 04:05:00 -> 2026-11-10 12:20:00 (99 letture dallo storico)",
+  "2026-11-10 20:39:59  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-10 20:39:59  Token Huawei rinnovato.",
+  "2026-11-10 20:40:06  GitHub: rigioco 2026-11-10 12:20:00 -> 2026-11-10 20:15:00 (95 letture dallo storico)",
+  "2026-11-10 13:30:00  Prezzi GME del 20261111 salvati: 24 ore, NORD da 0.2078 a 0.3530 EUR/kWh, con quarti d'ora",
+  "2026-11-10 13:30:00  Richiesta delle previsioni di 20261111 inviata a GitHub",
+  "2026-11-10 14:00:00  GitHub: inviati 2 file"
  ]
 }
