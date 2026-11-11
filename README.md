@@ -635,3 +635,41 @@ Prove fatte qui (copia del repository al 07/11/2026):
   (storico finto di 20 giorni importato, "INSTALLAZIONE RIUSCITA"), aggiornamento riuscito, tutti i 18 passi di
   ems.yml con esito 0 in entrambi i giri, rigioco della condizione 2 fatto con l'archivio delle previsioni (finto) in
   104 s per 15 giorni, versione.json R08 nel repository.
+
+## Prossima revisione (R10, annotata come R09 fino al 09/11/2026) - annotazioni (NIENTE CODICE finche' non richiesto)
+- Peso della potenza di scarica (07/11/2026, proposta dell'utente, immagine della cessione: scarica 17:00-17:30 a
+  piena potenza). Si accettano anche scariche a potenza non piena, con preferenza per la scarica piu' lenta:
+  potenza di scarica dal 20 all'80 % della massima peso 1; dall'80 al 90 % peso 0,98; dal 90 al 100 % peso 0,97.
+  Stato attuale (verificato nel codice R05-R08, cessione): la potenza e' gia' modulabile (Third-party: valore per ora;
+  TOU: potenza massima scelta 2-10 kW; sotto 2 kW = 20 % la scarica non parte), ma nella scelta del piano conta solo
+  il ricavo, quindi a parita' di prezzo non c'e' preferenza per la scarica lenta. Da chiarire con l'utente: a cosa si
+  applica il peso, a quali impianti, se vale solo per scegliere il piano o anche nei conti in euro.
+  Risposte dell'utente (07/11/2026): 16a - il peso si applica al ricavo dell'energia SCARICATA dalla batteria in quel
+  quarto d'ora (es. scarica al 95 % della potenza massima: quell'energia vale 0,97 del prezzo); 17b - vale per la
+  cessione totale E per Cismondi (scarica forzata 2-5 kW: 2 kW = 40 %, 4 kW = 80 %, 5 kW = 100 %); 18a - solo per
+  scegliere il piano: i conti in euro restano quelli veri.
+  Nota (verificata in config.lua): a Cismondi i livelli di scarica sono 2, 3, 4, 5 kW = 40, 60, 80, 100 % di 5 kW:
+  con i pesi proposti 2-4 kW peso 1 (4 kW = 80 %, confine: da decidere se 0,98 o 1) e 5 kW peso 0,97.
+  Confini (07/11/2026, utente 19a): dal 20 all'80 % compreso peso 1; oltre l'80 fino al 90 % peso 0,98; oltre il 90 %
+  peso 0,97. Cismondi: 2, 3, 4 kW peso 1; 5 kW peso 0,97.
+- Discontinuita' del 08/11 nella cessione (09/11/2026, immagine dell'utente: in rete 18:15-18:30, pausa, 19:00-20:00).
+  Verificato sui dati del repository: e' il grafico dell'OTTIMO TEORICO (cessione/giorni/2026-11-08.json): scarica
+  2,26 kWh alle 18:15, niente 18:30-18:45, poi 10 kW 19:00-20:00. Prezzi NORD: ore 18 = 0,3161, ore 19 = 0,3163 EUR/kWh
+  (differenza 0,0002): l'ottimo teorico e' una programmazione lineare senza costo dei cambi, quindi fra soluzioni di
+  ricavo quasi uguale ne sceglie una qualunque (stesso problema del 24/10). La regola "comandi costanti per ora" e il
+  costo dei cambi (R05) valgono solo per la simulazione ogni 2 ore, non per l'ottimo teorico.
+  Rimedi possibili (da decidere): peso per la continuita' (costo per ogni avvio/arresto della scarica) anche
+  nell'ottimo teorico; i pesi della potenza di scarica della R09 (scarica piu' lenta preferita) allungherebbero la
+  scarica su 18:00-20:00.
+- PROBLEMA trovato il 09/11/2026 (cessione, simulazione ogni 2 ore): l'esecuzione e' ferma al 07/11 09:45 (indice
+  live "eseguito fino a 07/11 09:45"; le decisioni continuano con lo stato di allora). Causa verificata nei dati:
+  il dataset di Cismondi del 07/11 inizia alle 09:55 (con l'installazione R08 le colonne del dataset sono cambiate e
+  registro.lua ha messo da parte il file del giorno iniziato e ne ha aperto uno nuovo); il quarto d'ora 09:45-10:00
+  ha una sola lettura e cessione_live.py esegue i quarti solo in ordine e senza buchi, quindi resta fermo per sempre.
+  Da correggere (su richiesta): superare un buco quando ci sono letture successive (es. dopo 1 ora), e leggere anche
+  i file del giorno messi da parte.
+- Continuita' della scarica (09/11/2026, utente 21a): peso minimo per la continuita': 0,001 EUR per ogni avvio o
+  arresto della scarica, anche nell'ottimo teorico (solo per scegliere fra soluzioni quasi uguali). -> R10.
+- Blocco della simulazione ogni 2 ore della cessione: CORRETTO nella R09 (09/11/2026, utente 22a), vedi REVISIONI.txt.
+  La numerazione: R09 = sola correzione; le annotazioni prima chiamate R09 (pesi della potenza di scarica) e la
+  continuita' passano alla R10.

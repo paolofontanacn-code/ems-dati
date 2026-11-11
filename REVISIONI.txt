@@ -1,6 +1,21 @@
 EMS Cismondi - elenco delle revisioni
 (le consegne precedenti al 23/10/2026 non sono numerate)
 
+R09 - 09/11/2026  (correzione; comprende la R08)
+  - Cessione, simulazione ogni 2 ore (ml/cessione_live.py): l'esecuzione era ferma dal 07/11 09:45. Causa: con
+    l'installazione della R08 le colonne del dataset di Cismondi sono cambiate, il Mango ha messo da parte il file del
+    giorno iniziato e ne ha aperto uno nuovo dalle 09:55; il quarto d'ora 09:45-10:00 e' rimasto con una sola lettura
+    e l'esecuzione (solo quarti consecutivi e completi) non e' piu' andata avanti. Ora: si leggono anche le copie
+    messe da parte (dataset_AAAAMMGG_v<ora>.csv) e un quarto d'ora incompleto si ricostruisce (interpolazione) se ci
+    sono letture almeno un'ora dopo; sui quarti ricostruiti niente apprendimento della previsione.
+    Al primo giro la simulazione recupera i giorni dal 07/11 con l'ultimo piano disponibile (deciso con lo stato del
+    07/11 09:45): i risultati del 07-09/11 non sono rappresentativi di una gestione ogni 2 ore.
+  - Mango (mango/registro.lua): quando cambiano le colonne del dataset, le righe gia' scritte nel giorno si
+    convertono nelle colonne nuove e restano nel file del giorno (prima finivano solo nella copia e mancavano nella
+    pagina, come il 07/11 dalle 00:00 alle 09:50). La copia _v<ora>.csv resta come riserva.
+  File modificati: pannello_ems.py, LEGGIMI.txt, repository/versione.json, repository/ml/cessione_live.py,
+  repository/mango/registro.lua, repository/README.md, repository/REVISIONI.txt, REVISIONI.txt
+
 R08 - 07/11/2026  (comprende la R07, mai installata)
   Cismondi:
   - Tolte le condizioni con carica dalla rete (2a, 2b, 2c, 2d, 2e): resta la condizione 2 (mango/config.lua, pagina,

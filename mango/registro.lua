@@ -1,3 +1,4 @@
+-- Revisione R09 - 09/11/2026 - cambio di colonne del dataset: le righe gia' scritte si convertono (prima finivano solo in una copia)
 -- Revisione R07 - 31/10/2026 - tolte le colonne pun e pun_15 del dataset
 -- registro.lua - file CSV (dataset per l'IA, periodi, riepilogo) e report giornaliero
 -- Le righe si accumulano in RAM e ogni ora vengono aggiunte ai file nella memoria interna.
@@ -7,6 +8,52 @@ local M = {}
 
 local FLUSSI = { "fv_carichi", "fv_batt", "rete_batt", "batt_carichi", "batt_rete", "fv_rete", "rete_carichi" }
 M.FLUSSI = FLUSSI
+
+-- ------------------------------------------------------------------ R09: conversione di un CSV a colonne nuove
+local function campi_csv(riga)
+  local out, i, n = {}, 1, #riga
+  while i <= n + 1 do
+    if riga:sub(i, i) == '"' then
+      local v, j = "", i + 1
+      while j <= n do
+        local ch = riga:sub(j, j)
+        if ch == '"' then
+          if riga:sub(j + 1, j + 1) == '"' then v = v .. '"'; j = j + 2 else j = j + 1; break end
+        else v = v .. ch; j = j + 1 end
+      end
+      out[#out + 1] = v
+      i = j + 1                                  -- salta la virgola
+    else
+      local j = riga:find(",", i, true) or (n + 1)
+      out[#out + 1] = riga:sub(i, j - 1)
+      i = j + 1
+    end
+  end
+  return out
+end
+
+local function campo(v)
+  if v == nil then return "" end
+  if v:find('[,"]') then return '"' .. v:gsub('"', '""') .. '"' end
+  return v
+end
+
+-- righe di un CSV (testo con intestazione) riscritte nelle colonne 'col' (senza intestazione)
+local function converti_csv(testo, col)
+  local righe, intest = {}, nil
+  for riga in testo:gmatch("[^\n]+") do
+    riga = riga:gsub("\r$", "")
+    if not intest then intest = campi_csv(riga)
+    else
+      local v, m = campi_csv(riga), {}
+      for k, nome in ipairs(intest) do m[nome] = v[k] end
+      local parti = {}
+      for k, nome in ipairs(col) do parti[k] = campo(m[nome]) end
+      righe[#righe + 1] = table.concat(parti, ",")
+    end
+  end
+  return (#righe > 0) and (table.concat(righe, "\n") .. "\n") or ""
+end
 
 -- ------------------------------------------------------------------ colonne del dataset (una riga ogni 5 minuti)
 local function colonne_dataset(profili)
@@ -98,10 +145,14 @@ function M.nuovo(c, cartella_ram, cartella_dati)
       if testo and #testo > 0 then
         local col = nome:match("^buffer_dataset_") and self.col_dataset or
           (nome:match("^buffer_carico_") and M.COL_CARICO or COL_PERIODI)
-        -- file iniziato con colonne diverse (aggiornamento del programma): si mette da parte e se ne inizia uno nuovo
+        -- file iniziato con colonne diverse (aggiornamento del programma): R09 - le righe gia' scritte si CONVERTONO
+        -- nelle colonne nuove (stesso nome = stesso valore, colonne nuove vuote) e restano nel file del giorno;
+        -- il file originale resta come copia (_v<ora>.csv). Prima della R09 le righe restavano solo nella copia.
         local intest = F.esiste(dest) and (F.leggi(dest) or ""):match("^([^\n]*)") or nil
         if intest and intest ~= F.intestazione_csv(col):gsub("\n$", "") then
+          local vecchio = F.leggi(dest) or ""
           os.rename(dest, (dest:gsub("%.csv$", "")) .. "_v" .. os.time() .. ".csv")
+          F.accoda(dest, F.intestazione_csv(col) .. converti_csv(vecchio, col))
         end
         if not F.esiste(dest) then
           local col = nome:match("^buffer_dataset_") and self.col_dataset or

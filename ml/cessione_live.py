@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Revisione R09 - 09/11/2026 - l'esecuzione non si ferma piu' per un buco di letture: si leggono anche le copie del dataset
+#   messe da parte dal Mango (cambio di colonne) e un quarto d'ora incompleto si ricostruisce se ci sono letture almeno
+#   un'ora dopo (dal 07/11 09:45 l'esecuzione era ferma per questo)
 # Revisione R06 - 26/10/2026 - a ogni decisione si salvano i piani completi calcolato e spedito (potenza in rete, energia
 #   in batteria, carica/scarica, produzione prevista) con l'ora di fine dei calcoli (cessione/live/piani/, piano_ultimo.json);
 #   prezzi noti fino all'ultimo disponibile (prezzi_noti.json); tolto il riassunto a testo del piano dal registro
@@ -98,16 +101,22 @@ def letture_recenti(da_ts, adesso):
     for g, v in CT.letture_fv().items():
         if g >= g0:
             out.update({t: w for t, w in v.items() if da_ts - 3600 <= t <= adesso})
-    files = sorted(glob.glob(os.path.join(CT.DATI, "dataset_????????.csv")))
+    # R09: anche le copie messe da parte dal Mango quando cambiano le colonne (dataset_AAAAMMGG_v<ora>.csv)
+    g0n = g0.replace("-", "")
+    files = sorted(f for f in glob.glob(os.path.join(CT.DATI, "dataset_????????*.csv"))
+                   if os.path.basename(f)[8:16] >= g0n)
     if not files and os.path.isfile(os.path.join(CT.RADICE, "pannello", "oggi.csv")):
         files = [os.path.join(CT.RADICE, "pannello", "oggi.csv")]
-    for f in files[-2:]:
+    for f in files:
         with open(f, encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
                 t, w = CT.numero(r.get("ts")), CT.numero(r.get("fv_w"))
                 if t is not None and w is not None and da_ts - 3600 <= t <= adesso:
                     out[int(t)] = max(0.0, w)
     return out
+
+
+RICOSTRUITI = []        # R09: quarti d'ora ricostruiti in questo giro (buchi di letture)
 
 
 def quarti_completi(letture, da_ts):
@@ -117,21 +126,31 @@ def quarti_completi(letture, da_ts):
         q = int(t // 900 * 900)
         if q >= da_ts:
             per.setdefault(q, []).append((t, w))
-    out = {}
     ultimo = max(letture) if letture else 0
-    for q in sorted(per):
-        v = per[q]
+    seq, q = {}, int(da_ts)
+    tempi = sorted(letture)
+    while q + 900 <= ultimo + 300:
+        v = per.get(q, [])
         if len(v) >= 2 and (max(t for t, _ in v) >= q + 600 or ultimo >= q + 900):
-            out[q] = sum(w for _, w in v) / len(v) / 1000 * CT.Q
+            seq[q] = sum(w for _, w in v) / len(v) / 1000 * CT.Q
+        elif ultimo >= q + 3600:
+            # R09: quarto d'ora incompleto ma con letture almeno un'ora dopo: il buco non si colmera' piu'.
+            # Potenza ricostruita tra la lettura prima e quella dopo (interpolazione lineare a meta' quarto)
+            tm = q + 450
+            prima = [t for t in tempi if t <= tm]
+            dopo = [t for t in tempi if t > tm]
+            if v:
+                w = sum(x for _, x in v) / len(v)
+            elif prima and dopo:
+                a, b = prima[-1], dopo[0]
+                w = letture[a] + (letture[b] - letture[a]) * (tm - a) / (b - a)
+            else:
+                w = letture[prima[-1]] if prima else letture[dopo[0]]
+            seq[q] = max(0.0, w) / 1000 * CT.Q
+            RICOSTRUITI.append(q)
         else:
             break                                   # i quarti si eseguono in ordine: ci si ferma al primo incompleto
-    # nessun buco: si eseguono solo quarti consecutivi
-    seq, atteso = {}, da_ts
-    for q in sorted(out):
-        if q != atteso:
-            break
-        seq[q] = out[q]
-        atteso = q + 900
+        q += 900
     return seq
 
 
@@ -331,7 +350,7 @@ def main():
             # apprendimento della previsione: errore per modello e orizzonte, correzione per ora del giorno
             h = str(ora_di(t))
             # errore per orizzonte: confronto con le previsioni di tutte le decisioni delle ultime 24 ore
-            for arch in st.get("prev_archivio", []):
+            for arch in (st.get("prev_archivio", []) if t not in RICOSTRUITI else []):   # R09: niente apprendimento sui buchi
                 orizz = fascia_orizzonte(t - arch["t_dati"])
                 for m, prev in arch["prev"].items():
                     g_raw = prev.get(str(t))
@@ -342,7 +361,7 @@ def main():
                     er["mae"] = a if er["mae"] is None else er["mae"] + ALFA_ERRORE * (a - er["mae"])
                     er["n"] += 1
             # correzione per ora del giorno: solo con la previsione della decisione in corso (una volta per quarto)
-            for m, prev in d["prev_grezza"].items():
+            for m, prev in (d["prev_grezza"].items() if t not in RICOSTRUITI else []):
                 g_raw = prev.get(str(t))
                 if g_raw is None:
                     continue
@@ -356,7 +375,8 @@ def main():
             reg["quarti"].append({"t": t, "fv": round(pv, 4), "prev": d["prev_ovest"].get(str(t)), "prezzo": round(pr, 5), "modo": modo,
                                   "valore": round(val, 3),
                                   "carica": round(c, 4), "scarica": round(s, 4), "ceduto": round(ced, 4), "ceduto0": round(ced0, 4),
-                                  "tagliato": round(tagl, 4), "soc": round(soc, 3)})
+                                  "tagliato": round(tagl, 4), "soc": round(soc, 3),
+                                  **({"ricostruito": True} if t in RICOSTRUITI else {})})
             salva_json(fq, reg, compatto=True)
             st["t_eseguito"] = t + 900
             eseguiti += 1
@@ -487,6 +507,8 @@ def main():
         "eseguito_fino_a": dt.datetime.fromtimestamp(st["t_eseguito"], CT.ROMA).isoformat(timespec="minutes"),
         "soc_kwh": round(st["soc"], 3), "modo_attuale": (st.get("decisione") or {}).get("modo"),
         "errore_modelli": st["errore"], "modelli": MODELLI, "theta": CO.carica_theta()})
+    if RICOSTRUITI:
+        log(f"quarti d'ora con letture mancanti ricostruiti (interpolazione): {len(RICOSTRUITI)}")
     log(f"quarti d'ora eseguiti in questo giro: {eseguiti}; eseguito fino a "
         f"{dt.datetime.fromtimestamp(st['t_eseguito'], CT.ROMA):%d/%m %H:%M}; batteria {st['soc']:.1f} kWh")
 
