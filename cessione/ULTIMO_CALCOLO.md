@@ -1,7 +1,8 @@
-# Cessione totale 20 kW - ottimo teorico, ultimo calcolo 10/11/2026 20:41 (R06)
+# Cessione totale 20 kW - ottimo teorico, ultimo calcolo 11/11/2026 01:39 (R06)
 
-Giorni calcolati: 58 (validi 53). Note: 0.
+Giorni calcolati: 59 (validi 54). Note: 1.
 
-Profilo 0 (senza batteria): 1909.9 kWh ceduti, 382.88 EUR
-Profilo 1 (batteria 30 kWh, carica/scarica 10/10 kW, ottimo teorico): 1843.6 kWh ceduti, 488.92 EUR, beneficio 106.03 EUR
+Profilo 0 (senza batteria): 1934.1 kWh ceduti, 391.57 EUR
+Profilo 1 (batteria 30 kWh, carica/scarica 10/10 kW, ottimo teorico): 1866.9 kWh ceduti, 497.97 EUR, beneficio 106.40 EUR
 
+- 2026-11-10: produzione Ovest con cielo sereno (radiazione non disponibile)

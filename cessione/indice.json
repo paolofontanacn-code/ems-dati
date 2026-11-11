@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-10T20:41:27+01:00",
+ "aggiornato": "2026-11-11T01:39:01+01:00",
  "revisione": "R06",
  "parametri": {
   "p_cismondi_kw": 11.0,
@@ -20,7 +20,9 @@
   44.397454,
   7.477188
  ],
- "giorni": 58,
- "note": [],
- "meteo_errore": null
+ "giorni": 59,
+ "note": [
+  "2026-11-10: produzione Ovest con cielo sereno (radiazione non disponibile)"
+ ],
+ "meteo_errore": "<urlopen error _ssl.c:994: The handshake operation timed out>"
 }
