@@ -1,0 +1,2 @@
+profilo,inizio,fine,durata_min,azione,categoria,motivo,soc_inizio,soc_fine,carica_fv_kwh,carica_rete_kwh,scarica_kwh,prelievo_kwh,immissione_kwh,nord_medio,costo_medio,euro_netto
+C2,2026-11-11T00:00:00+01:00,2026-11-12T00:00:00+01:00,1440,SCARICA_5000,scarica,piano -3.92 EUR fino a fine prezzi; vantaggio su AUTO 0.130 EUR,20.825813,20.825813,0,0,0,20.963625,7.5865,0.285232,0.241541,-2.530683
