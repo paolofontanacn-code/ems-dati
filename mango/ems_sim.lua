@@ -1,3 +1,5 @@
+-- Revisione R10 - 12/11/2026 - pesi della potenza misurati (modelli/rendimenti_batteria.json, da ml/rendimenti.py) letti a
+--   ogni avvio; prezzo di acquisto orario (struttura) tramite prezzi_acquisto.lua
 -- Revisione R07 - 31/10/2026 - tolto il PUN (medie per fascia e colonne pun): acquisto solo a prezzo fisso F0
 -- ems_sim.lua - SIMULAZIONE EMS Cismondi sul Mango (programma principale)
 -- SOLO SIMULAZIONE: legge Huawei, GME e meteo, simula tre profili di ottimizzazione e registra tutto.
@@ -85,6 +87,16 @@ end
 
 local hw = HW.nuovo(c, CARTELLA, stato, log)
 local gh = GH.nuovo(c, CARTELLA, stato, log)
+
+-- R10: pesi della potenza di carica/scarica misurati (rendimenti per fascia, ml/rendimenti.py); senza file: pesi fissi
+do
+  modelli.pesi_potenza = nil
+  local ok, cont = pcall(gh.leggi, "modelli/rendimenti_batteria.json")
+  if ok and cont then
+    local ok2, d = pcall(J.decode, cont)
+    if ok2 and type(d) == "table" and type(d.pesi) == "table" then modelli.pesi_potenza = d.pesi end
+  end
+end
 local reg = REG.nuovo(c, RAM, DATI)
 local usura = c.USURA_EUR_KWH or (c.COSTO_BATTERIA_EUR / (c.CICLI_VITA * c.CAPACITA_KWH))
 

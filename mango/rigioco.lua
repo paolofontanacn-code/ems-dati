@@ -1,3 +1,5 @@
+-- Revisione R10 - 12/11/2026 - pesi della potenza misurati (modelli/rendimenti_batteria.json) se presenti; prezzo di
+--   acquisto orario (struttura) tramite prezzi_acquisto.lua
 -- Revisione R08 - 07/11/2026 - prima versione: rigioco della condizione 2 su un giorno passato
 -- rigioco.lua - SOLO SIMULAZIONE: rigioca la condizione 2 (senza carica dalla rete) su un giorno passato con lo stesso
 -- ottimizzatore e lo stesso modello della batteria della simulazione vera.
@@ -34,6 +36,16 @@ if ing.modelli and F.esiste(ing.modelli) then
   end
 end
 
+-- R10: pesi della potenza misurati (stesso file letto dalla simulazione); senza file: pesi fissi di config.lua
+do
+  local repo = os.getenv("EMS_REPO_DIR") or (CARTELLA .. "/..")
+  local t = F.leggi(repo .. "/modelli/rendimenti_batteria.json")
+  if t then
+    local ok, d = pcall(J.decode, t)
+    if ok and type(d) == "table" and type(d.pesi) == "table" then e.pesi = d.pesi end
+  end
+end
+
 local function senza_batteria(fv, car)
   local fv_car = math.min(fv, car)
   local imm = math.max(0, math.min(fv - fv_car, c.P_MAX_IMMISSIONE_W, c.P_MAX_AC_INVERTER_W - fv_car))
@@ -44,7 +56,7 @@ local Q, D = ing.quarti, ing.domani or {}
 -- prezzi: cessione = NORD x (1 - imposta); acquisto = prezzo fisso F0 con tutte le voci (prezzi_acquisto.lua)
 local COSTO = PA.costo_da_energia(c, c.PREZZO_FISSO_A)
 for _, l in ipairs({ Q, D }) do
-  for _, x in ipairs(l) do x.vend = PA.valore_cessione(c, x.nord); x.costo = COSTO end
+  for _, x in ipairs(l) do x.vend = PA.valore_cessione(c, x.nord); x.costo = PA.costi(c, x.t)[P] or COSTO end
 end
 local soc, soc_auto = ing.soc0.C2 or 50, ing.soc0.auto or 50
 local azione, finestre, scarica_forzata, lambda_e, comandi = "AUTO", 0, 0, nil, 0

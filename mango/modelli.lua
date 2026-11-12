@@ -1,3 +1,4 @@
+-- Revisione R10 - 12/11/2026 - i rendimenti in uso portano anche i pesi della potenza misurati (e.pesi)
 -- modelli.lua - modelli ad autoapprendimento sul Mango (leggeri)
 --
 -- CONSUMI = comportamento + pompa di calore
@@ -360,7 +361,7 @@ end
 
 -- rendimenti da usare: misurati se ci sono abbastanza dati, altrimenti quelli della configurazione
 function M.efficienze(mod, c)
-  local e = { c = c.RENDIMENTO_CARICA, d = c.RENDIMENTO_SCARICA, inv = {}, fonte = {} }
+  local e = { c = c.RENDIMENTO_CARICA, d = c.RENDIMENTO_SCARICA, inv = {}, fonte = {}, pesi = mod.pesi_potenza }
   local ec = mod.eff.car
   if ec.e_in >= 3 then e.c = max(0.8, min(1, ec.imm / ec.e_in)); e.fonte.c = "misurato" else e.fonte.c = "ipotesi" end
   local es = mod.eff.sca

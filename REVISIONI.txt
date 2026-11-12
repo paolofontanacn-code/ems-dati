@@ -1,6 +1,41 @@
 EMS Cismondi - elenco delle revisioni
 (le consegne precedenti al 23/10/2026 non sono numerate)
 
+R10 - 12/11/2026
+  Cismondi (decisioni dell'utente dell'11-12/11/2026):
+  - Batteria tra il 5 e il 95 %: SOC_MIN e SOC_MIN_VENDITA = 5 % (prima 6 e 20 %). DA FARE: "Fine scarica SOC" al 5 %
+    anche sull'inverter.
+  - Costo per ogni cambio di comando 0,001 EUR (prima 0,10). Restano: 14 periodi forzati e 1 ciclo di scarica forzata
+    al giorno, 0,01 EUR per ogni ora con SOC sopra il 90 %.
+  - Nuove azioni: BATTERIA FERMA (niente carica e niente scarica; Huawei: potenza 0 W) e CARICA DAI PANNELLI a 1, 2, 3,
+    4, 5 kW (prima solo a piena potenza). Nomi chiari delle azioni nei grafici e nelle tabelle.
+  - Pesi della potenza di carica e scarica, solo per scegliere il piano (gli euro restano veri): fino all'80 % della
+    potenza massima peso 1, fino al 90 % 0,98, oltre 0,97 (Cismondi: 1-4 kW peso 1, 5 kW 0,97). Quando una fascia ha
+    almeno 10 tratti misurati di almeno 1,5 kWh, il suo peso = rendimento misurato / miglior rendimento misurato.
+    Nuovo ml/rendimenti.py (passo nuovo del workflow, prima della simulazione) -> modelli/rendimenti_batteria.json;
+    nuova pagina rendimenti.html.
+  - Prezzo di acquisto orario: predisposta la struttura (PREZZO_ENERGIA_ORARIO_FILE in config.lua: parte "energia" ora
+    per ora, le altre componenti fisse). Cismondi resta a prezzo fisso F0. Nella pagina: componenti del prezzo.
+  - Pagina: SOC reale (scala %) e potenza reale della batteria nel grafico delle potenze; curve simulate nascoste
+    all'inizio (si accendono dalla legenda); tolti i pannelli separati "SOC batteria" e "Potenza batteria"; "Piano
+    calcolato" del giorno scelto (piano della sera prima, dati/<giorno>/piano_sera.csv; se manca, l'ultimo piano).
+  - Mango: avvia il giro della simulazione su GitHub ogni 30 minuti (minuti 2 e 32), con una riga di cron e curl; non
+    fa calcoli. Lo prepara INSTALLA_EMS.bat (nuovo mango_avvio.py, passo SSH: chiede la password del Mango; stesso
+    token GitHub del PC). I giri programmati da GitHub restano come riserva.
+  Cessione totale 20 kW:
+  - Niente piu' ottimo teorico: la pagina parte dal 23/10/2026 (avvio della simulazione ogni 2 ore); i file dell'ottimo
+    (cessione/giornaliero.csv, mensile.csv, indice.json, ULTIMO_CALCOLO.md, giorni/) li cancella il primo giro.
+    Restano cessione/live/, cessione/prezzi/, cessione/meteo/.
+  - Rendimenti della batteria misurati a Cismondi per fascia di potenza (dove la fascia e' valida), perdite di
+    conversione dell'inverter sull'energia ceduta (rendimento misurato a Cismondi), pesi della potenza e 0,001 EUR per
+    ogni avvio o arresto della scarica (questi due solo per scegliere il piano).
+  Correzione: ems_sim.lua "prova" chiamava una funzione tolta nella R07 (prezzi_acquisto.aggiungi_giorno).
+  File modificati: INSTALLA_EMS (pannello_ems.py, installa_ems.py, nuovo mango_avvio.py, LEGGIMI.txt, REVISIONI.txt),
+  repository: .github/workflows/ems.yml, mango/config.lua, mango/simulatore.lua, mango/ottimizzatore.lua,
+  mango/ems_sim.lua, mango/modelli.lua, mango/rigioco.lua, mango/prezzi_acquisto.lua, mango/registro.lua,
+  ml/rendimenti.py (nuovo), ml/cessione_totale.py, ml/cessione_ottimizza.py, ml/cessione_live.py, index.html,
+  cessione.html, rendimenti.html (nuovo), versione.json, README.md, REVISIONI.txt
+
 R09 - 09/11/2026  (correzione; comprende la R08)
   - Cessione, simulazione ogni 2 ore (ml/cessione_live.py): l'esecuzione era ferma dal 07/11 09:45. Causa: con
     l'installazione della R08 le colonne del dataset di Cismondi sono cambiate, il Mango ha messo da parte il file del

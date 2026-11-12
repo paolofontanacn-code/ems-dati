@@ -1,3 +1,4 @@
+-- Revisione R10 - 12/11/2026 - costo per cambiamento scritto con 3 decimali (0,001 EUR)
 -- Revisione R09 - 09/11/2026 - cambio di colonne del dataset: le righe gia' scritte si convertono (prima finivano solo in una copia)
 -- Revisione R07 - 31/10/2026 - tolte le colonne pun e pun_15 del dataset
 -- registro.lua - file CSV (dataset per l'IA, periodi, riepilogo) e report giornaliero
@@ -228,7 +229,7 @@ function M.report(c, r, periodi, note)
     "Ogni scenario ha la sua batteria simulata e l'ottimizzatore sceglie ogni 15 minuti tra autoconsumo, carica ritardata, " ..
     "carica forzata e scarica forzata a potenze graduate, con al massimo " .. c.MAX_FINESTRE_GIORNO .. " periodi forzati e " ..
     tostring(c.MAX_CICLI_FORZATI_GIORNO or 1) .. " ciclo di scarica forzata al giorno. " ..
-    string.format("Ogni cambiamento di funzionamento costa %.2f EUR: si cambia solo se conviene anche pagandolo.", c.PENALITA_CAMBIO_EUR)
+    string.format("Ogni cambiamento di funzionamento costa %.3f EUR: si cambia solo se conviene anche pagandolo.", c.PENALITA_CAMBIO_EUR)
   L[#L + 1] = ""
   if (c.DISPACCIAMENTO or 0) == 0 then
     L[#L + 1] = "> Il dispacciamento non e' ancora noto ed e' calcolato a 0: i costi d'acquisto sono sottostimati " ..

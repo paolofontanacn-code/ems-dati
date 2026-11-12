@@ -1,3 +1,5 @@
+-- Revisione R10 - 12/11/2026 - SOC minimo 5 % (casa e vendita); costo per cambio 0,001 EUR; carica dall'esubero a
+--   1-5 kW e batteria ferma; pesi della potenza; prezzo di acquisto orario (struttura, Cismondi resta a prezzo fisso)
 -- Revisione R08 - 07/11/2026 - tolte le condizioni con carica dalla rete (2a..2e): resta la condizione 2
 -- Revisione R07 - 31/10/2026 - dispacciamento 0,017 EUR/kWh: costo del kWh prelevato circa 0,2415 EUR
 -- Revisione R05 - 26/10/2026 - scarica forzata modulabile 2-5 kW (livelli 2, 3, 4, 5 kW; sotto 2 kW la batteria si ferma)
@@ -9,6 +11,10 @@ return {
   -- costo di un kWh prelevato = [energia x (1 + PERDITE) + DISPACCIAMENTO + TRASPORTO + ONERI + ACCISE] x (1 + IVA)
   --   energia = PREZZO_FISSO_A: prezzo fisso monorario F0 (contratto a prezzo fisso, decisione del 21/10/2026)
   PREZZO_FISSO_A = 0.12,               -- EUR/kWh
+  -- R10: prezzo di acquisto ORARIO (struttura predisposta): nil = prezzo fisso PREZZO_FISSO_A a ogni ora.
+  -- Se impostato, e' il nome di un file JSON nella cartella dei dati con la parte "energia" ora per ora
+  -- (EUR/kWh, senza perdite e senza IVA): { "AAAAMMGG": [24 valori] } ; le altre componenti restano quelle qui sotto.
+  PREZZO_ENERGIA_ORARIO_FILE = nil,
   PERDITE = 0.10,                       -- 10 % bassa tensione (ARERA 117/2022/R/eel, TIS tab. 4), su energia e spread
   DISPACCIAMENTO = 0.017,               -- EUR/kWh, senza IVA e senza perdite (dato dell'utente, 28/10/2026)
   TRASPORTO = 0.014730,                 -- EUR/kWh quota variabile, domestico non residente, IV trim. 2026
@@ -31,11 +37,16 @@ return {
   P_MAX_CARICA_W = 5000,
   P_MAX_SCARICA_W = 5000,
   SOC_MAX = 95,                         -- "Fine carica SOC"
-  SOC_MIN = 6,                          -- "Fine scarica SOC" (riserva minima)
-  SOC_MIN_VENDITA = 20,                 -- la scarica verso la rete non scende sotto questo SOC
+  SOC_MIN = 5,                          -- "Fine scarica SOC" (riserva minima) - R10: 5 % (impostare 5 % anche sull'inverter)
+  SOC_MIN_VENDITA = 5,                  -- la scarica verso la rete non scende sotto questo SOC - R10: 5 %
   LIVELLI_SCARICA_W = { 2000, 3000, 4000, 5000 },   -- potenze graduate della scarica forzata (R05: 2-5 kW)
   P_MIN_SCARICA_W = 2000,               -- R05: la scarica forzata non va sotto 2 kW (se non si puo', la batteria si ferma)
   P_CARICA_RITARDATA_W = 200,           -- potenza di carica minima impostabile via API (carica ritardata)
+  LIVELLI_CARICA_FV_W = { 1000, 2000, 3000, 4000, 5000 },   -- R10: carica dall'esubero FV a potenze graduate
+  -- R10: pesi della potenza di carica e scarica (solo per scegliere il piano): fino all'80 % della potenza massima
+  -- peso 1, fino al 90 % 0,98, oltre 0,97; sostituiti fascia per fascia dai rendimenti misurati (ml/rendimenti.py)
+  PESI_POTENZA_SOGLIE = { 0.80, 0.90 },
+  PESI_POTENZA = { 1.0, 0.98, 0.97 },
   -- rendimenti iniziali (IPOTESI): vengono sostituiti da quelli misurati appena ci sono dati sufficienti
   RENDIMENTO_CARICA = 0.95,             -- energia immagazzinata / energia entrante
   RENDIMENTO_SCARICA = 0.97,            -- energia DC in uscita / energia tolta (batteria)
@@ -62,7 +73,7 @@ return {
   MAX_COMANDI_GIORNO = 100,             -- comandi di controllo OAuth al giorno
   -- costo attribuito a ogni cambiamento di funzionamento (compreso il ritorno all'autoconsumo): l'ottimizzatore
   -- cambia solo se conviene anche pagando questo costo, che viene sottratto dal beneficio nei riepiloghi
-  PENALITA_CAMBIO_EUR = 0.10,           -- EUR per cambiamento
+  PENALITA_CAMBIO_EUR = 0.001,          -- EUR per cambiamento (R10: 0,001, prima 0,10)
   PENALITA_FINESTRA_EUR = 0.0,          -- costo aggiuntivo per periodo forzato: cresce da solo oltre le 14 finestre
   MARGINE_Z = 0.5,                      -- margine di sicurezza: deviazioni standard dell'errore di previsione
   ORE_SOC_ALTO = 90,                    -- soglia per registrare le ore a SOC alto (invecchiamento)

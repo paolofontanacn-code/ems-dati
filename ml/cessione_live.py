@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Revisione R10 - 12/11/2026 - nell'indice anche i parametri dell'impianto e dei rendimenti (la pagina non usa piu' l'ottimo
+#   teorico); fisica con rendimenti misurati a Cismondi e perdite dell'inverter (cessione_ottimizza.py, cessione_totale.py)
 # Revisione R09 - 09/11/2026 - l'esecuzione non si ferma piu' per un buco di letture: si leggono anche le copie del dataset
 #   messe da parte dal Mango (cambio di colonne) e un quarto d'ora incompleto si ricostruisce se ci sono letture almeno
 #   un'ora dopo (dal 07/11 09:45 l'esecuzione era ferma per questo)
@@ -506,7 +508,14 @@ def main():
         "inizio": dt.datetime.fromtimestamp(st["inizio"], CT.ROMA).isoformat(timespec="minutes"),
         "eseguito_fino_a": dt.datetime.fromtimestamp(st["t_eseguito"], CT.ROMA).isoformat(timespec="minutes"),
         "soc_kwh": round(st["soc"], 3), "modo_attuale": (st.get("decisione") or {}).get("modo"),
-        "errore_modelli": st["errore"], "modelli": MODELLI, "theta": CO.carica_theta()})
+        "errore_modelli": st["errore"], "modelli": MODELLI, "theta": CO.carica_theta(),
+        "parametri": {"p_impianto_kw": CT.P_IMPIANTO_KW, "p_inverter_kw": CT.P_INVERTER_KW, "limite_rete_kw": CT.LIMITE_RETE_KW,
+                      "capacita_kwh": CT.CAPACITA_KWH, "potenza_carica_kw": CT.P_CARICA_KW, "potenza_scarica_kw": CT.P_SCARICA_KW,
+                      "perdita_ciclo": CT.PERDITA_CICLO},
+        "rendimenti": {"inverter_eta": CT.REND["inv_eta"], "inverter_fonte": CT.REND["inv_fonte"],
+                       "eta_carica": CT.REND["eta_carica"], "eta_scarica": CT.REND["eta_scarica"],
+                       "pesi_carica": CT.REND["pesi_carica"], "pesi_scarica": CT.REND["pesi_scarica"],
+                       "continuita_eur": CO.COSTO_CONTINUITA}})
     if RICOSTRUITI:
         log(f"quarti d'ora con letture mancanti ricostruiti (interpolazione): {len(RICOSTRUITI)}")
     log(f"quarti d'ora eseguiti in questo giro: {eseguiti}; eseguito fino a "

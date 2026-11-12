@@ -1,3 +1,5 @@
+-- Revisione R10 - 12/11/2026 - nuove azioni BATTERIA_FERMA e CARICA_FV_<W> (carica dall'esubero a 1-5 kW); categoria
+--   "ferma"; nomi leggibili delle azioni (M.nome); pesi della potenza di carica/scarica (M.peso, solo per scegliere il piano)
 -- Revisione R05 - 26/10/2026 - scarica forzata mai sotto P_MIN_SCARICA_W (2 kW): sotto, la batteria si ferma
 -- simulatore.lua - modello energetico della batteria simulata (SOLO SIMULAZIONE)
 --
@@ -9,8 +11,10 @@
 --   AUTO          massimo autoconsumo: FV ai carichi, eccedenza in batteria poi in rete; la batteria
 --                 copre i carichi quando il FV non basta. Mai rete -> batteria.
 --   RITARDATA     come AUTO ma con potenza di carica limitata (P_CARICA_RITARDATA_W): l'eccedenza va in rete
---   CARICA_FV     carica forzata (finestra TOU senza carica da rete): la batteria non scarica,
---                 si carica con l'eccedenza FV
+--   CARICA_FV_<W> carica forzata dall'eccedenza FV fino a <W> watt (finestra TOU senza carica da rete): la batteria
+--                 non scarica; l'eccedenza oltre <W> va in rete. CARICA_FV senza livello = P_MAX_CARICA_W
+--   BATTERIA_FERMA niente carica e niente scarica (Huawei: thirdPartyDispatch 0 W): eccedenza FV in rete, consumi
+--                 dalla rete
 --   CARICA_RETE_<W> come CARICA_FV piu' rete -> batteria fino a <W> watt (carica AC; solo di giorno se
 --                 CARICA_RETE_SOLO_GIORNO). CARICA_RETE senza livello = P_MAX_CARICA_RETE_W (versioni precedenti)
 --   SCARICA_<W>   scarica forzata a <W> watt: copre i carichi, il resto va in rete; si ferma a SOC_MIN_VENDITA
@@ -22,12 +26,50 @@ local min, max = math.min, math.max
 -- categoria per il conteggio delle finestre: auto, carica, scarica
 function M.categoria(azione)
   if azione == "AUTO" or azione == "RITARDATA" then return "auto" end
-  if azione == "CARICA_FV" or azione:sub(1, 11) == "CARICA_RETE" then return "carica" end
+  if azione:sub(1, 9) == "CARICA_FV" or azione:sub(1, 11) == "CARICA_RETE" then return "carica" end
+  if azione == "BATTERIA_FERMA" then return "ferma" end
   return "scarica"
 end
 
+-- nome leggibile di un'azione (grafici, tabelle, registri)
+function M.nome(azione)
+  azione = azione or ""
+  local w = tonumber(azione:match("_(%d+)$"))
+  local kw = w and (string.format("%g", w / 1000) .. " kW") or ""
+  if azione == "AUTO" then return "Autoconsumo (automatico)" end
+  if azione == "RITARDATA" then return "Carica lenta (200 W)" end
+  if azione == "BATTERIA_FERMA" then return "Batteria ferma" end
+  if azione:sub(1, 9) == "CARICA_FV" then return "Carica dai pannelli" .. (w and (" " .. kw) or " (piena)") end
+  if azione:sub(1, 11) == "CARICA_RETE" then return "Carica dalla rete" .. (w and (" " .. kw) or "") end
+  if azione:sub(1, 7) == "SCARICA" then return "Scarica" .. (w and (" " .. kw) or "") end
+  return azione
+end
+
+-- R10: peso della potenza di carica/scarica (solo per scegliere il piano, i conti in euro restano veri).
+-- p = potenza (W), tipo = "carica" o "scarica"; fascia 1 = fino all'80 % della potenza massima, 2 = fino al 90 %,
+-- 3 = oltre. Pesi: misurati (e.pesi, da modelli/rendimenti_batteria.json) se la fascia e' valida, altrimenti fissi.
+function M.peso(c, e, tipo, p)
+  if not p or p <= 0 then return 1 end
+  local pmax = (tipo == "carica") and c.P_MAX_CARICA_W or c.P_MAX_SCARICA_W
+  local f = p / pmax
+  local soglie = c.PESI_POTENZA_SOGLIE or { 0.80, 0.90 }
+  local i = (f <= soglie[1] + 1e-9 and 1) or (f <= soglie[2] + 1e-9 and 2) or 3
+  local mis = e and e.pesi and e.pesi[tipo]
+  if mis and mis[i] then return mis[i] end
+  return (c.PESI_POTENZA or { 1, 0.98, 0.97 })[i]
+end
+
+-- nomi delle versioni precedenti (stato salvato): CARICA_FV senza livello = carica piena
+function M.normalizza(c, azione)
+  azione = azione or "AUTO"
+  if azione == "CARICA_FV" then return "CARICA_FV_" .. c.P_MAX_CARICA_W end
+  return azione
+end
+
 function M.azioni(c)
-  local a = { "AUTO", "RITARDATA", "CARICA_FV" }
+  local a = { "AUTO", "RITARDATA" }
+  for _, w in ipairs(c.LIVELLI_CARICA_FV_W or { c.P_MAX_CARICA_W }) do a[#a + 1] = "CARICA_FV_" .. w end
+  a[#a + 1] = "BATTERIA_FERMA"
   if c.CARICA_DA_RETE_AMMESSA then
     for _, w in ipairs(c.LIVELLI_CARICA_RETE_W or { c.P_MAX_CARICA_RETE_W }) do a[#a + 1] = "CARICA_RETE_" .. w end
   end
@@ -64,7 +106,10 @@ function M.passo_num(c, e, soc, azione, fv, carico, dt, di_giorno)
   local fv_batt, rete_batt, batt_car, batt_rete, fv_rete, rete_car = 0, 0, 0, 0, 0, 0
 
   local cat = M.categoria(azione)
-  if cat == "scarica" then
+  if cat == "ferma" then                                       -- R10: niente carica e niente scarica
+    fv_rete = ecc
+    rete_car = manca
+  elseif cat == "scarica" then
     local livello = tonumber(azione:match("_(%d+)$")) or c.P_MAX_SCARICA_W
     local p = min(livello, p_sca_max(c, e, soc, dt, max(c.SOC_MIN, c.SOC_MIN_VENDITA), livello))
     if p < (c.P_MIN_SCARICA_W or 0) then p = 0 end           -- R05: scarica modulabile solo tra 2 e 5 kW
@@ -75,6 +120,7 @@ function M.passo_num(c, e, soc, azione, fv, carico, dt, di_giorno)
   else
     local lim_car = p_car_max
     if azione == "RITARDATA" then lim_car = min(lim_car, c.P_CARICA_RITARDATA_W) end
+    if azione:sub(1, 10) == "CARICA_FV_" then lim_car = min(lim_car, tonumber(azione:sub(11)) or lim_car) end
     fv_batt = min(ecc, lim_car)
     fv_rete = ecc - fv_batt
     if azione:sub(1, 11) == "CARICA_RETE" and (di_giorno or not c.CARICA_RETE_SOLO_GIORNO) then

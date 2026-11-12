@@ -1,0 +1,95 @@
+<!doctype html>
+<!-- Revisione R10 - 12/11/2026 - nuova pagina: rendimenti della batteria di Cismondi per fascia di potenza e pesi della potenza in uso -->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rendimenti batteria</title>
+<style>
+:root { --sfondo: #f6f7f9; --carta: #ffffff; --testo: #1d2330; --tenue: #667085; --bordo: #dfe3ea; --accento: #1f6feb; --ok: #1a9c5b; --no: #b26b00; }
+@media (prefers-color-scheme: dark) { :root { --sfondo: #11151c; --carta: #1a2029; --testo: #e6e9ef; --tenue: #9aa4b5; --bordo: #2c3440; --accento: #58a6ff; --ok: #3cc98a; --no: #f0a040; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--sfondo); color: var(--testo); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { padding: 14px 16px 6px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+h1 { font-size: 20px; margin: 0; }
+.nota { color: var(--tenue); font-size: 13px; }
+.etichetta { font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 4px; background: var(--accento); color: #fff; }
+main { padding: 10px 16px 40px; display: grid; gap: 14px; max-width: 1100px; }
+section { background: var(--carta); border: 1px solid var(--bordo); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+section h2 { font-size: 15px; margin: 0 0 4px; }
+.spiega { color: var(--tenue); font-size: 13px; margin: 0 0 8px; }
+.tab { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 5px 8px; border-bottom: 1px solid var(--bordo); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+.ok { color: var(--ok); font-weight: 600; } .no { color: var(--no); }
+.errore { color: #d1435b; }
+a { color: var(--accento); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Rendimenti della batteria</h1>
+  <span class="etichetta">SOLO SIMULAZIONE</span>
+  <span class="nota">Pagina R10</span>
+  <span class="nota" id="aggiornato">caricamento…</span>
+  <a class="nota" href="index.html">← EMS Cismondi</a>
+  <a class="nota" href="cessione.html">Cessione totale 20 kW →</a>
+</header>
+<main id="principale">
+  <section>
+    <h2>Come si misura</h2>
+    <p class="spiega" id="regole">Batteria vera di Cismondi (LUNA2000 15 kWh), letture a 5 minuti.</p>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const fmt = (v, d = 0) => v == null || isNaN(v) ? "–" : Number(v).toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
+const data = t => new Date(t * 1e3).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+function sezione(titolo, spiega) {
+  const s = document.createElement("section");
+  s.innerHTML = `<h2>${titolo}</h2>` + (spiega ? `<p class="spiega">${spiega}</p>` : "");
+  $("principale").appendChild(s); return s;
+}
+function tabellaBande(tipo, b, r) {
+  const s = sezione(tipo === "carica" ? "Carica" : "Scarica",
+    tipo === "carica" ? "Rendimento = energia immagazzinata (variazione del SOC × 15 kWh) / energia entrata in batteria."
+                      : "Rendimento = energia uscita dalla batteria / energia tolta (variazione del SOC × 15 kWh).");
+  s.insertAdjacentHTML("beforeend", `<div class="tab"><table><tr><th>Fascia di potenza</th><th>Tratti validi</th><th>Tratti in tutto</th><th>Energia kWh</th><th>Rendimento</th><th>Fascia</th><th>Peso in uso</th></tr>` +
+    b.map(x => `<tr><td>${x.da_perc}–${x.a_perc} % (${fmt(x.da_w / 1000, 1)}–${fmt(x.a_w / 1000, 1)} kW)</td><td>${x.tratti}</td><td>${x.tratti_totali}</td><td>${fmt(x.kwh, 1)}</td>
+      <td>${x.eta ? fmt(x.eta * 100, 1) + " %" : "–"}</td><td class="${x.valida ? "ok" : "no"}">${x.valida ? "valida" : `servono ${r.tratti_min} tratti`}</td>
+      <td>${fmt(x.peso, 3)} <span class="nota">(${x.fonte_peso})</span></td></tr>`).join("") + `</table></div>`);
+}
+async function avvia() {
+  let d;
+  try {
+    const r = await fetch("modelli/rendimenti_batteria.json?t=" + Date.now());
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    d = await r.json();
+  } catch (e) {
+    $("aggiornato").textContent = "";
+    sezione("Dati non ancora disponibili", `<span class="errore">Il file dei rendimenti non c'è ancora (si crea al prossimo giro della simulazione): ${e.message}</span>`);
+    return;
+  }
+  const r = d.regole;
+  $("aggiornato").textContent = "aggiornato " + new Date(d.aggiornato).toLocaleString("it-IT", { timeZone: "Europe/Rome" });
+  $("regole").innerHTML = `Batteria vera di Cismondi (LUNA2000 ${fmt(r.capacita_kwh, 0)} kWh, potenza massima ${fmt(r.p_max_w / 1000, 0)} kW), letture a 5 minuti` +
+    (d.periodo ? ` dal ${data(d.periodo.da)} al ${data(d.periodo.a)} (${fmt(d.periodo.letture)} letture)` : "") +
+    `. Un <b>tratto</b> è un periodo continuo con la batteria sempre in carica (o sempre in scarica) nella stessa fascia di potenza; vale solo se muove almeno ${fmt(r.kwh_min_tratto, 1)} kWh (10 % di SOC), perché il SOC si legge a passi dell'1 %. ` +
+    `Una fascia è <b>valida</b> con almeno ${r.tratti_min} tratti. <b>Peso</b> della fascia valida = suo rendimento / miglior rendimento tra le fasce valide; fascia non valida = peso fisso (${r.pesi_fissi.map(v => fmt(v, 2)).join(" / ")}). ` +
+    `I pesi servono solo a scegliere il piano (Cismondi e cessione totale): i conti in euro restano quelli veri.`;
+  tabellaBande("carica", d.carica, r);
+  tabellaBande("scarica", d.scarica, r);
+  const inv = d.inverter;
+  sezione("Inverter (perdite di conversione nella cessione totale)", `Rendimento AC/DC dell'inverter per fascia di potenza: ${inv.fonte}.`)
+    .insertAdjacentHTML("beforeend", `<div class="tab"><table><tr><th>Potenza</th><th>Rendimento</th></tr>` +
+      ["fino a 0,5 kW", "0,5–1 kW", "1–2 kW", "oltre 2 kW"].map((t, i) => `<tr><td>${t}</td><td>${fmt(inv.eta[i] * 100, 1)} %</td></tr>`).join("") + `</table></div>`);
+  const T = (d.tratti || []).slice().reverse().slice(0, 150);
+  sezione("Ultimi tratti misurati", "In grassetto i tratti usati per il rendimento (almeno " + fmt(r.kwh_min_tratto, 1) + " kWh).")
+    .insertAdjacentHTML("beforeend", `<div class="tab"><table><tr><th>Inizio</th><th>Fine</th><th>Tipo</th><th>Fascia</th><th>Potenza media kW</th><th>Energia kWh</th><th>Variazione SOC kWh</th><th>Rendimento</th></tr>` +
+      T.map(t => `<tr style="${t.usato ? "font-weight:600" : "color:var(--tenue)"}"><td>${data(t.inizio)}</td><td>${data(t.fine)}</td><td>${t.tipo}</td><td>${t.fascia}</td><td>${fmt(t.p_media_w / 1000, 2)}</td><td>${fmt(t.kwh, 2)}</td><td>${fmt(t.kwh_soc, 2)}</td><td>${t.eta ? fmt(t.eta * 100, 1) + " %" : "–"}</td></tr>`).join("") + `</table></div>`);
+}
+avvia();
+</script>
+</body>
+</html>

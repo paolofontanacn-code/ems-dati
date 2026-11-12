@@ -1,3 +1,5 @@
+# Revisione R10 - 12/11/2026 - nuovo passo: rendimenti della batteria (ml/rendimenti.py) prima della simulazione; la
+#   cessione non calcola piu' l'ottimo teorico (cessione_totale.py cancella i vecchi file dell'ottimo)
 # Revisione R08 - 07/11/2026 - nuovo passo: rigioco della condizione 2 sui giorni passati (ml/rigioco_c2.py)
 # Revisione R04 - 24/10/2026 - salvataggio con nuovi tentativi; decisione della cessione fino a 90 s
 # EMS Cismondi - SOLO SIMULAZIONE: ogni 30 minuti GitHub esegue lo stesso programma del Mango sui dati Huawei
@@ -70,6 +72,14 @@ jobs:
         timeout-minutes: 3
         run: python ml/diagnosi_rete.py
 
+      # Revisione R10 - 12/11/2026: rendimenti della batteria per fascia di potenza e pesi della potenza
+      - name: Rendimenti della batteria (pesi della potenza)
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          EMS_REPO_DIR: ${{ github.workspace }}
+        run: python ml/rendimenti.py
+
       - name: Simulazione (stesso programma del Mango)
         env:
           EMS_REPO_DIR: ${{ github.workspace }}
@@ -101,6 +111,7 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python ml/email_report.py
 
+      # Revisione R10 - 12/11/2026: niente piu' ottimo teorico; cessione_totale.py cancella i vecchi file dell'ottimo
       # Revisione R04 - 24/10/2026: decisione con algoritmo evolutivo (fino a 90 s) + ottimo teorico
       # Revisione R03 - 23/10/2026: simulazione ogni 2 ore (cessione_live.py) + ottimo teorico (cessione_totale.py)
       - name: Cessione totale 20 kW (pagina cessione.html, solo simulazione)

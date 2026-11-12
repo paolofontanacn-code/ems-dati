@@ -1,3 +1,5 @@
+-- Revisione R10 - 12/11/2026 - quarta categoria "ferma" (BATTERIA_FERMA) per il conteggio dei periodi forzati; pesi
+--   della potenza di carica e scarica nel valore delle azioni (solo per la scelta: gli euro del piano restano veri)
 -- ottimizzatore.lua - pianificazione a programmazione dinamica sul SOC, a passi di 15 minuti
 --
 -- Per ogni profilo di prezzo (A, B, C) trova la sequenza di azioni che massimizza
@@ -14,7 +16,8 @@ local S = require "simulatore"
 local M = {}
 local floor, max, min = math.floor, math.max, math.min
 
-local CAT_IDX = { auto = 1, carica = 2, scarica = 3 }
+local CAT_IDX = { auto = 1, carica = 2, scarica = 3, ferma = 4 }
+local NCAT = 4
 local DT = 0.25
 local PEN_SFORAMENTO = 10        -- EUR/kWh oltre il prelievo massimo (praticamente vietato)
 
@@ -69,8 +72,11 @@ local function un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_f
   local pol = {}
   for _, p in ipairs(nomi) do pol[p] = {} end
   local s2, pr, im, sc, sf = {}, {}, {}, {}, {}
+  -- R10: energia che perde valore per il peso della potenza (W equivalenti): scarica verso casa (al prezzo di
+  -- acquisto), scarica verso la rete e carica dal FV (al prezzo di vendita), carica dalla rete (al prezzo di acquisto)
+  local pdc, pdr, pcf, pcr = {}, {}, {}, {}
   local _ = CAT_IDX
-  for a = 1, #azioni do s2[a], pr[a], im[a], sc[a], sf[a] = {}, {}, {}, {}, {} end
+  for a = 1, #azioni do s2[a], pr[a], im[a], sc[a], sf[a] = {}, {}, {}, {}, {}; pdc[a], pdr[a], pcf[a], pcr[a] = {}, {}, {}, {} end
   local primo = {}
 
   local function interp(V, soc)
@@ -87,8 +93,13 @@ local function un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_f
     for a = 1, NA do
       local nome = azioni[a]
       local S2, PR, IM, SC, SF = s2[a], pr[a], im[a], sc[a], sf[a]
+      local DC, DR, CF, CR = pdc[a], pdr[a], pcf[a], pcr[a]
       for i = 1, n do
-        S2[i], PR[i], IM[i], SC[i], SF[i] = S.passo_num(c, e, griglia[i], nome, q.fv, q.carico, DT, q.di_giorno)
+        local _f, _g, fb, rb, bc, br
+        S2[i], PR[i], IM[i], SC[i], SF[i], _f, fb, rb, bc, br = S.passo_num(c, e, griglia[i], nome, q.fv, q.carico, DT, q.di_giorno)
+        local wd = 1 - S.peso(c, e, "scarica", SC[i])
+        local wc = 1 - S.peso(c, e, "carica", fb + rb)
+        DC[i], DR[i], CF[i], CR[i] = wd * bc, wd * br, wc * fb, wc * rb
       end
     end
     for _, p in ipairs(nomi) do
@@ -108,7 +119,8 @@ local function un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_f
       for i = 1, n do
         -- valore di ogni azione (indipendente dall'azione precedente)
         for _, a in ipairs(ammesse) do
-          local r = (im[a][i] * vend - pr[a][i] * costo - sc[a][i] * usura - sf[a][i] * PEN_SFORAMENTO) * DT / 1000
+          local r = (im[a][i] * vend - pr[a][i] * costo - sc[a][i] * usura - sf[a][i] * PEN_SFORAMENTO
+                     - (pdc[a][i] + pcr[a][i]) * costo - (pdr[a][i] + pcf[a][i]) * vend) * DT / 1000
           if cat_az[a] == 3 then r = r - sc[a][i] * lam_e end
           if s2[a][i] > soglia_alta then r = r - pen_alta end
           val[a] = r + interp(Vnp[a], s2[a][i])
@@ -117,7 +129,7 @@ local function un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_f
         -- migliori azioni "con cambio", poi si confronta con il restare nella stessa azione (O(NA) invece di O(NA^2))
         local mz = q.mezzanotte
         local top = {}
-        for cp = 1, 3 do
+        for cp = 1, NCAT do
           local v1, a1, v2, a2 = -1e18, nil, -1e18, nil
           for _, a in ipairs(ammesse) do
             local ca = cat_az[a]
@@ -144,13 +156,15 @@ local function un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_f
       if k == 1 then
         -- decisione esatta per il SOC attuale e valori delle alternative
         local pf = profili[p]
-        local prev = idx_az[pf.prev_azione or "AUTO"] or 1
+        local prev = idx_az[S.normalizza(c, pf.prev_azione)] or 1
         local cp = cat_az[prev]
         local alt, best, ba = {}, -1e18, 1
         for _, a in ipairs(ammesse) do
           local nome = azioni[a]
-          local so, prl, imm, sca, sfo = S.passo_num(c, e, pf.soc0, nome, q.fv, q.carico, DT, q.di_giorno)
-          local v = (imm * vend - prl * costo - sca * usura - sfo * PEN_SFORAMENTO) * DT / 1000 + interp(Vnp[a], so)
+          local so, prl, imm, sca, sfo, _f, fb, rb, bc, br = S.passo_num(c, e, pf.soc0, nome, q.fv, q.carico, DT, q.di_giorno)
+          local wd, wc = 1 - S.peso(c, e, "scarica", sca), 1 - S.peso(c, e, "carica", fb + rb)
+          local v = (imm * vend - prl * costo - sca * usura - sfo * PEN_SFORAMENTO
+                     - (wd * bc + wc * rb) * costo - (wd * br + wc * fb) * vend) * DT / 1000 + interp(Vnp[a], so)
           local ca = cat_az[a]
           if ca == 3 then v = v - sca * lam_e end
           if so > soglia_alta then v = v - pen_alta end
@@ -173,10 +187,10 @@ local function un_passaggio(c, e, quarti, nomi, profili, usura, lambda, valore_f
   for _, p in ipairs(nomi) do
     local pf = profili[p]
     local soc = pf.soc0
-    local prev_a = idx_az[pf.prev_azione or "AUTO"] or 1
+    local prev_a = idx_az[S.normalizza(c, pf.prev_azione)] or 1
     local prev = cat_az[prev_a]
     local piano, finestre, comandi, forzata = {}, {}, {}, {}
-    local az_prec = pf.prev_azione or "AUTO"
+    local az_prec = S.normalizza(c, pf.prev_azione)
     for k = 1, N do
       local q = quarti[k]
       local nome

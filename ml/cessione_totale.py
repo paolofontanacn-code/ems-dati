@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# Revisione R10 - 12/11/2026 - NIENTE PIU' OTTIMO TEORICO: main() cancella i vecchi file dell'ottimo (giornaliero.csv,
+#   mensile.csv, indice.json, ULTIMO_CALCOLO.md, giorni/ della cartella cessione/) e non calcola altro; restano le funzioni
+#   comuni (dati, prezzi, radiazione, fisica). Perdite di conversione dell'inverter (rendimento misurato a Cismondi per
+#   fascia di potenza) e rendimenti/pesi della batteria da modelli/rendimenti_batteria.json (ml/rendimenti.py).
+#   REVISIONE = R10
 # Revisione R06 - 26/10/2026 - REVISIONE = R06 (nessun altro cambiamento)
 # Revisione R05 - 26/10/2026 - carica 0-10 kW e scarica 2-10 kW (2 batterie da 5 kW; minimo 2 kW: solo nel modello non
 #   lineare di cessione_ottimizza.py, l'ottimo teorico lineare non ha il minimo); REVISIONE = R05
@@ -19,10 +24,9 @@ Produzione: letture Huawei a 5 minuti di Cismondi (11 kW, Sud, 2 gradi) x 20 / 1
   Ovest 2 gradi e sul piano Sud 2 gradi (modello isotropo, albedo 0,2), ora per ora, con la radiazione diretta e diffusa di
   Open-Meteo per il luogo di Cismondi (salvata in cessione/meteo/). Senza radiazione: rapporto con cielo sereno (segnalato).
 Prezzi: vendita in RID al prezzo orario zonale NORD del GME (MGP).
-Questo file calcola l'OTTIMO TEORICO dei giorni passati (produzione e prezzi noti in anticipo):
-  0 = senza batteria;  1 = con batteria, programmazione lineare sul giorno e sul giorno dopo (massimo ricavo).
-  Le funzioni comuni (dati, radiazione, fisica dell'impianto) sono usate anche da cessione_live.py (simulazione ogni 2 ore).
-Uscite (cartella cessione/): giornaliero.csv, mensile.csv, indice.json, giorni/, ULTIMO_CALCOLO.md
+R10: l'OTTIMO TEORICO dei giorni passati non si calcola piu' (main() cancella i suoi vecchi file). Restano le funzioni
+  comuni (dati, prezzi, radiazione, fisica dell'impianto, programmazione lineare usata come seme dall'algoritmo evolutivo)
+  usate da cessione_live.py (simulazione ogni 2 ore), cessione_ottimizza.py e cessione_apprendimento.py.
 """
 import base64
 import csv
@@ -48,7 +52,7 @@ DATI = os.environ.get("EMS_DATI", os.path.join(RADICE, "memoria_mango"))
 OUT = os.path.join(RADICE, "cessione")
 
 # ------------------------------------------------------------------ parametri (decisioni del 23/10/2026)
-REVISIONE = "R06"
+REVISIONE = "R10"
 P_CISMONDI_KW = 11.0             # Cismondi: 11 kW, Sud, inclinazione 2 gradi
 P_IMPIANTO_KW = 20.0             # impianto simulato
 SCALA = P_IMPIANTO_KW / P_CISMONDI_KW
@@ -71,6 +75,49 @@ Q = 0.25                         # ore in un quarto d'ora
 LIM_Q = min(LIMITE_RETE_KW, P_INVERTER_KW) * Q     # kWh massimi ceduti in un quarto d'ora
 INV_Q = P_INVERTER_KW * Q
 PC_Q, PS_Q, ETA = P_CARICA_KW * Q, P_SCARICA_KW * Q, 1 - PERDITA_CICLO
+N_INVERTER = 2                   # 2 x SUN2000-10KTL-M1: la potenza si divide tra i due
+
+
+# ------------------------------------------------------------------ R10: rendimenti misurati a Cismondi
+def _rendimenti():
+    """modelli/rendimenti_batteria.json (ml/rendimenti.py): rendimento dell'inverter per fascia (W per inverter), rendimenti
+    e pesi della batteria per fascia di potenza (in % della potenza massima). Senza file: valori fissi."""
+    r = {"inv_fasce_w": [500.0, 1000.0, 2000.0], "inv_eta": [0.97, 0.97, 0.97, 0.97], "inv_fonte": "ipotesi 0,97 (file mancante)",
+         "soglie": [0.80, 0.90], "pesi_carica": [1.0, 0.98, 0.97], "pesi_scarica": [1.0, 0.98, 0.97],
+         "eta_carica": [None, None, None], "eta_scarica": [None, None, None]}
+    try:
+        d = json.load(open(os.path.join(RADICE, "modelli", "rendimenti_batteria.json"), encoding="utf-8"))
+        inv = d.get("inverter") or {}
+        if len(inv.get("eta") or []) == 4:
+            r["inv_fasce_w"] = [float(v) for v in inv.get("fasce_w") or r["inv_fasce_w"]]
+            r["inv_eta"] = [min(1.0, max(0.8, float(v))) for v in inv["eta"]]
+            r["inv_fonte"] = inv.get("fonte") or ""
+        r["soglie"] = [float(v) for v in (d.get("regole") or {}).get("soglie") or r["soglie"]]
+        for tipo in ("carica", "scarica"):
+            b = d.get(tipo) or []
+            if len(b) == 3:
+                r["pesi_" + tipo] = [float(x["peso"]) for x in b]
+                r["eta_" + tipo] = [float(x["eta"]) if x.get("valida") and x.get("eta") else None for x in b]
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    return r
+
+
+REND = _rendimenti()
+
+
+def eta_inverter(e_dc_q):
+    """rendimento dell'inverter (array o numero) per l'energia DC di un quarto d'ora (kWh) divisa tra i 2 inverter"""
+    p_w = np.asarray(e_dc_q, dtype=float) / Q * 1000 / N_INVERTER
+    f, e = REND["inv_fasce_w"], REND["inv_eta"]
+    return np.where(p_w < f[0], e[0], np.where(p_w < f[1], e[1], np.where(p_w < f[2], e[2], e[3])))
+
+
+def fascia_potenza(e_q, p_max_kw):
+    """fascia di potenza 0, 1, 2 (fino all'80 %, fino al 90 %, oltre) per l'energia di un quarto d'ora"""
+    fr = np.asarray(e_q, dtype=float) / Q / p_max_kw
+    s1, s2 = REND["soglie"]
+    return np.where(fr <= s1 + 1e-9, 0, np.where(fr <= s2 + 1e-9, 1, 2))
 
 
 
@@ -373,8 +420,9 @@ def passo(modo, pv, soc, carica_cmd=0.0, scarica_cmd=0.0, fascia="I"):
     dispon = max(0.0, soc) * ETA                       # energia che la batteria puo' ancora consegnare
     c = s = 0.0
     if modo == "senza":
-        ced = min(pv, LIM_Q)
-        return 0.0, 0.0, ced, pv - ced, soc
+        ac = pv * float(eta_inverter(pv))                  # R10: perdite di conversione dell'inverter
+        ced = min(ac, LIM_Q)
+        return 0.0, 0.0, ced, ac - ced, soc
     if modo == "fully":                                # massima immissione: eccedenza in batteria, scarica fino al limite
         if pv >= LIM_Q:
             c = min(pv - LIM_Q, PC_Q, spazio)
@@ -394,8 +442,10 @@ def passo(modo, pv, soc, carica_cmd=0.0, scarica_cmd=0.0, fascia="I"):
             c = min(carica_cmd, pv, PC_Q, spazio)
         else:
             c = min(max(0.0, pv - LIM_Q), PC_Q, spazio)
-    ced = min(pv - c + s, LIM_Q)
-    tagl = pv - c + s - ced
+    dc = pv - c + s
+    ac = dc * float(eta_inverter(dc))                      # R10: perdite di conversione dell'inverter
+    ced = min(ac, LIM_Q)
+    tagl = ac - ced
     return c, s, ced, tagl, soc + c - s / ETA
 
 
@@ -420,127 +470,27 @@ def ottimo(pv, prezzi, soc0, n_oggi=None, valore_finale=0.0):
     return c, s, x
 
 
-# ------------------------------------------------------------------ ottimo teorico dei giorni passati
+# ------------------------------------------------------------------ R10: niente piu' ottimo teorico
+VECCHI_FILE_OTTIMO = ("giornaliero.csv", "mensile.csv", "indice.json", "ULTIMO_CALCOLO.md")
+
+
 def main():
-    os.makedirs(OUT, exist_ok=True)
-    oggi = dt.datetime.now(ROMA).strftime("%Y-%m-%d")
-    letture = letture_fv()
-    giorni = sorted(g for g in letture if g < oggi)
-    stato = {"scaricati": 0, "meteo": 0}
-    luogo = coordinate()
-    if luogo:
-        os.makedirs(os.path.join(OUT, "meteo"), exist_ok=True)
-        json.dump({"lat": luogo[0], "lon": luogo[1]}, open(os.path.join(OUT, "meteo", "luogo.json"), "w"))
-    righe, note, soc = [], [], 0.0
-    os.makedirs(os.path.join(OUT, "giorni"), exist_ok=True)
-    cache = {}
-
-    def dati(g):
-        if g not in cache:
-            fvc, cop = fv_quarti_cismondi(g, letture[g])
-            t0, nq = mezzanotte(g)
-            fatt, fonte_fv = fattore_quarti(t0, nq, radiazione_giorno(g, luogo, stato), luogo)
-            pr, fonte = prezzi_giorno(g, nq, stato)
-            cache[g] = (fvc * fatt, cop, t0, nq, pr, fonte, fonte_fv)
-        return cache[g]
-
-    riporti = []
-    for i, g in enumerate(giorni):
-        fv, cop, t0, nq, prezzi, fonte, fonte_fv = dati(g)
-        if prezzi is None:
-            note.append(f"{g}: {fonte}")
-            soc = 0.0
-            continue
-        if fonte_fv != "radiazione Open-Meteo":
-            note.append(f"{g}: produzione Ovest con {fonte_fv}")
-        p0 = [passo("senza", v, 0.0) for v in fv]
-        ced0 = np.array([x[2] for x in p0])
-        dom = giorni[i + 1] if i + 1 < len(giorni) else None
-        if dom and dom == (dt.date.fromisoformat(g) + dt.timedelta(days=1)).isoformat() and dati(dom)[4] is not None:
-            fv2, pr2 = np.concatenate([fv, dati(dom)[0]]), np.concatenate([prezzi, dati(dom)[4]])
-        else:
-            fv2, pr2 = fv, prezzi
-        try:
-            c, s, x = ottimo(fv2, pr2, soc, nq)
-        except Exception as e:
-            note.append(f"{g}: {e}")
-            continue
-        ced1 = fv - c + s - x
-        socq = soc + np.cumsum(c) - np.cumsum(s) / ETA
-        e0, e1 = float((ced0 * prezzi).sum()), float((ced1 * prezzi).sum())
-        righe.append({
-            "giorno": g, "mese": g[:7], "valido": int(cop >= COPERTURA_MINIMA), "copertura": round(cop, 3), "prezzi": fonte,
-            "produzione": fonte_fv, "fv_kwh": round(float(fv.sum()), 3), "prezzo_medio_eur_kwh": round(float(prezzi.mean()), 5),
-            "prezzo_min_eur_kwh": round(float(prezzi.min()), 5), "prezzo_max_eur_kwh": round(float(prezzi.max()), 5),
-            "p0_ceduti_kwh": round(float(ced0.sum()), 3), "p0_tagliati_kwh": round(float((fv - ced0).sum()), 3), "p0_eur": round(e0, 4),
-            "p1_ceduti_kwh": round(float(ced1.sum()), 3), "p1_tagliati_kwh": round(float(x.sum()), 3), "p1_eur": round(e1, 4),
-            "p1_carica_kwh": round(float(c.sum()), 3), "p1_scarica_kwh": round(float(s.sum()), 3),
-            "p1_perdite_kwh": round(float(s.sum() / ETA - s.sum()), 3), "p1_cicli": round(float(c.sum()) / CAPACITA_KWH, 3),
-            "p1_prezzo_carica": round(float((c * prezzi).sum() / c.sum()), 5) if c.sum() > 1e-6 else "",
-            "p1_prezzo_scarica": round(float((s * prezzi).sum() / s.sum()), 5) if s.sum() > 1e-6 else "",
-            "p1_beneficio_eur": round(e1 - e0, 4), "p1_energia_fine_kwh": round(float(socq[-1]), 3), "p1_riporto_eur": 0.0})
-        riporti.append((len(righe) - 1, float(socq[-1]), (float((s * prezzi).sum() / s.sum()) if s.sum() > 1e-6 else None)))
-        soc = float(socq[-1])
-        with open(os.path.join(OUT, "giorni", f"{g}.json"), "w", encoding="utf-8") as fh:
-            json.dump({"giorno": g, "inizio": t0, "revisione": REVISIONE, "p0_ceduto": [round(float(v), 4) for v in ced0],
-                       "quarti": [{"fv": round(float(fv[k]), 4), "prezzo": round(float(prezzi[k]), 5), "carica": round(float(c[k]), 4),
-                                   "scarica": round(float(s[k]), 4), "tagliato": round(float(x[k]), 4),
-                                   "ceduto": round(float(ced1[k]), 4), "soc": round(float(socq[k]), 3)} for k in range(nq)]},
-                      fh, separators=(",", ":"))
-    # energia rimasta in batteria a mezzanotte: il suo valore passa al giorno in cui e' stata prodotta
-    for j, (i, e_fine, pr_stesso) in enumerate(riporti):
-        if e_fine < 1e-6:
-            continue
-        succ = riporti[j + 1] if j + 1 < len(riporti) and riporti[j + 1][0] == i + 1 else None
-        pr = (succ[2] if succ and succ[2] is not None else None) or pr_stesso or righe[i]["prezzo_max_eur_kwh"]
-        v = e_fine * ETA * pr
-        for k, segno in ((i, 1), ((succ[0], -1) if succ else (None, 0))):
-            if k is None:
-                continue
-            for col in ("p1_riporto_eur", "p1_eur", "p1_beneficio_eur"):
-                righe[k][col] = round(righe[k][col] + segno * v, 4)
-    col = list(righe[0].keys()) if righe else ["giorno"]
-    with open(os.path.join(OUT, "giornaliero.csv"), "w", encoding="utf-8", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=col)
-        w.writeheader()
-        w.writerows(righe)
-    cm = ["fv_kwh", "p0_ceduti_kwh", "p0_eur", "p1_ceduti_kwh", "p1_eur", "p1_scarica_kwh", "p1_perdite_kwh", "p1_beneficio_eur"]
-    mesi = {}
-    for r in righe:
-        m = mesi.setdefault(r["mese"], {"mese": r["mese"], "giorni_validi": 0, "giorni_esclusi": 0, **{k: 0.0 for k in cm}})
-        if not r["valido"]:
-            m["giorni_esclusi"] += 1
-            continue
-        m["giorni_validi"] += 1
-        for k in cm:
-            m[k] += r[k]
-    with open(os.path.join(OUT, "mensile.csv"), "w", encoding="utf-8", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["mese", "giorni_validi", "giorni_esclusi"] + cm)
-        w.writeheader()
-        for m in sorted(mesi):
-            w.writerow({k: (round(v, 3) if isinstance(v, float) else v) for k, v in mesi[m].items()})
-    indice = {"aggiornato": dt.datetime.now(ROMA).isoformat(timespec="seconds"), "revisione": REVISIONE,
-              "parametri": {"p_cismondi_kw": P_CISMONDI_KW, "p_impianto_kw": P_IMPIANTO_KW, "scala": round(SCALA, 5),
-                            "inclinazione": INCLINAZIONE, "azimut_cismondi": AZIMUT_CISMONDI, "azimut_impianto": AZIMUT_IMPIANTO,
-                            "p_inverter_kw": P_INVERTER_KW, "limite_rete_kw": LIMITE_RETE_KW, "capacita_kwh": CAPACITA_KWH,
-                            "potenza_carica_kw": P_CARICA_KW, "potenza_scarica_kw": P_SCARICA_KW, "perdita_ciclo": PERDITA_CICLO,
-                            "copertura_minima": COPERTURA_MINIMA},
-              "luogo": list(luogo) if luogo else None, "giorni": len(righe), "note": note[-60:],
-              "meteo_errore": stato.get("meteo_ko")}
-    with open(os.path.join(OUT, "indice.json"), "w", encoding="utf-8") as fh:
-        json.dump(indice, fh, ensure_ascii=False, indent=1)
-    validi = [r for r in righe if r["valido"]]
-    tot = lambda k: sum(r[k] for r in validi)
-    testo = [f"# Cessione totale 20 kW - ottimo teorico, ultimo calcolo {dt.datetime.now(ROMA):%d/%m/%Y %H:%M} ({REVISIONE})", "",
-             f"Giorni calcolati: {len(righe)} (validi {len(validi)}). Note: {len(note)}.", "",
-             f"Profilo 0 (senza batteria): {tot('p0_ceduti_kwh'):.1f} kWh ceduti, {tot('p0_eur'):.2f} EUR",
-             f"Profilo 1 (batteria {CAPACITA_KWH:g} kWh, carica/scarica {P_CARICA_KW:g}/{P_SCARICA_KW:g} kW, ottimo teorico): "
-             f"{tot('p1_ceduti_kwh'):.1f} kWh ceduti, {tot('p1_eur'):.2f} EUR, beneficio {tot('p1_beneficio_eur'):.2f} EUR", ""] + \
-            [f"- {n}" for n in note[-60:]]
-    with open(os.path.join(OUT, "ULTIMO_CALCOLO.md"), "w", encoding="utf-8") as fh:
-        fh.write("\n".join(testo) + "\n")
-    log(f"ottimo teorico: {len(righe)} giorni ({len(validi)} validi), prezzi scaricati {stato['scaricati']}, radiazione "
-        f"scaricata {stato['meteo']} giorni, beneficio batteria {tot('p1_beneficio_eur'):.2f} EUR; note: {len(note)}")
+    """R10 (decisione dell'utente 11/11/2026): l'ottimo teorico non si calcola piu' e i suoi file si cancellano.
+    Restano cessione/live/ (simulazione ogni 2 ore), cessione/prezzi/ e cessione/meteo/ (usati dalla simulazione)."""
+    import shutil
+    tolti = []
+    for nome in VECCHI_FILE_OTTIMO:
+        f = os.path.join(OUT, nome)
+        if os.path.isfile(f):
+            os.remove(f)
+            tolti.append(nome)
+    cart = os.path.join(OUT, "giorni")
+    if os.path.isdir(cart):
+        n = len(os.listdir(cart))
+        shutil.rmtree(cart)
+        tolti.append(f"giorni/ ({n} file)")
+    log("ottimo teorico non piu' calcolato (R10); " + (("cancellati i vecchi file: " + ", ".join(tolti)) if tolti
+                                                      else "nessun vecchio file da cancellare"))
 
 
 if __name__ == "__main__":

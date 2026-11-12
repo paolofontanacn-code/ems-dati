@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Revisione R10 - 12/11/2026 - tolto l'ottimo teorico (grafico, totali, barre, mese per mese, colonne): la pagina parte dal 23/10/2026 (avvio della simulazione ogni 2 ore); mese per mese dalla simulazione ogni 2 ore; Aiuto: rendimenti misurati a Cismondi, perdite dell'inverter, pesi della potenza e continuità; collegamento alla pagina dei rendimenti -->
 <!-- Revisione R06 - 26/10/2026 - prezzi fino all'ultimo noto; energia in batteria anche in %; pulsanti giorno precedente/successivo (le curve scelte restano); domani selezionabile quando ci sono i prezzi (prezzi e ultimo piano spedito); pallini delle simulazioni (solo PC): col mouse sopra, potenza in rete del piano calcolato, del piano spedito e del piano spedito precedente; tolta la colonna Piano (riassunto a testo) dalle decisioni -->
 <!-- Revisione R05 - 26/10/2026 - grafici con uPlot (linee e barre, legenda cliccabile ricordata); meteo (radiazione, temperatura, nuvolosita') nei grafici delle potenze del giorno; asse dei tempi di 24 ore; revisione della pagina e revisione installata (versione.json); colonna stabilita' del piano nelle decisioni; Aiuto: scarica modulabile 2-10 kW, regola dei 4 ore, Fully fed to grid non impostabile via API -->
 <!-- Revisione R04 - 24/10/2026 - decisioni: piano a fasce di 2 ore con modalita' diverse nello stesso giorno (algoritmo evolutivo, semi lineari e fuzzy), prezzi previsti, apprendimento dei parametri; tabella delle decisioni e Aiuto aggiornati -->
@@ -63,6 +64,7 @@ tr.escluso td { color: var(--tenue); font-style: italic; }
   <span class="nota" id="revisione">Pagina R05</span>
   <span class="nota" id="aggiornato">caricamento…</span>
   <a class="nota" href="./">← pagina EMS Cismondi</a>
+  <a class="nota" href="rendimenti.html">Rendimenti batteria →</a>
 </header>
 <div class="barra">
   <label class="nota" for="mese">Mese</label>
@@ -79,7 +81,7 @@ tr.escluso td { color: var(--tenue); font-style: italic; }
     <p class="spiega">Impianto ipotetico da 20 kW in cessione totale: tutta l'energia prodotta va in rete, venduta in RID al prezzo orario zonale NORD (PO NORD) del GME. Nessun comando viene inviato a nessun impianto.</p>
     <dl>
       <dt>Impianto</dt>
-      <dd>20 kW di pannelli a <b>Ovest</b>, inclinazione 2°. Due inverter SUN2000-10KTL-M1 identici e due batterie da 15 kWh, calcolati come un inverter da 20 kW con una batteria da <span class="par_batt">30 kWh, carica 10 kW, scarica 10 kW</span>. Verso la rete al massimo <span class="par_rete">17</span> kW. Nessun prelievo dalla rete e nessuna carica da AC. Perdita tra carica e scarica: 5 %.</dd>
+      <dd>20 kW di pannelli a <b>Ovest</b>, inclinazione 2°. Due inverter SUN2000-10KTL-M1 identici e due batterie da 15 kWh, calcolati come un inverter da 20 kW con una batteria da <span class="par_batt">30 kWh, carica 10 kW, scarica 10 kW</span>. Verso la rete al massimo <span class="par_rete">17</span> kW. Nessun prelievo dalla rete e nessuna carica da AC. Rendimenti (R10): quelli della batteria vera di Cismondi (stesso tipo, LUNA2000) misurati per fascia di potenza, dove la fascia ha abbastanza misure (pagina «Rendimenti batteria»); altrove perdita tra carica e scarica 5 % più una perdita a bassa potenza di scarica. Perdite di conversione dell'inverter sull'energia ceduta (rendimento misurato a Cismondi per fascia di potenza).</dd>
       <dt>Produzione</dt>
       <dd>Letture Huawei di Cismondi (11 kW, Sud, 2°), i dati più freschi, × 20 / 11 × rapporto tra l'irraggiamento sul piano Ovest e sul piano Sud, ora per ora (radiazione diretta e diffusa di Open-Meteo per il luogo di Cismondi).</dd>
       <dt>Simulazione ogni 2 ore (da oggi in avanti)</dt>
@@ -87,34 +89,30 @@ tr.escluso td { color: var(--tenue); font-style: italic; }
         <ul>
           <li><b>Produzione prevista</b>: più modelli meteo (si usa quello che ha sbagliato meno per ogni orizzonte), correzione imparata per ora del giorno, correzione con le ultime letture reali; 3 scenari (bassa, probabile, alta) secondo l'incertezza misurata.</li>
           <li><b>Prezzi</b>: quelli noti e, oltre l'ultimo noto, una previsione dallo storico (giorno della settimana, giorni recenti): l'orizzonte arriva sempre a fine domani.</li>
-          <li><b>Piano</b>: per ogni fascia di 2 ore una modalità Huawei – anche diverse nello stesso giorno – e per ogni ora la fascia TOU (carica/scarica, max 14 al giorno) o il comando di potenza (Third-party dispatch). Il piano migliore è cercato con un <b>algoritmo evolutivo</b> (decine di migliaia di piani provati) partendo da programmazione lineare, <b>logica fuzzy</b> (prezzo basso e sole → carica, prezzo alto → scarica), modalità pure e piano precedente. Ogni piano è provato con un modello fisico non lineare (rendimento più basso a bassa potenza, potenza ridotta vicino a batteria piena o vuota).</li>
+          <li><b>Piano</b>: per ogni fascia di 2 ore una modalità Huawei – anche diverse nello stesso giorno – e per ogni ora la fascia TOU (carica/scarica, max 14 al giorno) o il comando di potenza (Third-party dispatch). Il piano migliore è cercato con un <b>algoritmo evolutivo</b> (decine di migliaia di piani provati) partendo da programmazione lineare, <b>logica fuzzy</b> (prezzo basso e sole → carica, prezzo alto → scarica), modalità pure e piano precedente. Ogni piano è provato con un modello fisico non lineare (rendimenti per fascia di potenza, potenza ridotta vicino a batteria piena o vuota, perdite dell'inverter). <b>Solo per scegliere il piano</b> (R10): pesi della potenza di carica e scarica (fino all'80 % della potenza massima 1, fino al 90 % 0,98, oltre 0,97, oppure dai rendimenti misurati) e 0,001 € per ogni avvio o arresto della scarica; gli euro mostrati restano quelli veri.</li>
           <li>Modalità: <b>Fully fed to grid</b> (la batteria prende solo la produzione oltre il limite e scarica fino al limite; <b>non impostabile via API</b> Huawei: si simula come confronto), <b>TOU</b> (fasce di carica: i pannelli caricano prima la batteria; fasce di scarica: la batteria cede in rete fino alla potenza massima scelta, i pannelli hanno la precedenza), <b>Third-party dispatch</b> (potenza comandata; in scarica la produzione oltre il limite si perde).</li>
           <li><b>Potenza modulabile</b> (R05): carica 0–5 kW per batteria (0–10 kW l'impianto), scarica 2–5 kW per batteria (2–10 kW l'impianto) oppure ferma; sotto 2 kW la batteria non scarica. Comandi costanti per ora: niente accensioni e spegnimenti nella stessa ora; a parità di ricavo vince il piano con meno cambi.</li>
           <li><b>Stabilità del piano</b> (R05): il piano già spedito per le prossime 4 ore si cambia solo se il nuovo rende almeno il 10 % in più e almeno 0,10 € (costo di una riprogrammazione). Il confronto è fatto con i dati nuovi: piano nuovo contro piano spedito per 4 ore e poi piano nuovo.</li>
         </ul>
         Poi l'impianto simulato «vive» i quarti d'ora con la produzione vera. <b>Autoapprendimento</b>: ogni 2 ore un calcolo separato rigioca le decisioni delle ultime 2 settimane con altri parametri (valore dell'energia lasciata in batteria, scenari, costo dei cambi, regole fuzzy), cercati con un algoritmo evolutivo, e li adotta solo se avrebbero reso di più. Obiettivo: il ricavo più alto, vendendo nelle ore a prezzo più alto.</dd>
-      <dt>Ottimo teorico (giorni passati)</dt>
-      <dd>Per i giorni prima dell'avvio, e come confronto: produzione e prezzi considerati noti in anticipo, batteria gestita nel modo migliore possibile. È il limite massimo, nella realtà il risultato è più basso.</dd>
     </dl>
     <h2>Da sapere</h2>
     <ul class="spiega">
-      <li>Simulazione ogni 2 ore: l'energia rimasta in batteria a mezzanotte viene venduta il giorno dopo e conta nel giorno in cui è venduta (un giorno può risultare negativo e il successivo positivo). Nell'ottimo teorico invece passa al giorno in cui è stata prodotta (colonna «riporto»).</li>
+      <li>Simulazione ogni 2 ore (dal 23/10/2026): l'energia rimasta in batteria a mezzanotte viene venduta il giorno dopo e conta nel giorno in cui è venduta (un giorno può risultare negativo e il successivo positivo). L'ottimo teorico non si calcola più (R10).</li>
       <li>Prezzo NORD: nel grafico della simulazione ogni 2 ore arriva fino all'ultimo prezzo noto (quelli di domani arrivano verso le 13; una volta letti non cambiano). Domani compare tra i giorni quando i suoi prezzi ci sono, con l'ultimo piano spedito.</li>
       <li>Energia in batteria in kWh (scala a sinistra) e in % della capacità (scala % a destra, la stessa della nuvolosità).</li>
       <li>Pallini (solo su PC): sotto il grafico della simulazione ogni 2 ore, uno per ogni simulazione, all'ora di fine dei calcoli (= ora in cui il piano è «inviato»). Con il mouse sopra un pallino si vedono la potenza in rete prevista del piano calcolato (migliore) e del piano spedito di quella simulazione e del piano spedito della simulazione precedente. Calcolato e spedito sono diversi quando la regola delle 4 ore tiene il piano spedito prima.</li>
       <li>Meteo nei grafici del giorno: Open-Meteo per il luogo di Cismondi (stessi dati della pagina EMS Cismondi), radiazione globale orizzontale, temperatura, nuvolosità, ognuno con la sua scala a destra.</li>
       <li>Clic su una voce della legenda per nascondere o mostrare la curva o le barre: la scelta resta anche cambiando mese o giorno.</li>
       <li>Non sono conteggiati: usura della batteria, costo dell'impianto, corrispettivi del GSE, consumi propri dell'impianto.</li>
-      <li>Ottimo teorico: i giorni con meno del 90 % delle letture sono in corsivo ed esclusi dai totali.</li>
     </ul>
   </section>
   <section><h2 id="t_live">Giorno – simulazione ogni 2 ore</h2><p class="spiega">Produzione vera e prevista, potenza in rete con e senza batteria, energia in batteria, prezzo e meteo, per quarto d'ora. Ogni grandezza ha la sua scala. Clic sulla legenda per scegliere le curve.</p><div id="live_tessere"></div><div id="g_live"></div><div class="tab" id="decisioni"></div></section>
-  <section><h2 id="t_giorno">Giorno – ottimo teorico</h2><p class="spiega">Con produzione e prezzi noti in anticipo (limite massimo). Clic sulla legenda per scegliere le curve.</p><div id="g_giorno"></div></section>
   <section id="s_totali"><h2>Totali del mese</h2><div id="totali"></div></section>
-  <section><h2>Euro al giorno</h2><p class="spiega">Ricavo di ogni giorno: senza batteria, con batteria (simulazione ogni 2 ore) e ottimo teorico.</p><div id="g_euro"></div></section>
+  <section><h2>Euro al giorno</h2><p class="spiega">Ricavo di ogni giorno: senza batteria e con batteria (simulazione ogni 2 ore).</p><div id="g_euro"></div></section>
   <section><h2>Beneficio della batteria al giorno</h2><p class="spiega">Con batteria − senza batteria, in euro.</p><div id="g_ben"></div></section>
   <section><h2>Energia al giorno</h2><p class="spiega">kWh prodotti e restituiti dalla batteria.</p><div id="g_kwh"></div></section>
-  <section><h2>Mese per mese</h2><p class="spiega">Ottimo teorico: totali dei giorni validi di ogni mese.</p><div id="g_mesi"></div></section>
+  <section><h2>Mese per mese</h2><p class="spiega">Simulazione ogni 2 ore: totali di ogni mese.</p><div id="g_mesi"></div></section>
   <section><h2>Giorni del mese</h2><div class="tab" id="tabella"></div></section>
 </main>
 
@@ -128,7 +126,7 @@ const $ = id => document.getElementById(id);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const num = v => { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; };
 const fmt = (v, d = 2) => (v == null || isNaN(v)) ? "–" : Number(v).toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
-const REV_PAGINA = "R06";
+const REV_PAGINA = "R10";
 const ROMA = "Europe/Rome";
 // Okabe-Ito (distinguibili anche da chi non vede bene i colori) + tratteggi diversi
 const OKABE = { arancio: "#E69F00", celeste: "#56B4E9", verde: "#009E73", giallo: "#F0E442", blu: "#0072B2", vermiglio: "#D55E00", rosa: "#CC79A7" };
@@ -327,8 +325,8 @@ function serieMeteo(m) {
     .filter(s => s.dati.some(v => v != null));
 }
 
-let G = [], M = [], L = [], indice = null, indiceLive = null, prezziNoti = {}, pianoUltimo = null;
-const capacita = () => num((indice && indice.parametri || {}).capacita_kwh) || 30;
+let L = [], indiceLive = null, prezziNoti = {}, pianoUltimo = null;
+const capacita = () => num((indiceLive && indiceLive.parametri || {}).capacita_kwh) || 30;
 const hhmm = t => new Date(t * 1e3).toLocaleTimeString("it-IT", { timeZone: ROMA, hour: "2-digit", minute: "2-digit" });
 const ggmm = t => new Date(t * 1e3).toLocaleDateString("it-IT", { timeZone: ROMA, day: "2-digit", month: "2-digit" });
 // prezzo noto di ogni quarto d'ora del giorno (null se non noto)
@@ -370,7 +368,6 @@ async function mostraGiorno() {
   const g = $("giorno").value; if (!g) return;
   const data = new Date(g + "T12:00:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
   $("t_live").textContent = "Giorno – simulazione ogni 2 ore – " + data;
-  $("t_giorno").textContent = "Giorno – ottimo teorico – " + data;
   const [t0, nq] = mezzanotte(g);
   const meteo = await meteoGiorno(g, t0, nq);
   // simulazione ogni 2 ore
@@ -427,59 +424,41 @@ async function mostraGiorno() {
         <td>${fmt(x.correzione_ultime_letture, 2)}</td><td style="text-align:left">${Object.entries(x.modello_per_orizzonte || {}).map(([o, m]) => o + ": " + m).join("<br>")}</td></tr>`).join("") + `</table>
       <p class="nota">Ricavo atteso = ricavo previsto fino a fine domani sui 3 scenari, più il valore dell'energia lasciata in batteria. Punto di partenza = stessi conti per i piani iniziali (programmazione lineare, logica fuzzy, modalità pure, piano precedente) prima dell'algoritmo evolutivo. ${Object.values(dec[dec.length - 1].modelli_errore || {}).length ? "Modelli meteo non disponibili: " + Object.keys(dec[dec.length - 1].modelli_errore).join(", ") + "." : ""}</p>`;
   } catch (e) { $("decisioni").innerHTML = ""; }
-  // ottimo teorico
-  try {
-    const d = await scarica(`cessione/giorni/${g}.json`, true);
-    const q = d.quarti;
-    const m2 = d.inizio === t0 && q.length === nq ? meteo : await meteoGiorno(g + "|o", d.inizio, q.length);
-    giorno($("g_giorno"), d.inizio, q.length, [
-      { label: "produzione kW (linea piena)", dati: q.map(r => r.fv * 4), stroke: css("--fv"), width: 2 },
-      { label: "in rete con batteria kW (linea spessa)", dati: q.map(r => r.ceduto * 4), stroke: css("--rete1"), width: 2.6 },
-      { label: "in rete senza batteria kW (linea sottile)", dati: (d.p0_ceduto || []).map(v => v * 4), stroke: css("--rete0"), width: 1.2 },
-      { label: "energia in batteria kWh (tratteggio lungo)", dati: q.map(r => r.soc), stroke: css("--soc"), dash: [10, 4], width: 2.4, dec: 1 },
-      { label: "energia in batteria % (tratteggio corto)", dati: q.map(r => r.soc / capacita() * 100), stroke: css("--soc"), dash: [3, 3], width: 1.6, scale: "pct", dec: 0 },
-      { label: "prezzo NORD €/kWh (puntini)", dati: q.map(r => r.prezzo), stroke: css("--prezzo"), dash: [2, 3], width: 2.4, scale: "e", dec: 3 },
-      ...serieMeteo(m2)]);
-  } catch (e) { $("g_giorno").innerHTML = `<p class="nota">Ottimo teorico non ancora calcolato per questo giorno (si calcola a giorno finito).</p>`; }
 }
 
-const tuttiGiorni = () => [...new Set([...G.map(r => r.giorno), ...L.map(r => r.giorno), ...Object.keys(prezziNoti).filter(g => !L.length || g >= L[0].giorno)])].sort();
+const tuttiGiorni = () => [...new Set([...L.map(r => r.giorno), ...Object.keys(prezziNoti).filter(g => !L.length || g >= L[0].giorno)])].sort();
 function mostraMese(desiderato) {
   const m = $("mese").value;
   const elenco = tuttiGiorni().filter(g => g.slice(0, 7) === m);                  // per la scelta del giorno
-  const giorni = elenco.filter(g => G.some(x => x.giorno === g) || L.some(x => x.giorno === g));   // per totali e grafici
-  const R = G.filter(r => r.mese === m), V = R.filter(r => r.valido === "1"), LV = L.filter(r => r.giorno.slice(0, 7) === m);
-  const t = k => V.reduce((a, r) => a + (num(r[k]) || 0), 0), tl = k => LV.reduce((a, r) => a + (num(r[k]) || 0), 0);
+  const giorni = elenco.filter(g => L.some(x => x.giorno === g));                   // per totali e grafici
+  const LV = L.filter(r => r.giorno.slice(0, 7) === m);
+  const tl = k => LV.reduce((a, r) => a + (num(r[k]) || 0), 0);
   const ben = v => `<b class="${v >= 0 ? "pos" : "negv"}">${fmt(v)}</b>`;
-  $("totali").innerHTML = `<div class="tessere">
-    ${LV.length ? `<div class="tessera"><span>Ogni 2 ore – senza batteria</span><b>${fmt(tl("p0_eur"))}</b><span>€ (${LV.length} giorni)</span></div>
-    <div class="tessera"><span>Ogni 2 ore – con batteria</span><b>${fmt(tl("batt_eur"))}</b><span>€</span></div>
-    <div class="tessera"><span>Ogni 2 ore – beneficio</span>${ben(tl("beneficio_eur"))}<span>€</span></div>` : ""}
-    <div class="tessera"><span>Ottimo teorico – senza batteria</span><b>${fmt(t("p0_eur"))}</b><span>€ (${V.length} giorni validi su ${R.length})</span></div>
-    <div class="tessera"><span>Ottimo teorico – con batteria</span><b>${fmt(t("p1_eur"))}</b><span>€</span></div>
-    <div class="tessera"><span>Ottimo teorico – beneficio</span>${ben(t("p1_beneficio_eur"))}<span>€</span></div></div>`;
+  $("totali").innerHTML = LV.length ? `<div class="tessere">
+    <div class="tessera"><span>Senza batteria</span><b>${fmt(tl("p0_eur"))}</b><span>€ (${LV.length} giorni)</span></div>
+    <div class="tessera"><span>Con batteria – ogni 2 ore</span><b>${fmt(tl("batt_eur"))}</b><span>€</span></div>
+    <div class="tessera"><span>Beneficio della batteria</span>${ben(tl("beneficio_eur"))}<span>€</span></div>
+    <div class="tessera"><span>Prodotti</span><b>${fmt(tl("fv_kwh"), 0)}</b><span>kWh</span></div></div>` : `<p class="nota">Nessun giorno simulato in questo mese.</p>`;
   const et = giorni.map(giornoBreve);
-  const gv = (righe, k) => giorni.map(g => { const r = righe.find(x => x.giorno === g); return r ? num(r[k]) : null; });
-  const op = giorni.map(g => { const r = R.find(x => x.giorno === g); return r ? r.valido !== "1" : false; });
-  const S = (nome, valori, riempi, opaco = op) => ({ nome, valori, riempi, opaco });
-  const P0 = { colore: css("--p0") }, RIGHE = { colore: css("--p1"), tipo: "righe" }, QUADRI = { colore: css("--p1ac"), tipo: "quadri" }, PUNTI = { colore: css("--ben"), tipo: "punti" };
-  barre($("g_euro"), et, [S("Senza batteria (prezzi del giorno)", giorni.map((g, i) => gv(LV, "p0_eur")[i] ?? gv(R, "p0_eur")[i]), P0),
-                          S("Con batteria – ogni 2 ore", gv(LV, "batt_eur"), QUADRI), S("Con batteria – ottimo teorico", gv(R, "p1_eur"), RIGHE)], "€");
-  barre($("g_ben"), et, [S("Beneficio – ogni 2 ore", gv(LV, "beneficio_eur"), QUADRI), S("Beneficio – ottimo teorico", gv(R, "p1_beneficio_eur"), RIGHE)], "€");
-  barre($("g_kwh"), et, [S("Prodotti", giorni.map((g, i) => gv(LV, "fv_kwh")[i] ?? gv(R, "fv_kwh")[i]), P0),
-                         S("Restituiti dalla batteria – ogni 2 ore", gv(LV, "scarica_kwh"), QUADRI),
-                         S("Restituiti dalla batteria – ottimo teorico", gv(R, "p1_scarica_kwh"), RIGHE)], "kWh", 1);
-  barre($("g_mesi"), M.map(x => nomeMese(x.mese)), [S("Senza batteria", M.map(x => num(x.p0_eur)), P0, null),
-    S("Con batteria – ottimo teorico", M.map(x => num(x.p1_eur)), RIGHE, null), S("Beneficio – ottimo teorico", M.map(x => num(x.p1_beneficio_eur)), PUNTI, null)], "€");
+  const gv = k => giorni.map(g => { const r = LV.find(x => x.giorno === g); return r ? num(r[k]) : null; });
+  const S = (nome, valori, riempi) => ({ nome, valori, riempi, opaco: null });
+  const P0 = { colore: css("--p0") }, QUADRI = { colore: css("--p1ac"), tipo: "quadri" }, PUNTI = { colore: css("--ben"), tipo: "punti" };
+  barre($("g_euro"), et, [S("Senza batteria", gv("p0_eur"), P0), S("Con batteria – ogni 2 ore", gv("batt_eur"), QUADRI)], "€");
+  barre($("g_ben"), et, [S("Beneficio – ogni 2 ore", gv("beneficio_eur"), QUADRI)], "€");
+  barre($("g_kwh"), et, [S("Prodotti", gv("fv_kwh"), P0), S("Restituiti dalla batteria – ogni 2 ore", gv("scarica_kwh"), QUADRI)], "kWh", 1);
+  const mesi = [...new Set(L.map(r => r.giorno.slice(0, 7)))].sort();
+  const tm = (mm, k) => L.filter(r => r.giorno.slice(0, 7) === mm).reduce((a, r) => a + (num(r[k]) || 0), 0);
+  barre($("g_mesi"), mesi.map(nomeMese), [S("Senza batteria", mesi.map(mm => tm(mm, "p0_eur")), P0),
+    S("Con batteria – ogni 2 ore", mesi.map(mm => tm(mm, "batt_eur")), QUADRI), S("Beneficio – ogni 2 ore", mesi.map(mm => tm(mm, "beneficio_eur")), PUNTI)], "€");
   const cb = v => `class="${num(v) >= 0 ? "pos" : "negv"}"`;
+  const nord = g => { const p = prezziNoti[g]; if (!p || !p.prezzi || !p.prezzi.length) return "–"; return fmt(Math.min(...p.prezzi), 3) + "–" + fmt(Math.max(...p.prezzi), 3); };
   $("tabella").innerHTML = `<table><tr><th>Giorno</th><th>Prodotti kWh</th><th>Senza batteria €</th><th>Ogni 2 ore €</th><th>Beneficio ogni 2 ore €</th>
-    <th>Modalità (quarti d'ora)</th><th>Ottimo teorico €</th><th>Beneficio ottimo €</th><th>di cui riporto €</th><th>NORD min–max €/kWh</th><th>Letture</th></tr>` +
-    giorni.map(g => { const r = R.find(x => x.giorno === g) || {}, l = LV.find(x => x.giorno === g) || {};
+    <th>Restituiti kWh</th><th>Modalità (quarti d'ora)</th><th>Quarti d'ora</th><th>NORD min–max €/kWh</th></tr>` +
+    giorni.map(g => { const l = LV.find(x => x.giorno === g) || {};
       const modi = l.giorno ? ["fully", "tou", "terzi"].filter(k => num(l["quarti_" + k]) > 0).map(k => `${NOMI_MODI[k]} ${l["quarti_" + k]}`).join(", ") : "–";
-      return `<tr class="${r.valido === "0" ? "escluso" : ""}"><td>${giornoBreve(g)}</td><td>${fmt(num(l.fv_kwh ?? r.fv_kwh), 1)}</td><td>${fmt(num(l.p0_eur ?? r.p0_eur))}</td>
-      <td>${fmt(num(l.batt_eur))}</td><td ${cb(l.beneficio_eur)}>${fmt(num(l.beneficio_eur))}</td><td style="text-align:left">${modi}</td>
-      <td>${fmt(num(r.p1_eur))}</td><td ${cb(r.p1_beneficio_eur)}>${fmt(num(r.p1_beneficio_eur))}</td><td>${fmt(num(r.p1_riporto_eur))}</td>
-      <td>${r.giorno ? fmt(num(r.prezzo_min_eur_kwh), 3) + "–" + fmt(num(r.prezzo_max_eur_kwh), 3) : "–"}</td><td>${r.giorno ? fmt(num(r.copertura) * 100, 0) + " %" : "–"}</td></tr>`; }).join("") + `</table>`;
+      return `<tr><td>${giornoBreve(g)}</td><td>${fmt(num(l.fv_kwh), 1)}</td><td>${fmt(num(l.p0_eur))}</td>
+      <td>${fmt(num(l.batt_eur))}</td><td ${cb(l.beneficio_eur)}>${fmt(num(l.beneficio_eur))}</td><td>${fmt(num(l.scarica_kwh), 1)}</td><td style="text-align:left">${modi}</td>
+      <td>${l.quarti ?? "–"}</td><td>${nord(g)}</td></tr>`; }).join("") + `</table>`;
   const prima = $("giorno").value;
   $("giorno").innerHTML = elenco.map(g => `<option value="${g}">${giornoBreve(g)}${giorni.includes(g) ? "" : " (prezzi)"}</option>`).join("");
   $("giorno").value = typeof desiderato === "string" && elenco.includes(desiderato) ? desiderato : elenco.includes(prima) ? prima : (giorni[giorni.length - 1] || elenco[elenco.length - 1] || "");
@@ -494,20 +473,20 @@ async function revisioni() {
 }
 async function avvio() {
   try {
-    [indice, G, M] = await Promise.all([scarica("cessione/indice.json", true), scarica("cessione/giornaliero.csv").then(csv), scarica("cessione/mensile.csv").then(csv)]);
+    [indiceLive, L] = await Promise.all([scarica("cessione/live/indice.json", true), scarica("cessione/live/giornaliero.csv").then(csv)]);
   } catch (e) {
     $("aggiornato").textContent = "";
     document.querySelector("main").insertAdjacentHTML("afterbegin", `<section class="errore">Dati non ancora disponibili (${e.message}): si preparano al prossimo giro di GitHub.</section>`);
     return;
   }
-  try { [indiceLive, L] = await Promise.all([scarica("cessione/live/indice.json", true), scarica("cessione/live/giornaliero.csv").then(csv)]); } catch (e) { L = []; }
-  const pp = indice.parametri || {};
+  L = L.filter(r => r.giorno >= "2026-10-23");                                   // R10: la pagina parte dall'avvio della simulazione ogni 2 ore
+  const pp = indiceLive.parametri || {};
   if (pp.capacita_kwh) document.querySelectorAll(".par_batt").forEach(e => e.textContent = `${fmt(pp.capacita_kwh, 0)} kWh, carica ${fmt(pp.potenza_carica_kw, 0)} kW, scarica ${fmt(pp.potenza_scarica_kw, 0)} kW`);
   if (pp.limite_rete_kw) document.querySelectorAll(".par_rete").forEach(e => e.textContent = fmt(pp.limite_rete_kw, 0));
   revisioni();
   const quando = t => new Date(t).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-  $("aggiornato").textContent = (indice.revisione ? "calcolo " + indice.revisione + ", " : "") + "aggiornato al " + quando(indice.aggiornato) +
-    (indiceLive ? ` · ogni 2 ore: dal ${quando(indiceLive.inizio)}, eseguito fino al ${quando(indiceLive.eseguito_fino_a)}, modalità ${NOMI_MODI[indiceLive.modo_attuale] || "–"}` : "");
+  $("aggiornato").textContent = (indiceLive.revisione ? "calcolo " + indiceLive.revisione + ", " : "") + "aggiornato al " + quando(indiceLive.aggiornato) +
+    ` · ogni 2 ore: dal ${quando(indiceLive.inizio)}, eseguito fino al ${quando(indiceLive.eseguito_fino_a)}, modalità ${NOMI_MODI[indiceLive.modo_attuale] || "–"}`;
   try {
     const ap = await scarica("cessione/live/apprendimento.json", true);
     const u = (ap.storico || [])[ap.storico.length - 1];
@@ -517,7 +496,7 @@ async function avvio() {
   try { pianoUltimo = await scarica("cessione/live/piano_ultimo.json", true); } catch (e) { pianoUltimo = null; }
   const mesi = [...new Set(tuttiGiorni().map(g => g.slice(0, 7)))].sort();
   $("mese").innerHTML = mesi.map(m => `<option value="${m}">${nomeMese(m)}</option>`).join("");
-  const vissuti = tuttiGiorni().filter(g => L.some(x => x.giorno === g) || G.some(x => x.giorno === g));
+  const vissuti = tuttiGiorni().filter(g => L.some(x => x.giorno === g));
   $("mese").value = (vissuti[vissuti.length - 1] || "").slice(0, 7) || mesi[mesi.length - 1] || "";
   mostraMese();
 }

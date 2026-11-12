@@ -636,7 +636,7 @@ Prove fatte qui (copia del repository al 07/11/2026):
   ems.yml con esito 0 in entrambi i giri, rigioco della condizione 2 fatto con l'archivio delle previsioni (finto) in
   104 s per 15 giorni, versione.json R08 nel repository.
 
-## Prossima revisione (R10, annotata come R09 fino al 09/11/2026) - annotazioni (NIENTE CODICE finche' non richiesto)
+## Revisione R10 (annotata come R09 fino al 09/11/2026) - annotazioni; APPLICATA il 12/11/2026 (vedi in fondo)
 - Peso della potenza di scarica (07/11/2026, proposta dell'utente, immagine della cessione: scarica 17:00-17:30 a
   piena potenza). Si accettano anche scariche a potenza non piena, con preferenza per la scarica piu' lenta:
   potenza di scarica dal 20 all'80 % della massima peso 1; dall'80 al 90 % peso 0,98; dal 90 al 100 % peso 0,97.
@@ -673,3 +673,258 @@ Prove fatte qui (copia del repository al 07/11/2026):
 - Blocco della simulazione ogni 2 ore della cessione: CORRETTO nella R09 (09/11/2026, utente 22a), vedi REVISIONI.txt.
   La numerazione: R09 = sola correzione; le annotazioni prima chiamate R09 (pesi della potenza di scarica) e la
   continuita' passano alla R10.
+- Cessione a potenza ridotta su tutto l'intervallo (11/11/2026, utente, immagine dell'ottimo teorico del 09/11:
+  scarica a piena potenza 16:00-17:45 e 19:15-20:00): la cessione poteva essere distribuita su 17-18 e 19-20 con una
+  potenza inferiore al 100 % per tutto l'intervallo. -> R10 (pesi della potenza + continuita', anche nell'ottimo teorico).
+- Rendimento di scarica (e carica?) dipendente dalla potenza (11/11/2026, utente: valore non noto). Verifica sui dati
+  veri di Cismondi (dati/ dal 17/10 al 10/11, tratti continui a potenza stabile, energia misurata contro variazione
+  del SOC su 15 kWh nominali; SOC a passi dell'1 % = 0,15 kWh):
+  - scarica: sotto 1 kW rapporto 0,85 (4 tratti); 1-2 kW 0,90 (5 tratti); oltre 2 kW nessun dato (l'automatismo
+    attuale scarica solo sul consumo della casa);
+  - carica: 1-2 kW 0,935 (6 tratti); 2-3 kW 0,963 (4 tratti); oltre 3 kW nessun dato.
+  Quindi i dati mostrano solo che a bassa potenza il rendimento e' piu' basso (gia' nel modello della cessione:
+  PERDITA_BASSA_POT); l'andamento fra 20 e 100 % non e' misurabile con i dati attuali. Da decidere con l'utente.
+  Risposta dell'utente (11/11/2026, 24a): si usano i pesi gia' decisi (1 / 0,98 / 0,97) come parametro; il programma
+  MISURA il rendimento vero per fascia di potenza quando ci saranno scariche e cariche a potenze piu' alte (fase 2 o
+  giorni in cui capita) e lo mostra; i pesi restano quelli decisi finche' l'utente non decide altrimenti. -> R10.
+  Risposta dell'utente (11/11/2026, 26a): quando la misura e' disponibile i pesi si AGGIORNANO DA SOLI con il
+  rendimento misurato; nuova pagina html dedicata ai rendimenti della batteria. Dati: impianto di Cismondi (unica
+  batteria vera: LUNA2000 15 kWh; dataset a 5 minuti con potenza della batteria e SOC). Da chiarire: se la cessione
+  (batterie ipotetiche) usa i rendimenti misurati a Cismondi.
+  Risposte dell'utente (11/11/2026): 27 si -> la cessione usa i rendimenti misurati a Cismondi (stesso tipo di
+  batteria, LUNA2000). "28 si" (inteso come domanda 25, da confermare): anche la carica preferisce stare fra il 20 e
+  l'80 % della potenza massima, con gli stessi pesi; precisazione dell'utente: l'energia ceduta direttamente in rete
+  (quella che non entra in batteria) ha il prezzo orario e subisce solo le perdite di conversione (inverter), non le
+  perdite di carica/scarica della batteria.
+  Confermato (11/11/2026): la risposta "28 si" era la 25: anche la CARICA preferisce stare fra il 20 e l'80 % della
+  potenza massima, con gli stessi pesi della scarica (1 / 0,98 / 0,97, poi rendimento misurato).
+- Grafico del SOC insieme al grafico delle potenze (11/11/2026, utente). Stato attuale: nella pagina di Cismondi SOC e
+  potenze sono due pannelli separati; nella pagina della cessione l'energia in batteria (kWh e %) e' gia' nel grafico
+  del giorno. Da chiarire: pagina e curve di SOC (reale, simulati). -> R10.
+- Idem per il grafico della potenza della batteria (11/11/2026, utente): anche la potenza della batteria nel grafico
+  delle potenze. Stato attuale: nella pagina di Cismondi il grafico delle potenze ha gia' la potenza reale della
+  batteria; il pannello "Potenza batteria" separato ha reale, automatico simulato e condizione 2. Da chiarire con la 30.
+  Risposte dell'utente (11/11/2026): 30a - nel grafico delle potenze di Cismondi SOC REALE (scala % propria) e potenza
+  reale della batteria; i pannelli separati "SOC batteria" e "Potenza batteria" si tolgono. 29a - nella cessione si
+  aggiungono le perdite di conversione dell'inverter sull'energia ceduta, con il rendimento dell'inverter misurato a
+  Cismondi per fascia di potenza (colonne eta_inv_500, eta_inv_1000, eta_inv_2000, eta_inv_oltre del dataset). -> R10.
+  Risposta dell'utente (11/11/2026, 31c): anche le curve SIMULATE di SOC e potenza della batteria (automatico
+  simulato e condizione 2) entrano nel grafico delle potenze, NASCOSTE all'inizio (si accendono dalla legenda). -> R10.
+- Ottimo teorico della cessione (11/11/2026, utente): NON calcolarlo piu', per semplificare. -> R10.
+  Cosa dipende oggi dall'ottimo teorico (cessione_totale.py main): grafico "Giorno - ottimo teorico", barre e colonne
+  "ottimo teorico" (euro, beneficio, energia, mese per mese), totali del mese, cessione/giornaliero.csv, mensile.csv,
+  giorni/*.json; per i giorni prima dell'avvio della simulazione ogni 2 ore (23/10/2026) anche il "senza batteria".
+  Le funzioni comuni di cessione_totale.py (impianto, radiazione, prezzi) restano: le usa la simulazione ogni 2 ore.
+  Il punto R10 "continuita' anche nell'ottimo teorico" decade. Da chiarire: giorni prima del 23/10 e file gia' salvati.
+  Risposte dell'utente (11/11/2026): 33a - la pagina della cessione parte dal 23/10/2026 (avvio della simulazione ogni
+  2 ore): i giorni prima si tolgono. 34a - i file dell'ottimo teorico gia' salvati nel repository si CANCELLANO
+  (cessione/giornaliero.csv, cessione/mensile.csv, cessione/giorni/, cessione/indice.json dell'ottimo; da verificare
+  al momento del codice quali altri file usa ancora la simulazione ogni 2 ore, es. cessione/prezzi e cessione/meteo).
+- PROBLEMA trovato l'11/11/2026 (Cismondi, condizione 2), dal grafico "Piano calcolato" dell'11/11 mandato dall'utente:
+  la condizione 2 e' ferma su "SCARICA_5000" (scarica forzata 5 kW) dal 30/10, con il SOC simulato fisso al 21 %
+  (dataset: 288 quarti su 288 ogni giorno dal 30/10 al 10/11). Verificato nel codice e con l'ottimizzatore:
+  - in scarica forzata la batteria non scende sotto SOC_MIN_VENDITA = 20 % e sotto 2 kW si ferma: al 21 % non scarica;
+  - in scarica forzata l'esubero FV va in rete e la batteria NON si carica;
+  - quindi la batteria simulata resta ferma (come senza batteria), ma il comando resta "scarica";
+  - l'ottimizzatore non torna in AUTO perche' ogni cambio costa 0,10 EUR e in novembre (poco esubero FV, batteria
+    vuota) il vantaggio stimato di AUTO e' piu' piccolo (prova con il piano dell'11/11: AUTO meglio di circa 0,01 EUR).
+  Conseguenza: dal 30/10 i risultati della condizione 2 sono di fatto "batteria ferma" (es. 08/11: condizione 2 0,10 EUR
+  peggio del reale). Rimedi da decidere con l'utente.
+  CORREZIONE della diagnosi (11/11/2026, dopo la domanda dell'utente sul 10/11): con i prezzi VERI la batteria ferma
+  della condizione 2 e' stata la scelta piu' conveniente. Dati del 10/11: prezzo NORD di vendita circa 0,36 EUR/kWh,
+  acquisto a prezzo fisso 0,2415 EUR/kWh. Reale (automatico, batteria caricata dal 6 al 48 %): prelievo 14,8 kWh,
+  immissione 0,06 kWh, netto 3,68 EUR. Condizione 2 (batteria ferma, esubero venduto): prelievo 21,1 kWh, immissione
+  7,4 kWh venduti a circa 0,35, netto 2,50 EUR -> 1,19 EUR meglio del reale. Quando il prezzo di vendita supera
+  quello di acquisto conviene vendere l'esubero e non caricare la batteria. La prova di prima (AUTO meglio di 0,01
+  EUR) era fatta con prezzi inventati: non valida. Resta da sistemare: il nome dell'azione ("scarica forzata 5 kW"
+  mentre la batteria e' ferma) e il caso in cui la batteria resta a lungo al 20-21 % senza poter essere usata.
+
+## Revisione del progetto Cismondi (11/11/2026, richiesta dell'utente) - NIENTE CODICE finche' non richiesto
+Richiesta: rivedere progetto e logiche per un sistema funzionante che MINIMIZZI L'ACQUISTO e di conseguenza
+massimizzi la cessione ("che vale di meno"), usando la batteria in tutti i modi di funzionamento conosciuti;
+per ora niente carica da rete.
+Fatti verificati (repository all'11/11/2026):
+- obiettivo attuale dell'ottimizzatore: minimo costo netto in euro = acquisti - cessioni + usura + 0,10 EUR per cambio;
+- prezzi: acquisto fisso 0,2415 EUR/kWh; NORD dal 17/10 al 10/11: medie giornaliere 0,225-0,321, massimi fino a 0,427;
+  in 384 ore su 601 (64 %) il NORD e' stato SOPRA il prezzo di acquisto -> in quelle ore vendere rende piu' che
+  evitare un acquisto, e il minimo costo in euro porta a NON caricare la batteria (es. 10/11). In questo periodo la
+  premessa "la cessione vale di meno" non e' vera;
+- azioni simulate: AUTO (massimo autoconsumo), RITARDATA (carica limitata a 200 W), CARICA_FV (carica dall'esubero,
+  niente scarica), SCARICA 2/3/4/5 kW (scarica forzata, anche verso la rete, fino al 20 %); "batteria ferma" non
+  esiste come azione (oggi si ottiene di fatto con una scarica forzata impossibile);
+- vincoli: 14 periodi forzati al giorno, 1 ciclo di scarica forzata al giorno, SOC 6-95 %, vendita fino al 20 %.
+Da decidere con l'utente: obiettivo (kWh acquistati o euro), azioni da aggiungere, forma del lavoro di revisione.
+Risposta dell'utente (11/11/2026): obiettivo = MINIMIZZARE GLI EURO, visto GIORNALMENTE, comprendendo gli acquisti
+per i consumi di Cismondi, che devono essere GARANTITI. Possibile anche comprare quando costa poco e vendere quando
+rende tanto, agendo sui modi di funzionamento della batteria (carica da rete esclusa per ora).
+Fatti per la decisione: l'acquisto e' a prezzo fisso F0 (0,2415 EUR/kWh uguale a ogni ora): non ci sono ore di
+acquisto a basso prezzo. Senza carica da rete lo scambio possibile e' indiretto: la batteria (caricata dal FV) vende
+in rete nelle ore a prezzo NORD alto mentre la casa compra a 0,2415 (scarica forzata verso la rete: gia' simulata).
+Da chiarire: significato di "garantire l'esigenza energetica" (riserva di batteria o solo consumi sempre coperti).
+Precisazione dell'utente (11/11/2026): "compro quando costa poco" e' una semplificazione: la simulazione deve
+funzionare con un PREZZO DI ACQUISTO ORARIO in generale (prezzo fisso = caso particolare). Cismondi oggi compra a
+prezzo fisso; per l'impianto da 20 kW si vedra': predisporre tutto. Nel grafico va mostrato il prezzo di acquisto con
+le sue componenti (energia, perdite, dispacciamento, trasporto, oneri, accise, IVA).
+Nota: nella R07 sono state tolte le simulazioni PARALLELE con prezzi diversi dal fisso (decisione dell'utente); qui si
+tratta di un'unica simulazione con prezzo di acquisto configurabile (fisso oppure orario). Da chiarire la formula del
+prezzo orario.
+Risposta dell'utente (11/11/2026, 39a): "garantire l'esigenza energetica" = i consumi della casa sono sempre coperti
+(dalla rete se serve); la batteria si puo' svuotare quando conviene (nessuna riserva aggiuntiva oltre ai limiti
+della batteria).
+Regola di valore dell'utente (11/11/2026): caricare la batteria dai pannelli costa quanto la mancata vendita (prezzo
+NORD dell'ora di carica); quando scarica, l'energia vale il mancato acquisto (prezzo di acquisto) finche' copre i
+consumi della casa (scambio con la rete a zero); oltre, l'energia va in rete e vale il prezzo orario di vendita.
+Verificato nel codice: il simulatore calcola i flussi quarto per quarto (FV->casa, FV->batteria, FV->rete,
+batteria->casa, batteria->rete, rete->casa) e l'ottimizzatore valuta prelievo x prezzo di acquisto e immissione x
+prezzo di vendita: e' la stessa regola, piu' le perdite di carica/scarica e l'usura (0,02 EUR/kWh scaricato).
+Risposta dell'utente (11/11/2026, 41): limite di SOC per vendere in rete = 5 %. Nota: oggi il minimo della batteria
+in config.lua e' SOC_MIN = 6 % ("Fine scarica SOC" dell'inverter): da chiarire se anche il minimo generale passa al 5 %.
+Risposta dell'utente (11/11/2026): minimo generale della batteria = 5 % (SOC_MIN e SOC_MIN_VENDITA a 5 %); l'utente
+deve impostare anche il "Fine scarica SOC" dell'inverter al 5 % perche' la simulazione corrisponda all'impianto.
+Risposta dell'utente (11/11/2026): la parte "energia" del prezzo di acquisto orario la indichera' piu' avanti: per ora
+si predispone solo la STRUTTURA (prezzo di acquisto per ora/quarto d'ora configurabile; Cismondi resta a prezzo fisso).
+
+## Revisione delle logiche e delle annotazioni - riepilogo (11/11/2026, NIENTE CODICE)
+Obiettivo (deciso): minimo costo in euro della giornata, consumi di Cismondi sempre coperti; valore dell'energia:
+carica dal FV = mancata vendita, scarica = mancato acquisto fino a scambio zero, oltre = prezzo di vendita
+(gia' cosi' nel simulatore). Niente carica da rete.
+Azioni di Cismondi oggi (simulatore.lua): AUTO, RITARDATA (200 W), CARICA_FV (carica piena dall'esubero, niente
+scarica), SCARICA 2/3/4/5 kW. Proposte della revisione:
+- nuova azione BATTERIA FERMA (niente carica, niente scarica; esubero in rete, consumi dalla rete): oggi manca e la si
+  ottiene con una scarica impossibile (nome fuorviante "scarica 5 kW" dal 30/10);
+- carica dall'esubero a potenze graduate (es. 1-5 kW), per i pesi della potenza (fino all'80 % peso 1, 80-90 % 0,98,
+  oltre 0,97): oggi la carica dall'esubero e' solo a piena potenza;
+- nomi chiari delle azioni in grafici e tabelle;
+- corrispondenza con i comandi Huawei (fase 2, documento 26.2.0): AUTO = maximumSelfConsumption; CARICA dall'esubero
+  = finestra TOU di carica con allowedAcChargePower 0 e potenza massima di carica (5.2.5); SCARICA P = finestra TOU di
+  scarica con maximumDischargePower P, oppure thirdPartyDispatch -P; BATTERIA FERMA = thirdPartyDispatch 0 W
+  (5.2.9: "0 fermo"). Da verificare sull'impianto prima della fase 2.
+Incoerenza trovata: costo per cambio di comando a Cismondi 0,10 EUR (PENALITA_CAMBIO_EUR) contro il peso minimo di
+continuita' 0,001 EUR deciso per la cessione: il costo di 0,10 EUR blocca cambi che renderebbero meno di 0,10 EUR.
+Da decidere con l'utente. Altri vincoli da confermare: 14 periodi forzati al giorno, 1 ciclo di scarica forzata al
+giorno, 0,01 EUR per ora sopra il 90 % di SOC.
+Gia' deciso per la R10: SOC minimo 5 % (casa e vendita; Fine scarica SOC dell'inverter al 5 %), prezzo di acquisto
+orario (struttura) con componenti nel grafico, pesi della potenza e rendimenti misurati (pagina nuova), perdite di
+conversione nella cessione, SOC e potenza batteria nel grafico delle potenze, ottimo teorico della cessione tolto
+(pagina dal 23/10, file cancellati), peso di continuita' 0,001 EUR nella cessione.
+Altro trovato: il pannello "Piano calcolato" mostra sempre l'ultimo piano, non quello del giorno scelto.
+Decisione 1 (11/11/2026): costo per cambio di comando a Cismondi = 0,001 EUR (come la continuita' della cessione).
+Decisione 2 (11/11/2026): restano entrambi i limiti a Cismondi: 14 periodi forzati al giorno e 1 ciclo di scarica
+forzata al giorno (motivo: in futuro l'utente abilitera' la carica da rete; per ora no).
+Decisione 3 (11/11/2026): resta il costo di 0,01 EUR per ogni ora con SOC sopra il 90 % (Cismondi).
+Decisione 4 (11/11/2026): a Cismondi si aggiungono (a) l'azione BATTERIA FERMA (niente carica e niente scarica;
+comando Huawei: potenza 0 W) e la CARICA DALL'ESUBERO A POTENZE GRADUATE 1, 2, 3, 4, 5 kW (pesi: 1-4 kW peso 1,
+5 kW peso 0,97).
+Decisione 5 (11/11/2026): il pannello "Piano calcolato" mostra il piano del GIORNO SCELTO (quello calcolato la sera
+prima per quel giorno: dati/AAAA-MM-GG/piano_sera.csv, presente nei giorni simulati); per domani resta l'ultimo piano.
+Precisazione dell'utente sull'obiettivo (11/11/2026): non solo la giornata: va valutata anche la giornata SUCCESSIVA,
+considerando l'energia rimasta in batteria per ridurre il costo del giorno dopo.
+Stato attuale (verificato in ems_sim.lua): l'orizzonte dell'ottimizzatore arriva alla fine dei prezzi noti (oggi; dopo
+le 13:30 circa anche domani, quando il GME pubblica i prezzi); all'energia rimasta a fine orizzonte si da' il valore
+del costo medio di acquisto per i kWh che serviranno nella notte successiva (previsione, al massimo 14 ore).
+Da decidere con l'utente come estendere (vedi cessione: orizzonte sempre fino a fine domani con prezzi previsti).
+Risposta dell'utente (11/11/2026): dalle 13:30 (prezzi di domani noti) si valuta anche il giorno dopo (in particolare
+la scarica nelle prime ore notturne); tanto il tutto si rivaluta ogni n ore. -> resta l'orizzonte attuale (fino
+all'ultimo prezzo noto), che gia' fa questo. Stato attuale della rivalutazione a Cismondi: piano ricalcolato a ogni
+quarto d'ora quando il programma gira (su GitHub i giri sono ogni 30 minuti, a volte saltati). Da chiarire "n".
+Risposta dell'utente (11/11/2026): i piani si ricalcolano DOPO il recupero delle informazioni da Huawei. Verificato in
+ems_sim.lua (ciclo): prima la lettura Huawei (su GitHub: le letture a 5 minuti dallo storico Huawei arrivate dal giro
+precedente), poi la decisione del quarto d'ora con il piano ricalcolato: e' gia' cosi'. Nessun cambiamento.
+- Frequenza dei giri (11/11/2026, domanda dell'utente). Verificato: ems.yml e' programmato ogni 30 minuti (minuti 7 e
+  37), ma dal 03/11 all'11/11 GitHub ha fatto 33 giri: da 3 a 6 al giorno, intervallo medio 5,7 ore (minimo 0,4,
+  massimo 11 ore). A ogni giro il programma (modalita' GitHub di ems_sim.lua) rigioca UNA PER UNA tutte le letture a
+  5 minuti arrivate dal giro precedente, con l'ora simulata, e ricalcola il piano a ogni quarto d'ora simulato, come
+  farebbe il Mango (che girera' ogni 5 minuti). Da verificare: quale previsione meteo usano le decisioni rigiocate
+  (quella scaricata al momento del giro, piu' recente di quella che il Mango avrebbe avuto).
+  Decisione dell'utente (11/11/2026, 1b): si ANTICIPA l'avvio dei giri da parte del Mango: il Mango avvia il workflow
+  ems.yml ogni 30 minuti (API GitHub workflow_dispatch, come fa gia' INSTALLA_EMS). Serve: Mango collegato a Internet
+  (router), curl, un token GitHub con permesso "workflow" salvato sul Mango, una riga di cron. Da chiarire lo stato
+  del Mango.
+  Mango reale (11/11/2026, dati dall'utente via SSH): GL.iNet GL-MT300N-V2, OpenWrt 22.03.4 (ramips/mt76x8, mipsel_24kc),
+  RAM ~119 MB (disponibili ~68 MB), flash /overlay 1,6 MB (836 kB liberi), /tmp 59 MB in RAM, Lua 5.1.5 (double int32),
+  curl e wget presenti, crontab vuoto.
+  Benchmark (benchmark_mango.lua, config con PROFILI = {"C2"}): Mango totale 45,955 s (batteria 0,180 / ottimizzatore
+  39,393 / json 6,381), real 55,75 s; GitHub 0,258 s (0,001 / 0,217 / 0,040). FATTORE_MANGO misurato ~178 (non ancora
+  scritto in config.lua). Non verificato: che il piano calcolato sul Mango sia identico a quello di GitHub.
+  La parte Python (ml/) non e' installabile sul Mango (flash 1,6 MB; numpy+pandas+scipy ~180 MB).
+  Passaggi dell'ottimizzatore nei giorni reali (11/11/2026): rigioco C2 sui dati Cismondi 20/09-16/10/2026 (27 giorni,
+  648 piani, uno all'ora, meteo previsto dall'archivio Open-Meteo gia' salvato in rigioco/meteo), conteggio fatto su una
+  copia del programma: 1 passaggio 626 piani (96,6 %), 3 -> 5, 4 -> 3, 6 -> 2, 7 -> 1, 8 -> 11 (1,7 %); media 1,17.
+  Stima sul Mango (~39 s per passaggio su 136 quarti): di solito <= 40 s, nei casi peggiori fino a ~5 minuti.
+  Dettaglio dei piani con piu' passaggi (12/11/2026): 22 piani su 648, concentrati in 3 giorni (20/09 13-22,
+  11/10 13 e 12/10 00, 13/10 13-22). Causa sempre il limite di 1 ciclo forzato al giorno (15 kWh): nei passaggi
+  successivi il costo per kWh (lambda_e) viene abbassato per tentativi e il piano salta a 15,5-20,4 kWh di scarica
+  forzata (oltre il limite) e viene scartato. Il limite di 14 finestre non e' mai stato superato (0 casi).
+  Non verificato: se i passaggi dal 2 in poi cambiano il piano scelto rispetto al primo.
+  Effetto dei passaggi in piu' (12/11/2026, stessi 22 piani): in 16 piani il piano finale e' identico al primo
+  passaggio (passaggi 2-8 senza effetto); in 4 il primo passaggio superava il limite di ciclo (passaggi necessari);
+  in 2 (20/09 14:00 +0,32 EUR, 20/09 22:00 +0,26 EUR di valore piano) i passaggi successivi hanno trovato un piano
+  migliore entro il limite. In tutti i 22 l'azione del primo quarto d'ora e' identica; le differenze iniziano
+  dopo 26-89 quarti d'ora (6,5-22 ore), quindi nel rigioco orario nessuna azione eseguita e' cambiata.
+  Perche' solo 22 piani: dopo un primo passaggio entro i limiti la ricerca continua solo se il costo di ciclo
+  ereditato dal piano precedente (lambda_e) e' > 0,01 EUR/kWh (e al massimo fino al passaggio 3), oppure se c'e'
+  una violazione; negli altri 626 piani nessuna delle due condizioni.
+  Conferma (12/11/2026): GitHub resta per calcoli, memoria, pagine ed email. Il Mango NON calcola: avvia soltanto il
+  workflow ems.yml ogni 30 minuti (1 riga di cron + curl, ~1 s). Motivo: il Mango e' l'unico dispositivo acceso e
+  collegato 24 ore su 24 (il PC no con certezza); scartato il servizio cron esterno (token presso terzi).
+  Sul Mango servono: token GitHub con permesso di avviare i workflow (solo repository ems-dati) salvato in un file
+  leggibile solo da root, servizio cron di OpenWrt abilitato, riga di crontab. Nessun programma Lua da copiare.
+  Verifica (12/11/2026): ems.yml ha gia' workflow_dispatch e concurrency (group ems, cancel-in-progress false: un giro
+  alla volta, al massimo uno in attesa). Durata dei giri dalla pagina Actions (#135-#142): da 1 min 2 s a 4 min 55 s,
+  quindi molto sotto i 30 minuti. Intervalli tra giri programmati ancora di ore (es. 11/11 23:39 -> 12/11 04:46).
+  Giro #139 (11/11 17:05, 4 min 55 s) FALLITO: causa da verificare.
+  Decisione token (12/11/2026): sul Mango si usa lo STESSO token classico del PC (permessi repo e workflow su tutti
+  i repository), salvato in un file leggibile solo da root. Rischio accettato dall'utente: chi accedesse al Mango
+  avrebbe accesso completo ai repository. Non va mai scritto in file del repository ne' nei documenti.
+  Richiesta (12/11/2026): SIMULATORE PER PC, file .exe per Windows 11, con tutte e tre le funzioni:
+  a) prove "cosa succede se" (giorno reale o inventato, prezzi/consumi/FV/batteria/regole modificabili -> piano, SOC, euro);
+  b) giri al posto di GitHub; c) confronto programmazione dinamica vs algoritmo genetico (euro e tempi).
+  Nota tecnica certa: l'.exe Windows (es. PyInstaller) si costruisce su Windows, non dal contenitore Linux; si puo'
+  costruire con un workflow GitHub su runner windows-latest. Da chiarire: punto b (il PC non e' acceso 24 h con
+  certezza; le pagine sono su GitHub Pages), algoritmo genetico (dell'utente o da scrivere).
+  Chiarimento (12/11/2026): il simulatore per PC deve SOLO far vedere graficamente cosa fa il sistema; nessuna modifica
+  a quanto gia' fatto (GitHub, Mango, repository, workflow restano invariati; il simulatore non scrive su GitHub).
+  Dati del simulatore PC (12/11/2026, c): copia locale sul PC, aggiornata in sola lettura dal repository pubblico quando c'e' Internet (nessun token).
+  Viste del simulatore PC (12/11/2026, tutto): vista a filmato quarto per quarto (dati usati, piano, azione, flussi, SOC, euro; play/pausa/avanti/indietro) + vista a grafici del giorno + modifiche 'cosa succede se' + confronto programmazione dinamica / algoritmo genetico.
+  Precisazione (12/11/2026): il simulatore per PC e' per l'impianto CESSIONE TOTALE 20 kW (non Cismondi). L'utente
+  chiede che scriva e compili tutto io, senza azioni da parte sua. Nota: la cessione usa GIA' un algoritmo evolutivo
+  (cessione_ottimizza.py: fasce di 2 ore, modi Fully/TOU/Third-party, 3 scenari di produzione, semi da LP e fuzzy).
+  Nota tecnica: dal contenitore il sito python.org e' bloccato (403), quindi non posso impacchettare Python per
+  Windows; possibile invece un .exe unico compilato in Go (incrociato per Windows) con pagina grafica nel browser.
+  Ordine deciso (12/11/2026, a): PRIMA la revisione R10, POI il simulatore per PC della cessione (che copia la logica R10).
+
+## R10 - elenco unico (12/11/2026, NIENTE CODICE finche' non richiesto)
+DECISO - Cismondi:
+ D1 SOC_MIN e SOC_MIN_VENDITA = 5 % (l'utente imposta "Fine scarica SOC" dell'inverter al 5 %).
+ D2 Costo per cambio di comando 0,001 EUR. Restano: 14 periodi forzati/giorno, 1 ciclo forzato/giorno, 0,01 EUR/ora SOC > 90 %.
+ D3 Nuove azioni: BATTERIA FERMA (0 W) e CARICA DALL'ESUBERO a 1-5 kW. Nomi chiari delle azioni in grafici e tabelle.
+ D4 Pesi della potenza (solo per scegliere il piano): scarica e carica, fino all'80 % peso 1, 80-90 % 0,98, oltre 0,97
+    (Cismondi: 1-4 kW peso 1, 5 kW 0,97); rendimento misurato per fascia di potenza; nuova pagina html dei rendimenti.
+ D5 Prezzo di acquisto orario: solo struttura (Cismondi resta a prezzo fisso); componenti del prezzo nel grafico.
+ D6 Grafico delle potenze: SOC reale (scala %) e potenza reale della batteria; curve simulate nascoste all'inizio;
+    tolti i pannelli separati "SOC batteria" e "Potenza batteria".
+ D7 "Piano calcolato" = piano del giorno scelto (dati/<g>/piano_sera.csv); per domani l'ultimo piano.
+ D8 Il Mango avvia ems.yml ogni 30 minuti (curl + cron, token classico del PC in file leggibile solo da root).
+ Invariati (verificati): orizzonte fino all'ultimo prezzo noto (dalle 13:30 anche domani); piano ricalcolato dopo le letture Huawei.
+DECISO - Cessione totale:
+ D9  Pesi della potenza di scarica e carica (come D4) e rendimenti batteria misurati a Cismondi.
+ D10 Perdite di conversione dell'inverter sull'energia ceduta (eta_inv per fascia, misurato a Cismondi).
+ D11 Continuita': 0,001 EUR per ogni avvio o arresto della scarica.
+ D12 Ottimo teorico tolto: pagina dal 23/10/2026, file dell'ottimo cancellati (si tengono quelli usati dalla simulazione ogni 2 ore).
+APERTO:
+ A1 Come il rendimento misurato diventa peso ("i pesi si aggiornano da soli"): formula non definita.
+ A2 Prezzo di acquisto orario: formula delle componenti con la parte "energia" variabile.
+ A3 Installazione sul Mango: da qui non raggiungo il Mango (rete di casa); serve un passo fatto dall'utente o dal PC.
+ A4 Caso "batteria a lungo al 20-21 % senza poter essere usata" (11/11): da confermare se risolto da D1 + D3.
+ A5 Da verificare (non codice): previsione meteo usata dalle decisioni rigiocate su GitHub; servizio cron del Mango abilitato.
+ Non indagato per scelta dell'utente: giro #139 fallito.
+ A1 deciso (12/11/2026, a): peso fascia = rendimento misurato della fascia / miglior rendimento misurato (la migliore = 1); senza misure resta il peso fisso (1 / 0,98 / 0,97). Da chiudere: quante misure servono per considerare valida una fascia.
+ A1-bis deciso (12/11/2026, b): una fascia e' valida con almeno 10 tratti, ciascuno di almeno 1,5 kWh (10 % di SOC).
+ A2 deciso (12/11/2026, a): prezzo orario = stessa formula di oggi con 'energia' oraria (fonte indicata piu' avanti); perdite, dispacciamento, trasporto, oneri, accise e IVA restano fissi.
+ A3 prova c (12/11/2026): dal computer collegato alla sessione la rete locale non e' raggiungibile (connessione diretta: 'Network is unreachable'; HTTP via proxy: 403). Strada c esclusa.
+ A3 riprova (12/11/2026, Mango a 192.168.1.1 con VPN attiva): dal computer collegato il proxy di rete della sessione rifiuta la connessione (CONNECT 192.168.1.1:22 Forbidden). Strada c esclusa: dipende dalle impostazioni di rete dell'organizzazione.
+
+## R10 APPLICATA (12/11/2026, "crea codice" dell'utente): D1-D12 e A1, A2, A3 (strada a: INSTALLA_EMS.bat via SSH).
+Restano aperti: A4 (batteria a lungo al 20-21 %: con SOC minimo 5 % e BATTERIA FERMA dovrebbe sparire, da verificare
+sui giorni dopo l'installazione), A5 (meteo usato dalle decisioni rigiocate; servizio cron del Mango: lo verifica il
+passo Mango di INSTALLA_EMS). Dopo: simulatore per PC della cessione totale (.exe Windows, solo visualizzazione).

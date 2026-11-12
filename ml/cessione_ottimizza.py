@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Revisione R10 - 12/11/2026 - rendimenti della batteria misurati a Cismondi per fascia di potenza (se la fascia e' valida),
+#   perdite di conversione dell'inverter sull'energia ceduta, pesi della potenza di carica/scarica e costo di continuita'
+#   0,001 EUR per ogni avvio o arresto della scarica (pesi e continuita' solo per scegliere il piano: gli euro restano veri)
 # Revisione R05 - 26/10/2026 - scarica modulabile 2-10 kW (2 batterie da 2-5 kW: sotto 2 kW ferma), carica 0-10 kW;
 #   potenza massima di scarica in TOU scelta dal piano (2-10 kW, impostabile via API 5.2.5); a parita' di ricavo meno
 #   cambi di comando; regola di stabilita' 4 ore / +10 % / 0,10 EUR prima di cambiare il piano spedito
@@ -46,6 +49,7 @@ P_CMD_KW = 10.0                                # comando massimo in Third-party 
 P_MIN_SCARICA_KW = 2.0                         # R05: sotto 2 kW la scarica non parte (2 batterie da 2-5 kW ciascuna)
 MAX_FASCE_TOU = 14
 COSTO_VARIAZIONE = 0.002                       # R05: EUR per ogni cambio di comando tra ore (a parita' di ricavo: meno cambi)
+COSTO_CONTINUITA = 0.001                       # R10: EUR per ogni avvio o arresto della scarica (solo per la scelta)
 STABILITA_ORE = 4                              # R05: confronto sulle 4 ore successive
 STABILITA_PERC = 0.10                          #      il nuovo piano deve rendere almeno il 10 % in piu'
 STABILITA_EUR = 0.10                           #      e almeno 0,10 EUR (costo di un cambio di programmazione)
@@ -133,14 +137,26 @@ def struttura(quarti):
 
 
 # ------------------------------------------------------------------ modello fisico non lineare (vettoriale)
-def simula(modo_q, val_q, pv, prezzi, soc0, dettaglio=False, cap_kw=None):
+def _per_fascia(valori, fascia, riserva):
+    """valore per fascia (0, 1, 2) con riserva dove la fascia non ha misura"""
+    v = [riserva if x is None else x for x in valori]
+    return np.where(fascia == 0, v[0], np.where(fascia == 1, v[1], v[2]))
+
+
+def simula(modo_q, val_q, pv, prezzi, soc0, dettaglio=False, cap_kw=None, scelta=None):
     """modo_q, val_q: (P, N); pv: (S, N) kWh per quarto; ritorna ricavo (P, S), energia finale (P, S)
-    e, con dettaglio=True (P = S = 1), le serie per quarto d'ora."""
+    e, con dettaglio=True (P = S = 1), le serie per quarto d'ora.
+    R10: scelta = lista in cui mettere (P, S) EUR di penalita' per la sola scelta del piano (pesi della potenza e
+    continuita' della scarica); i rendimenti misurati e le perdite dell'inverter valgono sempre (fisica)."""
     P, N = modo_q.shape
     S = pv.shape[0]
     LIM, PC, PS, CAP = CT.LIM_Q, CT.PC_Q, CT.PS_Q, CT.CAPACITA_KWH
     soc = np.full((P, S), float(soc0))
     eur = np.zeros((P, S))
+    pen = np.zeros((P, S))
+    in_scarica = np.zeros((P, S), dtype=bool)
+    ec_mis, ed_mis = CT.REND["eta_carica"], CT.REND["eta_scarica"]
+    eta_d_min = min([ETA_D] + [x for x in ed_mis if x])
     serie = {k: [] for k in ("carica", "scarica", "ceduto", "tagliato", "soc")} if dettaglio else None
     cap = (np.full((P, 1), PS) if cap_kw is None else (np.asarray(cap_kw, dtype=float).reshape(P, 1) * CT.Q))   # TOU: potenza max
     for k in range(N):
@@ -150,7 +166,7 @@ def simula(modo_q, val_q, pv, prezzi, soc0, dettaglio=False, cap_kw=None):
         pc_max = PC * np.clip((CAP - soc) / (FASCIA_RIDUZIONE * CAP), 0, 1)
         ps_max = PS * np.clip(soc / (FASCIA_RIDUZIONE * CAP), 0, 1)
         entra = (CAP - soc) / ETA_C
-        esce = soc * ETA_D
+        esce = soc * eta_d_min
         sopra = np.maximum(f - LIM, 0)
         sotto = np.maximum(LIM - f, 0)
         c_idle = np.minimum.reduce([np.broadcast_to(sopra, soc.shape), pc_max, entra])
@@ -172,13 +188,27 @@ def simula(modo_q, val_q, pv, prezzi, soc0, dettaglio=False, cap_kw=None):
         c = np.maximum(c, 0)
         s = np.maximum(s, 0)
         s = np.where(s < P_MIN_SCARICA_KW * CT.Q - 1e-9, 0.0, s)        # R05: scarica minima 2 kW
-        ced = np.minimum(f - c + s, LIM)
-        eta_d = ETA_D * (1 - PERDITA_BASSA_POT * np.exp(-(s / CT.Q) / POT_RIF_KW))
-        soc = np.clip(soc + c * ETA_C - np.where(s > 0, s / eta_d, 0.0), 0, CAP)
+        dc = f - c + s
+        ac = dc * CT.eta_inverter(dc)                                      # R10: perdite dell'inverter
+        ced = np.minimum(ac, LIM)
+        fc, fs = CT.fascia_potenza(c, CT.P_CARICA_KW), CT.fascia_potenza(s, CT.P_SCARICA_KW)
+        eta_mod = ETA_D * (1 - PERDITA_BASSA_POT * np.exp(-(s / CT.Q) / POT_RIF_KW))
+        eta_d = np.where(np.asarray(_per_fascia(ed_mis, fs, -1.0)) > 0, _per_fascia(ed_mis, fs, -1.0), eta_mod)   # R10: misurato
+        eta_c = _per_fascia(ec_mis, fc, ETA_C)
+        soc = np.clip(soc + c * eta_c - np.where(s > 0, s / eta_d, 0.0), 0, CAP)
         eur += ced * prezzi[k]
+        if scelta is not None:                                             # R10: solo per scegliere il piano
+            wc = _per_fascia(CT.REND["pesi_carica"], fc, 1.0)
+            wd = _per_fascia(CT.REND["pesi_scarica"], fs, 1.0)
+            pen += (c * (1 - wc) + s * (1 - wd)) * prezzi[k]
+            ora_scarica = s > 1e-9
+            pen += (ora_scarica != in_scarica) * COSTO_CONTINUITA
+            in_scarica = ora_scarica
         if dettaglio:
-            for nome, x in (("carica", c), ("scarica", s), ("ceduto", ced), ("tagliato", f - c + s - ced), ("soc", soc)):
+            for nome, x in (("carica", c), ("scarica", s), ("ceduto", ced), ("tagliato", ac - ced), ("soc", soc)):
                 serie[nome].append(float(x[0, 0]))
+    if scelta is not None:
+        scelta.append(pen)
     return eur, soc, serie
 
 
@@ -242,8 +272,9 @@ def decidi(contesto, theta, tempo_s=60.0, pop=120, max_gen=4000, stallo=300, sem
     vfin = theta["valore_finale"] * float(np.mean(prezzi)) * ETA_D
 
     def valuta(modi_f, val_o, cap_o):
-        eur, soc, _ = simula(modi_f[:, fascia_q], val_o[:, ora_q], pv, prezzi, soc0, cap_kw=cap_o)
-        return (eur + soc * vfin) @ pesi - penalita(modi_f, val_o, fascia_q, ora_q, giorno_q, theta)
+        sc = []
+        eur, soc, _ = simula(modi_f[:, fascia_q], val_o[:, ora_q], pv, prezzi, soc0, cap_kw=cap_o, scelta=sc)
+        return (eur + soc * vfin - sc[0]) @ pesi - penalita(modi_f, val_o, fascia_q, ora_q, giorno_q, theta)
 
     v_lin = seme_lineare(p50, prezzi, soc0, ora_q, n_ore, theta)
     v_fz = seme_fuzzy(p50, prezzi, ora_q, n_ore, theta)
@@ -370,8 +401,9 @@ def stabilita(contesto, theta, nuovo, vecchio):
     mA, vA, cA = arr(nuovo)
     mB, vB, cB = arr(ibrido)
     # potenza TOU: una per piano (la prima ora del piano)
-    eur, soc, _ = simula(np.array([mA, mB]), np.array([vA, vB]), pv, prezzi, float(contesto["soc"]), cap_kw=[cA[0], cB[0]])
-    val = (eur + soc * vfin) @ pesi
+    sc = []
+    eur, soc, _ = simula(np.array([mA, mB]), np.array([vA, vB]), pv, prezzi, float(contesto["soc"]), cap_kw=[cA[0], cB[0]], scelta=sc)
+    val = (eur + soc * vfin - sc[0]) @ pesi
     n4 = len(quattro)
     e4, _, _ = simula(np.array([mB[:n4]]), np.array([vB[:n4]]), pv[:, :n4], prezzi[:n4], float(contesto["soc"]), cap_kw=[cB[0]])
     ricavo4_vecchio = float(e4[0] @ pesi)
