@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-12T17:24:03+01:00",
+ "aggiornato": "2026-11-12T21:29:04+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -239,9 +239,9 @@
   }
  ],
  "oggi": "2026-11-12",
- "piano": "2026-11-12",
+ "piano": "2026-11-13",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 12/11/2026 16:23:24 UTC",
+  "Controllo di rete del giro su GitHub - 12/11/2026 20:26:32 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -278,11 +278,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-08 14:15:35  Token Huawei rinnovato.",
-  "2026-11-08 14:15:42  GitHub: rigioco 2026-11-08 06:30:00 -> 2026-11-08 13:55:00 (89 letture dallo storico)",
-  "2026-11-08 13:30:00  Prezzi GME del 20261109 salvati: 24 ore, NORD da 0.2244 a 0.4270 EUR/kWh, con quarti d'ora",
-  "2026-11-08 13:30:00  Richiesta delle previsioni di 20261109 inviata a GitHub",
-  "2026-11-08 14:15:58  GitHub: inviati 2 file",
   "2026-11-08 19:29:45  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-08 19:29:45  Token Huawei rinnovato.",
   "2026-11-08 19:29:53  GitHub: rigioco 2026-11-08 13:55:00 -> 2026-11-08 19:05:00 (62 letture dallo storico)",
@@ -357,6 +352,11 @@
   "2026-11-12 17:23:38  GitHub: rigioco 2026-11-12 13:15:00 -> 2026-11-12 17:00:00 (45 letture dallo storico)",
   "2026-11-12 13:30:00  Prezzi GME del 20261113 salvati: 24 ore, NORD da 0.1865 a 0.2960 EUR/kWh, con quarti d'ora",
   "2026-11-12 13:30:00  Richiesta delle previsioni di 20261113 inviata a GitHub",
-  "2026-11-12 14:00:00  GitHub: inviati 2 file"
+  "2026-11-12 14:00:00  GitHub: inviati 2 file",
+  "2026-11-12 21:26:40  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-12 21:26:41  Token Huawei rinnovato.",
+  "2026-11-12 21:26:50  GitHub: rigioco 2026-11-12 17:00:00 -> 2026-11-12 21:05:00 (49 letture dallo storico)",
+  "2026-11-12 17:15:00  Previsioni di GitHub per 20261113 ricevute e accettate",
+  "2026-11-12 17:30:00  Piano della sera per 20261113 salvato"
  ]
 }
