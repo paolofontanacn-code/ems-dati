@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Revisione R11 - 13/11/2026 - REVISIONE = R11 (nessun altro cambiamento)
 # Revisione R10 - 12/11/2026 - NIENTE PIU' OTTIMO TEORICO: main() cancella i vecchi file dell'ottimo (giornaliero.csv,
 #   mensile.csv, indice.json, ULTIMO_CALCOLO.md, giorni/ della cartella cessione/) e non calcola altro; restano le funzioni
 #   comuni (dati, prezzi, radiazione, fisica). Perdite di conversione dell'inverter (rendimento misurato a Cismondi per
@@ -52,7 +53,7 @@ DATI = os.environ.get("EMS_DATI", os.path.join(RADICE, "memoria_mango"))
 OUT = os.path.join(RADICE, "cessione")
 
 # ------------------------------------------------------------------ parametri (decisioni del 23/10/2026)
-REVISIONE = "R10"
+REVISIONE = "R11"
 P_CISMONDI_KW = 11.0             # Cismondi: 11 kW, Sud, inclinazione 2 gradi
 P_IMPIANTO_KW = 20.0             # impianto simulato
 SCALA = P_IMPIANTO_KW / P_CISMONDI_KW

@@ -1,3 +1,5 @@
+-- Revisione R11 - 13/11/2026 - i profili con PROFILI_ALGORITMO = "evolutivo" (condizione 3) sono pianificati da
+--   evolutivo.lua; gli altri restano alla programmazione dinamica
 -- Revisione R10 - 12/11/2026 - quarta categoria "ferma" (BATTERIA_FERMA) per il conteggio dei periodi forzati; pesi
 --   della potenza di carica e scarica nel valore delle azioni (solo per la scelta: gli euro del piano restano veri)
 -- ottimizzatore.lua - pianificazione a programmazione dinamica sul SOC, a passi di 15 minuti
@@ -255,7 +257,7 @@ end
 -- I limiti (finestre al giorno, energia di scarica forzata al giorno) sono rispettati con costi aggiuntivi cercati
 -- per tentativi; si ripete il calcolo solo per i profili che ne hanno bisogno. profili[p].lambda_e (facoltativo) e'
 -- il costo per kWh trovato al calcolo precedente: si riparte da li' (di solito basta 1-2 passaggi).
-function M.pianifica(c, e, quarti, nomi, profili, usura, valore_fine)
+local function pianifica_dp(c, e, quarti, nomi, profili, usura, valore_fine)
   local lambda, lambda_e, lo_e, hi_e, migliore, ris = {}, {}, {}, {}, {}, {}
   local function valore(r) local v = 0; for _, x in ipairs(r.piano) do v = v + x.euro end; return v end
   for _, p in ipairs(nomi) do
@@ -314,6 +316,25 @@ function M.pianifica(c, e, quarti, nomi, profili, usura, valore_fine)
                    violazione_e = false, forzata = r.forzata, lambda = r.lambda, lambda_e = ris[p].lambda_e,
                    soc_fine = r.soc_fine, troncato = r.troncato, valore_piano = r.valore_piano, adottato_da = q }
       end
+    end
+  end
+  return ris
+end
+
+-- R11: programmazione dinamica per i profili normali, algoritmo evolutivo per quelli indicati in config.lua
+function M.pianifica(c, e, quarti, nomi, profili, usura, valore_fine)
+  local alg = c.PROFILI_ALGORITMO or {}
+  local dp, ev = {}, {}
+  for _, p in ipairs(nomi) do
+    if alg[p] == "evolutivo" then ev[#ev + 1] = p else dp[#dp + 1] = p end
+  end
+  local ris = (#dp > 0) and pianifica_dp(c, e, quarti, dp, profili, usura, valore_fine) or {}
+  if #ev > 0 then
+    local EV = require "evolutivo"
+    for _, p in ipairs(ev) do
+      local t0 = os.clock()
+      ris[p] = EV.pianifica(c, e, quarti, p, profili[p], usura, valore_fine[p], tronca)
+      ris[p].secondi = os.clock() - t0
     end
   end
   return ris

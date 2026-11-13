@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Revisione R11 - 13/11/2026 - in aggiunta all'algoritmo evolutivo: piano con PROGRAMMAZIONE DINAMICA (decidi_pd), per il
+#   confronto; simula() accetta un'energia iniziale diversa per ogni piano
 # Revisione R10 - 12/11/2026 - rendimenti della batteria misurati a Cismondi per fascia di potenza (se la fascia e' valida),
 #   perdite di conversione dell'inverter sull'energia ceduta, pesi della potenza di carica/scarica e costo di continuita'
 #   0,001 EUR per ogni avvio o arresto della scarica (pesi e continuita' solo per scegliere il piano: gli euro restano veri)
@@ -151,7 +153,8 @@ def simula(modo_q, val_q, pv, prezzi, soc0, dettaglio=False, cap_kw=None, scelta
     P, N = modo_q.shape
     S = pv.shape[0]
     LIM, PC, PS, CAP = CT.LIM_Q, CT.PC_Q, CT.PS_Q, CT.CAPACITA_KWH
-    soc = np.full((P, S), float(soc0))
+    s_ini = np.asarray(soc0, dtype=float)                  # R11: uno per tutti oppure uno per piano
+    soc = np.full((P, S), float(s_ini)) if s_ini.ndim == 0 else np.repeat(s_ini.reshape(P, 1), S, axis=1)
     eur = np.zeros((P, S))
     pen = np.zeros((P, S))
     in_scarica = np.zeros((P, S), dtype=bool)
@@ -334,6 +337,56 @@ def decidi(contesto, theta, tempo_s=60.0, pop=120, max_gen=4000, stallo=300, sem
     return {"piano": piano, "atteso_eur": round(migliore, 3), "punteggi_semi": punteggi_semi, "generazioni": gen,
             "valutazioni": pop * (gen + 1), "secondi": round(time.perf_counter() - t0, 1),
             "fasce": riassunto(quarti, piano)}
+
+
+# ------------------------------------------------------------------ R11: programmazione dinamica (confronto)
+PD_PASSO_KWH = 0.25                             # griglia dell'energia in batteria
+PD_COMANDI = (-1.0, -0.8, -0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0)   # Third-party: x 10 kW (- scarica, + carica)
+
+
+def decidi_pd(contesto, theta):
+    """Piano con programmazione dinamica sull'energia in batteria: per ogni ORA un comando tra Fully fed to grid e
+    Third-party dispatch a potenze fisse (scarica 2-10 kW, ferma, carica 2-10 kW dai pannelli). Stesso modello fisico,
+    stessi prezzi, stessi pesi della potenza e stesso valore dell'energia finale dell'algoritmo evolutivo; produzione =
+    scenario probabile (una sola previsione). Ritorna il piano nello stesso formato di decidi()."""
+    t0 = time.perf_counter()
+    quarti = list(contesto["quarti"])
+    p50, prezzi = (np.asarray(contesto[k], dtype=float) for k in ("p50", "prezzi"))
+    soc0 = float(contesto["soc"])
+    ora_q, _, _, n_ore, _ = struttura(quarti)
+    vfin = theta["valore_finale"] * float(np.mean(prezzi)) * ETA_D
+    griglia = np.arange(0.0, CT.CAPACITA_KWH + 1e-9, PD_PASSO_KWH)
+    nS = len(griglia)
+    azioni = [(0, 0.0)] + [(2, v) for v in PD_COMANDI]          # (modalita', valore)
+    nA = len(azioni)
+    V = griglia * vfin                                          # valore dell'energia rimasta a fine orizzonte
+
+    def ora(h, soc_ini):
+        """tutte le azioni per ogni energia iniziale: valore immediato (n, nA) ed energia finale (n, nA)"""
+        idx = np.where(ora_q == h)[0]
+        n = len(soc_ini)
+        modo = np.repeat(np.array([a[0] for a in azioni]), n)[:, None] * np.ones((1, len(idx)), dtype=int)
+        val = np.repeat(np.array([a[1] for a in azioni]), n)[:, None] * np.ones((1, len(idx)))
+        sc = []
+        eur, soc, _ = simula(modo, val, p50[None, idx], prezzi[idx], np.tile(soc_ini, nA), scelta=sc)
+        return (eur[:, 0] - sc[0][:, 0]).reshape(nA, n).T, soc[:, 0].reshape(nA, n).T
+
+    tabelle = [None] * n_ore
+    for h in range(n_ore - 1, -1, -1):
+        tabelle[h] = V
+        r, s2 = ora(h, griglia)
+        V = (r + np.interp(s2, griglia, tabelle[h])).max(axis=1)
+    piano, soc, atteso = {}, soc0, 0.0
+    for h in range(n_ore):
+        r, s2 = ora(h, np.array([soc]))
+        tot = r[0] + np.interp(s2[0], griglia, tabelle[h])
+        a = int(np.argmax(tot))
+        atteso += float(r[0, a])
+        soc = float(s2[0, a])
+        for k in np.where(ora_q == h)[0]:
+            piano[str(quarti[k])] = [int(azioni[a][0]), round(float(azioni[a][1]), 4), P_CMD_KW]
+    return {"piano": piano, "atteso_eur": round(atteso + soc * vfin, 3), "secondi": round(time.perf_counter() - t0, 2),
+            "stati": nS, "azioni": nA, "fasce": riassunto(quarti, piano)}
 
 
 def riassunto(quarti, piano):

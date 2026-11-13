@@ -1,6 +1,25 @@
 EMS Cismondi - elenco delle revisioni
 (le consegne precedenti al 23/10/2026 non sono numerate)
 
+R11 - 13/11/2026
+  Algoritmo evolutivo e programmazione dinamica affiancati su tutti e due gli impianti (richiesta dell'utente):
+  - Cismondi: nuova CONDIZIONE 3 = stessi dati, stesso modello della batteria, stessi costi e limiti della condizione 2,
+    ma con il piano cercato da un ALGORITMO EVOLUTIVO (nuovo mango/evolutivo.lua: un'azione per ogni ora, popolazione 30,
+    40 generazioni, semi: automatico, batteria ferma, piano precedente, regola semplice sui prezzi; non usa il piano
+    della programmazione dinamica). Ha la sua batteria virtuale; nella pagina e nell'email compare accanto alla 2.
+    La condizione 2 (programmazione dinamica) non cambia.
+    Prova sui dati veri 20/09-16/10 (decisione ogni ora): costo netto dei 27 giorni -10,23 EUR con l'evolutivo,
+    -9,71 EUR con la programmazione dinamica (automatico simulato -1,86 EUR).
+  - Cessione totale: accanto all'algoritmo evolutivo, a ogni decisione si calcola anche un piano con la PROGRAMMAZIONE
+    DINAMICA (ml/cessione_ottimizza.py decidi_pd: per ogni ora Fully fed to grid oppure potenza comandata a passi di
+    2 kW, una sola previsione di produzione). Seconda batteria virtuale, partita dall'energia dell'altra; colonne pd_*
+    in cessione/live/giornaliero.csv (solo giorni interi), curve e tabelle nella pagina.
+  - INSTALLA_EMS: se il Mango e' gia' stato preparato il passo Mango si salta con Invio; messaggio piu' chiaro se il
+    Mango non risponde.
+  File modificati: pannello_ems.py, mango_avvio.py, LEGGIMI.txt, REVISIONI.txt; repository: mango/evolutivo.lua (nuovo),
+  mango/ottimizzatore.lua, mango/config.lua, mango/ems_sim.lua, ml/cessione_ottimizza.py, ml/cessione_live.py,
+  ml/cessione_totale.py, ml/email_report.py, index.html, cessione.html, versione.json, README.md, REVISIONI.txt
+
 R10 - 12/11/2026
   Cismondi (decisioni dell'utente dell'11-12/11/2026):
   - Batteria tra il 5 e il 95 %: SOC_MIN e SOC_MIN_VENDITA = 5 % (prima 6 e 20 %). DA FARE: "Fine scarica SOC" al 5 %

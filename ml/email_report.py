@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Revisione R11 - 13/11/2026 - nomi delle condizioni: 2 = programmazione dinamica, 3 = algoritmo evolutivo
 # Revisione R08 - 07/11/2026 - solo la condizione 2 (tolte 2a..2e, carica dalla rete)
 # Revisione R07 - 31/10/2026 - tolte le simulazioni vecchie (F0/F0R): solo le condizioni attuali a prezzo fisso F0
 """
@@ -17,7 +18,7 @@ import sys
 from email.message import EmailMessage
 
 PAGINA = "https://paolofontanacn-code.github.io/ems-dati/"
-NOMI = {"C2": "condizione 2 (senza carica AC)"}          # R08: tolte le condizioni con carica dalla rete
+NOMI = {"C2": "condizione 2 (programmazione dinamica)", "C3": "condizione 3 (algoritmo evolutivo)"}   # R11: condizione 3          # R08: tolte le condizioni con carica dalla rete
 
 
 def num(v):

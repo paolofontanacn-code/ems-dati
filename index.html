@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Revisione R11 - 13/11/2026 - nuova condizione 3: stessi dati e limiti della condizione 2, piano cercato con algoritmo evolutivo (confronto con la programmazione dinamica) -->
 <!-- Revisione R10 - 12/11/2026 - grafico delle potenze con SOC reale (scala %) e potenza reale della batteria, curve simulate nascoste all'inizio; tolti i pannelli separati «SOC batteria» e «Potenza batteria»; «Piano calcolato» del giorno scelto (piano della sera prima); componenti del prezzo di acquisto; nomi chiari delle azioni (anche batteria ferma e carica dai pannelli a 1–5 kW); collegamento alla pagina dei rendimenti -->
 <!-- Revisione R08 - 07/11/2026 - tolte le condizioni con carica dalla rete (2a…2e); giorni dal 12/09 al 16/10: rigioco della condizione 2 con le previsioni che il sistema avrebbe avuto; pannello «Stima consumi: bravura» (indice di bravura della logica fuzzy rispetto al Mango e alla settimana prima) -->
 <!-- Revisione R07 - 31/10/2026 - tolte le simulazioni vecchie con prezzi di acquisto diversi dal prezzo fisso (F0/F0R, A, B, C): nei giorni vecchi solo dati reali; nel grafico delle potenze il consumo stimato con la logica fuzzy autoapprendente; costo d'acquisto con dispacciamento 0,017 EUR/kWh -->
@@ -94,10 +95,12 @@ pre { font-size: 12px; overflow-x: auto; margin: 0; white-space: pre; }
     <dd>Come se la batteria non ci fosse: il consumo non coperto dal FV si preleva dalla rete, l'eccedenza del FV si cede alla rete.</dd>
     <dt>Condizione 1 – impianto con batteria senza ottimizzazione dei profili (condizione attuale)</dt>
     <dd>Dati reali misurati da Huawei, finché l'inverter lavora in automatico. Al costo si aggiunge l'usura della batteria sui kWh scaricati misurati. Quando saranno attivi i comandi verso l'inverter (fase 2), la condizione 1 tornerà a essere calcolata dal simulatore.</dd>
-    <dt>Condizione 2 – ottimizzazione dei profili di carica/scarica, senza carica AC</dt>
+    <dt>Condizione 2 – ottimizzazione dei profili di carica/scarica, senza carica AC (programmazione dinamica)</dt>
     <dd>Il programma decide ogni quarto d'ora se lasciare l'automatico, ritardare la carica, caricare dai pannelli (1–5 kW), tenere ferma la batteria o scaricarla (2–5 kW), guardando prezzi, previsioni meteo e consumi. La batteria non si carica mai dalla rete.</dd>
     <dt>Condizioni con carica dalla rete (2a…2e)</dt>
     <dd>Tolte dalla revisione R08 (07/11/2026): non si simulano più e non si mostrano.</dd>
+    <dt>Condizione 3 – come la 2, con algoritmo evolutivo (R11)</dt>
+    <dd>Stessi dati, stesso modello della batteria, stessi costi e limiti della condizione 2, ma il piano è cercato con un algoritmo evolutivo (popolazione di piani con un'azione per ogni ora, incrocio, mutazione, restano i migliori) invece che con la programmazione dinamica. I due metodi sono indipendenti: serve a confrontarli in euro, giorno per giorno. Ha la sua batteria virtuale.</dd>
     <dt>Rigioco della condizione 2 sui giorni prima della simulazione</dt>
     <dd>Dal 12/09/2026 (inizio del monitoraggio) al giorno prima dell'avvio della simulazione, la condizione 2 è rigiocata con i dati reali di quei giorni e con le previsioni che il sistema avrebbe avuto: meteo previsto (archivio delle previsioni Open-Meteo), consumi stimati con la logica fuzzy addestrata solo sui giorni precedenti, decisione ogni ora (nella simulazione vera ogni quarto d'ora). La batteria virtuale parte dal 50 % il primo giorno.</dd>
     <dt>Controllo: automatico simulato</dt>
@@ -138,7 +141,7 @@ const PANNELLI = [
   ["bravura", "Stima consumi: bravura"],
   ["registro", "Registro ultimo giro"],
 ];
-const REV_PAGINA = "R10";
+const REV_PAGINA = "R11";
 const PREDEFINITI = ["tabella", "potenze", "prezzi", "giornaliero", "bravura"];
 function leggiScelte() {
   try { const v = JSON.parse(localStorage.getItem("ems_pannelli")); if (Array.isArray(v)) return new Set(v); } catch (e) {}
@@ -198,11 +201,11 @@ function larghezza(el) { const cs = getComputedStyle(el); return Math.max(260, M
 
 // ---------------------------------------------------------------- condizioni simulate (C2…C2e, acquisto a prezzo fisso F0)
 const USURA = 0.02;   // €/kWh scaricato
-const NOMI_PROFILI = { C2: "Condizione 2 – senza carica AC" };      // R08: tolte le condizioni con carica dalla rete (2a…2e)
-const NOMI_BREVI = { C2: "2", C2a: "2a", C2b: "2b", C2c: "2c", C2d: "2d", C2e: "2e" };
+const NOMI_PROFILI = { C2: "Condizione 2 – programmazione dinamica", C3: "Condizione 3 – algoritmo evolutivo" };   // R11: condizione 3      // R08: tolte le condizioni con carica dalla rete (2a…2e)
+const NOMI_BREVI = { C2: "2", C3: "3", C2a: "2a", C2b: "2b", C2c: "2c", C2d: "2d", C2e: "2e" };
 // colori Okabe-Ito (distinguibili anche da chi non vede bene i colori) + tratteggio diverso per ogni condizione
-const COLORE_FISSO = { C2: "#0072B2", C2a: "#D55E00", C2b: "#009E73", C2c: "#CC79A7", C2d: "#E69F00", C2e: "#56B4E9" };
-const TRATTO_FISSO = { C2: null, C2a: [8, 3], C2b: [2, 3], C2c: [8, 3, 2, 3], C2d: [12, 4], C2e: [4, 4] };
+const COLORE_FISSO = { C2: "#0072B2", C3: "#D55E00", C2a: "#D55E00", C2b: "#009E73", C2c: "#CC79A7", C2d: "#E69F00", C2e: "#56B4E9" };
+const TRATTO_FISSO = { C2: null, C3: [8, 3], C2a: [8, 3], C2b: [2, 3], C2c: [8, 3, 2, 3], C2d: [12, 4], C2e: [4, 4] };
 let PROF = [];
 const nomeP = p => NOMI_PROFILI[p] || p;
 const coloreP = p => COLORE_FISSO[p] || "#0072B2";
@@ -407,7 +410,7 @@ function meteoRighe(d) {
 const OKABE = { arancio: "#E69F00", celeste: "#56B4E9", verde: "#009E73", giallo: "#F0E442", blu: "#0072B2", vermiglio: "#D55E00", rosa: "#CC79A7" };
 
 async function pPotenze(d) {
-  const s = sezione("potenze", "Potenze reali (misurate da Huawei) e meteo", "Rete: sopra lo zero immissione, sotto lo zero prelievo. Batteria: sopra lo zero in carica. SOC della batteria in % (scala a destra): reale visibile; potenza e SOC simulati (automatico simulato e condizione 2) nascosti, si accendono dalla legenda. Consumo stimato (fuzzy, tratteggio): stima del giorno prima con la logica fuzzy autoapprendente (comportamento, riscaldamento e acqua calda della pompa di calore, temperatura esterna con l'inerzia della casa, consumi dei giorni prima). Meteo (Open-Meteo, linee tratteggiate): radiazione W/m², temperatura °C, nuvolosità %, ognuno con la sua scala a destra. Clic su una voce della legenda per nasconderla: resta nascosta anche cambiando giorno.");
+  const s = sezione("potenze", "Potenze reali (misurate da Huawei) e meteo", "Rete: sopra lo zero immissione, sotto lo zero prelievo. Batteria: sopra lo zero in carica. SOC della batteria in % (scala a destra): reale visibile; potenza e SOC simulati (automatico simulato, condizioni 2 e 3) nascosti, si accendono dalla legenda. Consumo stimato (fuzzy, tratteggio): stima del giorno prima con la logica fuzzy autoapprendente (comportamento, riscaldamento e acqua calda della pompa di calore, temperatura esterna con l'inerzia della casa, consumi dei giorni prima). Meteo (Open-Meteo, linee tratteggiate): radiazione W/m², temperatura °C, nuvolosità %, ognuno con la sua scala a destra. Clic su una voce della legenda per nasconderla: resta nascosta anche cambiando giorno.");
   // R07: consumo stimato con la logica fuzzy (previsioni/fuzzy/AAAA-MM-GG.json, scritto da ml/consumi_fuzzy.py)
   let fz = null, info = null;
   try { fz = await scarica(`previsioni/fuzzy/${d.info.g}.json`, "json"); } catch (e) {}
@@ -548,13 +551,13 @@ async function pPiano(g) {
   if (g) { try { P = csv(await scarica(`dati/${g}/piano_sera.csv`)); } catch (e) { P = null; } }
   if (P && P.length) {
     titolo = "Piano calcolato la sera prima per " + data(g);
-    nota = "Quello che la condizione 2 prevedeva di fare per questo giorno, calcolato la sera prima con le previsioni e i prezzi noti allora (durante il giorno il piano viene ricalcolato: le azioni eseguite sono nel pannello «Prezzi e azioni»).";
+    nota = "Quello che le condizioni 2 e 3 prevedevano di fare per questo giorno, calcolato la sera prima con le previsioni e i prezzi noti allora (durante il giorno il piano viene ricalcolato: le azioni eseguite sono nel pannello «Prezzi e azioni»).";
   } else {
     if (!indice.piano) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun piano ancora calcolato (i prezzi del giorno dopo arrivano dalle 13:30).</p>`); return; }
     P = csv(await scarica("pannello/piano.csv"));
     titolo = "Ultimo piano calcolato, per " + data(indice.piano);
     nota = (g && g !== indice.piano ? "Per il giorno scelto non c'è il piano della sera prima: si mostra l'ultimo piano. " : "") +
-      "Quello che la condizione 2 prevede di fare, con le previsioni e i prezzi noti al momento del calcolo. Il piano viene ricalcolato durante il giorno.";
+      "Quello che le condizioni 2 e 3 prevedono di fare, con le previsioni e i prezzi noti al momento del calcolo. Il piano viene ricalcolato durante il giorno.";
   }
   s.querySelector("h2").textContent = titolo;
   s.insertAdjacentHTML("beforeend", `<p class="spiega">${nota}</p>`);
@@ -578,7 +581,7 @@ async function pPiano(g) {
 
 let giornaliero = [];
 function pGiornaliero() {
-  const s = sezione("giornaliero", "Giorno per giorno", "Energia di ogni giorno (anche prima dell'avvio della simulazione) e beneficio cumulato della condizione 2 sulla condizione 1 (reale), sul controllo automatico simulato e sulla condizione 0.");
+  const s = sezione("giornaliero", "Giorno per giorno", "Energia di ogni giorno (anche prima dell'avvio della simulazione) e beneficio cumulato delle condizioni 2 e 3 sulla condizione 1 (reale), sul controllo automatico simulato e sulla condizione 0.");
   const G = giornaliero; if (!G.length) { s.insertAdjacentHTML("beforeend", `<p class="vuoto">Nessun dato.</p>`); return; }
   const x = G.map(r => Date.parse(r.giorno + "T12:00:00") / 1000);
   grafico(s, x, [

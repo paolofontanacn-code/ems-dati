@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Revisione R11 - 13/11/2026 - seconda batteria virtuale gestita con la PROGRAMMAZIONE DINAMICA (confronto con l'algoritmo
+#   evolutivo): stessi dati, sua energia in batteria; colonne pd_* in giornaliero.csv, curve nei file dei giorni
 # Revisione R10 - 12/11/2026 - nell'indice anche i parametri dell'impianto e dei rendimenti (la pagina non usa piu' l'ottimo
 #   teorico); fisica con rendimenti misurati a Cismondi e perdite dell'inverter (cessione_ottimizza.py, cessione_totale.py)
 # Revisione R09 - 09/11/2026 - l'esecuzione non si ferma piu' per un buco di letture: si leggono anche le copie del dataset
@@ -349,6 +351,18 @@ def main():
             gi["tagliati_kwh"] += tagl
             gi["modi"][modo] += 1
             gi["soc_fine"] = soc
+            # R11: batteria gestita con la programmazione dinamica (parte quando c'e' il suo primo piano)
+            pd = st.get("pd")
+            ced_pd = soc_pd = None
+            if pd and pd.get("piano"):
+                vp = pd["piano"].get(str(t), [0, 0.0])
+                c_p, s_p, ced_pd, _, soc_pd = CO.esegui_quarto(vp[0], vp[1], pv, pd["soc"], vp[2] if len(vp) > 2 else CO.P_CMD_KW)
+                pd["soc"] = soc_pd
+                gi["pd_quarti"] = gi.get("pd_quarti", 0) + 1
+                gi["pd_eur"] = gi.get("pd_eur", 0.0) + ced_pd * pr
+                gi["pd_ceduti_kwh"] = gi.get("pd_ceduti_kwh", 0.0) + ced_pd
+                gi["pd_scarica_kwh"] = gi.get("pd_scarica_kwh", 0.0) + s_p
+                gi["pd_soc_fine"] = soc_pd
             # apprendimento della previsione: errore per modello e orizzonte, correzione per ora del giorno
             h = str(ora_di(t))
             # errore per orizzonte: confronto con le previsioni di tutte le decisioni delle ultime 24 ore
@@ -378,6 +392,7 @@ def main():
                                   "valore": round(val, 3),
                                   "carica": round(c, 4), "scarica": round(s, 4), "ceduto": round(ced, 4), "ceduto0": round(ced0, 4),
                                   "tagliato": round(tagl, 4), "soc": round(soc, 3),
+                                  **({"ceduto_pd": round(ced_pd, 4), "soc_pd": round(soc_pd, 3)} if ced_pd is not None else {}),
                                   **({"ricostruito": True} if t in RICOSTRUITI else {})})
             salva_json(fq, reg, compatto=True)
             st["t_eseguito"] = t + 900
@@ -456,6 +471,14 @@ def main():
                  "prev_ovest": {str(t): round(float(v), 5) for t, v in zip(quarti, ovest)},
                  "rapporto": {str(t): round(float(v), 4) for t, v in zip(quarti, rapp)}}
             st["decisione"] = d
+            # R11: piano della seconda batteria con la programmazione dinamica (stessi dati, sua energia in batteria)
+            pd = st.setdefault("pd", {"soc": st["soc"], "piano": {}})
+            ris_pd = None
+            try:
+                ris_pd = CO.decidi_pd(dict(contesto, soc=round(pd["soc"], 4)), theta)
+                pd["piano"] = ris_pd["piano"]
+            except Exception as ex:
+                log(f"programmazione dinamica non riuscita: {ex}")
             t_fine_calcoli = adesso + (time.perf_counter() - t_inizio_calcoli)      # ora di fine = ora di "invio" del piano
             d["t_fine"] = int(t_fine_calcoli)
             salva_piani(contesto, ris["piano"], piano, t_fine_calcoli, adesso, stab)
@@ -475,6 +498,8 @@ def main():
                         "atteso_eur": ris["atteso_eur"], "punteggi_semi": ris["punteggi_semi"],
                         "fine_calcoli": dt.datetime.fromtimestamp(t_fine_calcoli, CT.ROMA).isoformat(timespec="seconds"), "stabilita": stab,
                         "generazioni": ris["generazioni"], "valutazioni": ris["valutazioni"], "secondi": ris["secondi"],
+                        **({"pd_atteso_eur": ris_pd["atteso_eur"], "pd_secondi": ris_pd["secondi"], "pd_soc_kwh": round(pd["soc"], 2),
+                            "pd_ora": ris_pd["fasce"][0] if ris_pd["fasce"] else ""} if ris_pd else {}),
                         "ore_prezzo_previsto": int((~noto).sum() // 4), "theta": theta,
                         "orizzonte_fino_a": dt.datetime.fromtimestamp(quarti[-1] + 900, CT.ROMA).isoformat(timespec="minutes"),
                         "previsione_kwh": round(float(ovest.sum()), 2), "modelli": sorted(meteo), "modelli_errore": errori_meteo,
@@ -490,7 +515,8 @@ def main():
         log(f"prezzi noti non salvati: {ex}")
     salva_json(fstato, st, compatto=True)
     col = ["giorno", "quarti", "decisioni", "fv_kwh", "p0_ceduti_kwh", "p0_eur", "batt_ceduti_kwh", "batt_eur", "beneficio_eur",
-           "carica_kwh", "scarica_kwh", "tagliati_kwh", "soc_fine", "quarti_fully", "quarti_tou", "quarti_terzi"]
+           "carica_kwh", "scarica_kwh", "tagliati_kwh", "soc_fine", "quarti_fully", "quarti_tou", "quarti_terzi",
+           "pd_eur", "pd_beneficio_eur", "pd_scarica_kwh", "pd_soc_fine"]
     with open(os.path.join(OUT, "giornaliero.csv"), "w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=col)
         w.writeheader()
@@ -502,7 +528,11 @@ def main():
                         "beneficio_eur": round(x["batt_eur"] - x["p0_eur"], 4), "carica_kwh": round(x["carica_kwh"], 3),
                         "scarica_kwh": round(x["scarica_kwh"], 3), "tagliati_kwh": round(x["tagliati_kwh"], 3),
                         "soc_fine": round(x.get("soc_fine", 0.0), 3), "quarti_fully": x["modi"]["fully"],
-                        "quarti_tou": x["modi"]["tou"], "quarti_terzi": x["modi"]["terzi"]})
+                        "quarti_tou": x["modi"]["tou"], "quarti_terzi": x["modi"]["terzi"],
+                        # R11: programmazione dinamica, solo nei giorni coperti per intero (confronto alla pari)
+                        **({"pd_eur": round(x["pd_eur"], 4), "pd_beneficio_eur": round(x["pd_eur"] - x["p0_eur"], 4),
+                            "pd_scarica_kwh": round(x.get("pd_scarica_kwh", 0.0), 3), "pd_soc_fine": round(x.get("pd_soc_fine", 0.0), 3)}
+                           if x.get("pd_quarti") and x["pd_quarti"] == x["quarti"] else {})})
     salva_json(os.path.join(OUT, "indice.json"), {
         "aggiornato": dt.datetime.now(CT.ROMA).isoformat(timespec="seconds"), "revisione": CT.REVISIONE,
         "inizio": dt.datetime.fromtimestamp(st["inizio"], CT.ROMA).isoformat(timespec="minutes"),

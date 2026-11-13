@@ -928,3 +928,9 @@ APERTO:
 Restano aperti: A4 (batteria a lungo al 20-21 %: con SOC minimo 5 % e BATTERIA FERMA dovrebbe sparire, da verificare
 sui giorni dopo l'installazione), A5 (meteo usato dalle decisioni rigiocate; servizio cron del Mango: lo verifica il
 passo Mango di INSTALLA_EMS). Dopo: simulatore per PC della cessione totale (.exe Windows, solo visualizzazione).
+
+## R11 APPLICATA (13/11/2026, richiesta dell'utente: "aggiungi l'algoritmo evolutivo ... in aggiunta alla programmazione
+esistente per cismondi e per cessione totale, crea r11, crea simulatore")
+Interpretazione applicata: Cismondi = nuova condizione 3 con algoritmo evolutivo accanto alla 2 (programmazione dinamica);
+cessione = programmazione dinamica accanto all'algoritmo evolutivo gia' presente. Passo Mango riuscito il 13/11/2026 18:50
+(cron 2,32; giro di prova 204). Simulatore per PC della cessione: programma separato (.exe), non modifica il repository.

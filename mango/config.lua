@@ -1,3 +1,4 @@
+-- Revisione R11 - 13/11/2026 - nuova condizione 3: stessi dati e limiti della 2, piano cercato con algoritmo evolutivo
 -- Revisione R10 - 12/11/2026 - SOC minimo 5 % (casa e vendita); costo per cambio 0,001 EUR; carica dall'esubero a
 --   1-5 kW e batteria ferma; pesi della potenza; prezzo di acquisto orario (struttura, Cismondi resta a prezzo fisso)
 -- Revisione R08 - 07/11/2026 - tolte le condizioni con carica dalla rete (2a..2e): resta la condizione 2
@@ -28,9 +29,13 @@ return {
   -- condizione simulata con ottimizzazione, acquisto a prezzo fisso F0: C2 senza carica dalla rete.
   -- R08 (07/11/2026): tolte le condizioni 2a..2e con carica AC dalla rete (decisione dell'utente)
   -- (condizione 0 = senza batteria e condizione 1 = reale misurato sono calcolate a parte)
-  PROFILI = { "C2" },
-  PROFILI_CARICA_RETE_W = { C2 = 0 },
-  PROFILI_NOME = { C2 = "condizione 2 (senza carica AC)" },
+  -- R11 (13/11/2026): condizione 3 = come la 2 ma con il piano cercato dall'algoritmo evolutivo (evolutivo.lua)
+  PROFILI = { "C2", "C3" },
+  PROFILI_CARICA_RETE_W = { C2 = 0, C3 = 0 },
+  PROFILI_NOME = { C2 = "condizione 2 (programmazione dinamica)", C3 = "condizione 3 (algoritmo evolutivo)" },
+  PROFILI_ALGORITMO = { C3 = "evolutivo" },   -- gli altri profili: programmazione dinamica
+  EV_POPOLAZIONE = 30,                  -- algoritmo evolutivo: piani nella popolazione
+  EV_GENERAZIONI = 40,                  -- algoritmo evolutivo: generazioni
 
   -- ================================================================ BATTERIA (LUNA2000 15 kWh)
   CAPACITA_KWH = 15.0,

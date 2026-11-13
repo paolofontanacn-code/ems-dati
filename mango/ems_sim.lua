@@ -1,3 +1,4 @@
+-- Revisione R11 - 13/11/2026 - condizione 3 (algoritmo evolutivo): il piano precedente si conserva e fa da seme
 -- Revisione R10 - 12/11/2026 - pesi della potenza misurati (modelli/rendimenti_batteria.json, da ml/rendimenti.py) letti a
 --   ogni avvio; prezzo di acquisto orario (struttura) tramite prezzi_acquisto.lua
 -- Revisione R07 - 31/10/2026 - tolto il PUN (medie per fascia e colonne pun): acquisto solo a prezzo fisso F0
@@ -810,7 +811,7 @@ local function ciclo()
         local s = stato.sim[p]
         prof_in[p] = { soc0 = s.soc, prev_azione = s.azione, finestre_oggi = s.finestre_oggi or 0, giorno_oggi = oggi,
                        carica_rete_w = (c.PROFILI_CARICA_RETE_W or {})[p], scarica_forzata_oggi = s.scarica_forzata_oggi or 0,
-                       lambda_e = s.lambda_e }
+                       lambda_e = s.lambda_e, genoma = s.genoma }
       end
       local ok, ris = pcall(O.pianifica, c, e, quarti, c.PROFILI, prof_in, usura, valore_fine(quarti, serie))
       if ok then
@@ -825,6 +826,7 @@ local function ciclo()
           if ris[p].troncato then motivo = motivo .. " (limitato: max " .. c.MAX_FINESTRE_GIORNO .. " finestre e " ..
             (c.MAX_CICLI_FORZATI_GIORNO or 1) .. " ciclo di scarica forzata al giorno)" end
           s.lambda_e = ris[p].lambda_e
+          s.genoma = ris[p].genoma
           if ris[p].adottato_da then motivo = motivo .. " (stesso piano di " .. ris[p].adottato_da .. ")" end
           riga[p .. "_decisione"], riga[p .. "_motivo"] = nuova, motivo
           riga[p .. "_vantaggio_eur"] = v_auto and ((alt[nuova] or 0) - v_auto) or nil

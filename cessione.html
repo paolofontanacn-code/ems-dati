@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Revisione R11 - 13/11/2026 - confronto con la programmazione dinamica: seconda batteria virtuale (tessera, curve nel grafico del giorno, barre, colonne nelle tabelle) accanto all'algoritmo evolutivo -->
 <!-- Revisione R10 - 12/11/2026 - tolto l'ottimo teorico (grafico, totali, barre, mese per mese, colonne): la pagina parte dal 23/10/2026 (avvio della simulazione ogni 2 ore); mese per mese dalla simulazione ogni 2 ore; Aiuto: rendimenti misurati a Cismondi, perdite dell'inverter, pesi della potenza e continuità; collegamento alla pagina dei rendimenti -->
 <!-- Revisione R06 - 26/10/2026 - prezzi fino all'ultimo noto; energia in batteria anche in %; pulsanti giorno precedente/successivo (le curve scelte restano); domani selezionabile quando ci sono i prezzi (prezzi e ultimo piano spedito); pallini delle simulazioni (solo PC): col mouse sopra, potenza in rete del piano calcolato, del piano spedito e del piano spedito precedente; tolta la colonna Piano (riassunto a testo) dalle decisioni -->
 <!-- Revisione R05 - 26/10/2026 - grafici con uPlot (linee e barre, legenda cliccabile ricordata); meteo (radiazione, temperatura, nuvolosita') nei grafici delle potenze del giorno; asse dei tempi di 24 ore; revisione della pagina e revisione installata (versione.json); colonna stabilita' del piano nelle decisioni; Aiuto: scarica modulabile 2-10 kW, regola dei 4 ore, Fully fed to grid non impostabile via API -->
@@ -98,6 +99,7 @@ tr.escluso td { color: var(--tenue); font-style: italic; }
     </dl>
     <h2>Da sapere</h2>
     <ul class="spiega">
+      <li><b>Confronto con la programmazione dinamica (R11)</b>: a ogni decisione si calcola anche un secondo piano con la programmazione dinamica (per ogni ora: Fully fed to grid oppure potenza comandata a passi di 2 kW; una sola previsione di produzione; stesso modello fisico, stessi prezzi e pesi). Ha la sua batteria virtuale, partita dall'energia dell'altra al primo calcolo. Nelle tabelle compare solo nei giorni coperti per intero, per un confronto alla pari.</li>
       <li>Simulazione ogni 2 ore (dal 23/10/2026): l'energia rimasta in batteria a mezzanotte viene venduta il giorno dopo e conta nel giorno in cui è venduta (un giorno può risultare negativo e il successivo positivo). L'ottimo teorico non si calcola più (R10).</li>
       <li>Prezzo NORD: nel grafico della simulazione ogni 2 ore arriva fino all'ultimo prezzo noto (quelli di domani arrivano verso le 13; una volta letti non cambiano). Domani compare tra i giorni quando i suoi prezzi ci sono, con l'ultimo piano spedito.</li>
       <li>Energia in batteria in kWh (scala a sinistra) e in % della capacità (scala % a destra, la stessa della nuvolosità).</li>
@@ -126,7 +128,7 @@ const $ = id => document.getElementById(id);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const num = v => { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; };
 const fmt = (v, d = 2) => (v == null || isNaN(v)) ? "–" : Number(v).toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
-const REV_PAGINA = "R10";
+const REV_PAGINA = "R11";
 const ROMA = "Europe/Rome";
 // Okabe-Ito (distinguibili anche da chi non vede bene i colori) + tratteggi diversi
 const OKABE = { arancio: "#E69F00", celeste: "#56B4E9", verde: "#009E73", giallo: "#F0E442", blu: "#0072B2", vermiglio: "#D55E00", rosa: "#CC79A7" };
@@ -385,7 +387,8 @@ async function mostraGiorno() {
     $("live_tessere").innerHTML = `<div class="tessere">
       <div class="tessera"><span>Produzione 20 kW</span><b>${fmt(num(r.fv_kwh), 1)}</b><span>kWh (${r.quarti || 0} quarti d'ora)</span></div>
       <div class="tessera"><span>Senza batteria</span><b>${fmt(num(r.p0_eur))}</b><span>€</span></div>
-      <div class="tessera"><span>Con batteria</span><b>${fmt(num(r.batt_eur))}</b><span>€</span></div>
+      <div class="tessera"><span>Con batteria – algoritmo evolutivo</span><b>${fmt(num(r.batt_eur))}</b><span>€</span></div>
+      ${num(r.pd_eur) != null ? `<div class="tessera"><span>Con batteria – programmazione dinamica</span><b>${fmt(num(r.pd_eur))}</b><span>€ (beneficio ${fmt(num(r.pd_beneficio_eur))} €)</span></div>` : ""}
       <div class="tessera"><span>Beneficio della batteria</span><b class="${num(r.beneficio_eur) >= 0 ? "pos" : "negv"}">${fmt(num(r.beneficio_eur))}</b><span>€ (vendite del giorno)</span></div>
       <div class="tessera"><span>Batteria a fine giornata</span><b>${fmt(num(r.soc_fine), 1)}</b><span>kWh (${fmt(num(r.soc_fine) / cap * 100, 0)} %)</span></div></div>`;
     giorno($("g_live"), t0, nq, [
@@ -393,6 +396,9 @@ async function mostraGiorno() {
       { label: "produzione prevista kW (tratteggio)", dati: col(q => q.prev == null ? null : q.prev * 4), stroke: css("--prev"), dash: [6, 3], width: 2 },
       { label: "in rete con batteria kW (linea spessa)", dati: col(q => q.ceduto * 4), stroke: css("--rete1"), width: 2.6 },
       { label: "in rete senza batteria kW (linea sottile)", dati: col(q => q.ceduto0 * 4), stroke: css("--rete0"), width: 1.2 },
+      ...(d.quarti.some(q => q.ceduto_pd != null) ? [
+        { label: "in rete – programmazione dinamica kW", dati: col(q => q.ceduto_pd == null ? null : q.ceduto_pd * 4), stroke: OKABE.vermiglio, dash: [5, 2], width: 2 },
+        { label: "energia in batteria – programmazione dinamica kWh", dati: col(q => q.soc_pd ?? null), stroke: OKABE.vermiglio, dash: [10, 4], width: 1.6, dec: 1 }] : []),
       { label: "energia in batteria kWh (tratteggio lungo)", dati: col(q => q.soc), stroke: css("--soc"), dash: [10, 4], width: 2.4, dec: 1 },
       { label: "energia in batteria % (tratteggio corto)", dati: col(q => q.soc / cap * 100), stroke: css("--soc"), dash: [3, 3], width: 1.6, scale: "pct", dec: 0 },
       { label: "prezzo NORD €/kWh (puntini)", dati: prezzi.map((v, k) => per[k] ? per[k].prezzo : v), stroke: css("--prezzo"), dash: [2, 3], width: 2.4, scale: "e", dec: 3 },
@@ -416,9 +422,10 @@ async function mostraGiorno() {
       (st.guadagno_eur != null ? `<br>nuovo +${fmt(st.guadagno_eur)} € (soglia ${fmt(st.soglia_eur)} €)` : `<br>${st.motivo || ""}`);
     const semi = x => x.punteggi_semi ? Object.entries(x.punteggi_semi).map(([n, v]) => `${n} ${fmt(v)}`).join("<br>") : "–";
     $("decisioni").innerHTML = `<h2 style="margin-top:12px">Decisioni del giorno</h2><table><tr><th>Ora</th><th>Dati fino a</th><th>Batteria kWh</th><th>Modalità ora</th>
-      <th>Ricavo atteso €</th><th>Punto di partenza €</th><th>Piani provati</th><th>Ore prezzo previsto</th><th>Piano spedito (regola 4 ore)</th><th>Previsione kWh</th><th>Correzione letture</th><th>Modello meteo</th></tr>` +
+      <th>Ricavo atteso €</th><th>Progr. dinamica: atteso €</th><th>Punto di partenza €</th><th>Piani provati</th><th>Ore prezzo previsto</th><th>Piano spedito (regola 4 ore)</th><th>Previsione kWh</th><th>Correzione letture</th><th>Modello meteo</th></tr>` +
       dec.map(x => `<tr><td>${x.ora.slice(11, 16)}</td><td>${x.dati_fino_a.slice(11, 16)}</td><td>${fmt(x.soc_kwh, 1)}</td><td><b>${x.nome_modo}</b></td>
         <td>${typeof x.atteso_eur === "number" ? fmt(x.atteso_eur) : fmt(Math.max(...Object.values(x.punteggio_eur || {0: null})))}</td>
+        <td>${x.pd_atteso_eur != null ? fmt(x.pd_atteso_eur) + " (" + fmt(x.pd_secondi, 2) + " s)" : "–"}</td>
         <td style="text-align:left">${semi(x)}</td><td>${x.valutazioni ? x.valutazioni.toLocaleString("it-IT") + " (" + fmt(x.secondi, 0) + " s)" : "–"}</td>
         <td>${x.ore_prezzo_previsto ?? "–"}</td><td style="text-align:left;white-space:normal;min-width:160px">${stab(x.stabilita)}</td><td>${fmt(x.previsione_kwh, 1)}</td>
         <td>${fmt(x.correzione_ultime_letture, 2)}</td><td style="text-align:left">${Object.entries(x.modello_per_orizzonte || {}).map(([o, m]) => o + ": " + m).join("<br>")}</td></tr>`).join("") + `</table>
@@ -433,18 +440,20 @@ function mostraMese(desiderato) {
   const giorni = elenco.filter(g => L.some(x => x.giorno === g));                   // per totali e grafici
   const LV = L.filter(r => r.giorno.slice(0, 7) === m);
   const tl = k => LV.reduce((a, r) => a + (num(r[k]) || 0), 0);
+  const PD = LV.filter(r => num(r.pd_eur) != null);              // R11: giorni interi con la programmazione dinamica
   const ben = v => `<b class="${v >= 0 ? "pos" : "negv"}">${fmt(v)}</b>`;
   $("totali").innerHTML = LV.length ? `<div class="tessere">
     <div class="tessera"><span>Senza batteria</span><b>${fmt(tl("p0_eur"))}</b><span>€ (${LV.length} giorni)</span></div>
-    <div class="tessera"><span>Con batteria – ogni 2 ore</span><b>${fmt(tl("batt_eur"))}</b><span>€</span></div>
-    <div class="tessera"><span>Beneficio della batteria</span>${ben(tl("beneficio_eur"))}<span>€</span></div>
+    <div class="tessera"><span>Con batteria – algoritmo evolutivo</span><b>${fmt(tl("batt_eur"))}</b><span>€</span></div>
+    <div class="tessera"><span>Beneficio – algoritmo evolutivo</span>${ben(tl("beneficio_eur"))}<span>€</span></div>
+    ${PD.length ? `<div class="tessera"><span>Confronto alla pari (${PD.length} giorni interi)</span><b>${fmt(PD.reduce((a, r) => a + num(r.pd_eur), 0))}</b><span>€ progr. dinamica · ${fmt(PD.reduce((a, r) => a + num(r.batt_eur), 0))} € evolutivo</span></div>` : ""}
     <div class="tessera"><span>Prodotti</span><b>${fmt(tl("fv_kwh"), 0)}</b><span>kWh</span></div></div>` : `<p class="nota">Nessun giorno simulato in questo mese.</p>`;
   const et = giorni.map(giornoBreve);
   const gv = k => giorni.map(g => { const r = LV.find(x => x.giorno === g); return r ? num(r[k]) : null; });
   const S = (nome, valori, riempi) => ({ nome, valori, riempi, opaco: null });
-  const P0 = { colore: css("--p0") }, QUADRI = { colore: css("--p1ac"), tipo: "quadri" }, PUNTI = { colore: css("--ben"), tipo: "punti" };
-  barre($("g_euro"), et, [S("Senza batteria", gv("p0_eur"), P0), S("Con batteria – ogni 2 ore", gv("batt_eur"), QUADRI)], "€");
-  barre($("g_ben"), et, [S("Beneficio – ogni 2 ore", gv("beneficio_eur"), QUADRI)], "€");
+  const P0 = { colore: css("--p0") }, RIGHE = { colore: css("--p1"), tipo: "righe" }, QUADRI = { colore: css("--p1ac"), tipo: "quadri" }, PUNTI = { colore: css("--ben"), tipo: "punti" };
+  barre($("g_euro"), et, [S("Senza batteria", gv("p0_eur"), P0), S("Con batteria – algoritmo evolutivo", gv("batt_eur"), QUADRI), S("Con batteria – programmazione dinamica", gv("pd_eur"), RIGHE)], "€");
+  barre($("g_ben"), et, [S("Beneficio – algoritmo evolutivo", gv("beneficio_eur"), QUADRI), S("Beneficio – programmazione dinamica", gv("pd_beneficio_eur"), RIGHE)], "€");
   barre($("g_kwh"), et, [S("Prodotti", gv("fv_kwh"), P0), S("Restituiti dalla batteria – ogni 2 ore", gv("scarica_kwh"), QUADRI)], "kWh", 1);
   const mesi = [...new Set(L.map(r => r.giorno.slice(0, 7)))].sort();
   const tm = (mm, k) => L.filter(r => r.giorno.slice(0, 7) === mm).reduce((a, r) => a + (num(r[k]) || 0), 0);
@@ -452,12 +461,12 @@ function mostraMese(desiderato) {
     S("Con batteria – ogni 2 ore", mesi.map(mm => tm(mm, "batt_eur")), QUADRI), S("Beneficio – ogni 2 ore", mesi.map(mm => tm(mm, "beneficio_eur")), PUNTI)], "€");
   const cb = v => `class="${num(v) >= 0 ? "pos" : "negv"}"`;
   const nord = g => { const p = prezziNoti[g]; if (!p || !p.prezzi || !p.prezzi.length) return "–"; return fmt(Math.min(...p.prezzi), 3) + "–" + fmt(Math.max(...p.prezzi), 3); };
-  $("tabella").innerHTML = `<table><tr><th>Giorno</th><th>Prodotti kWh</th><th>Senza batteria €</th><th>Ogni 2 ore €</th><th>Beneficio ogni 2 ore €</th>
+  $("tabella").innerHTML = `<table><tr><th>Giorno</th><th>Prodotti kWh</th><th>Senza batteria €</th><th>Evolutivo €</th><th>Beneficio evolutivo €</th><th>Progr. dinamica €</th><th>Beneficio progr. dinamica €</th>
     <th>Restituiti kWh</th><th>Modalità (quarti d'ora)</th><th>Quarti d'ora</th><th>NORD min–max €/kWh</th></tr>` +
     giorni.map(g => { const l = LV.find(x => x.giorno === g) || {};
       const modi = l.giorno ? ["fully", "tou", "terzi"].filter(k => num(l["quarti_" + k]) > 0).map(k => `${NOMI_MODI[k]} ${l["quarti_" + k]}`).join(", ") : "–";
       return `<tr><td>${giornoBreve(g)}</td><td>${fmt(num(l.fv_kwh), 1)}</td><td>${fmt(num(l.p0_eur))}</td>
-      <td>${fmt(num(l.batt_eur))}</td><td ${cb(l.beneficio_eur)}>${fmt(num(l.beneficio_eur))}</td><td>${fmt(num(l.scarica_kwh), 1)}</td><td style="text-align:left">${modi}</td>
+      <td>${fmt(num(l.batt_eur))}</td><td ${cb(l.beneficio_eur)}>${fmt(num(l.beneficio_eur))}</td><td>${fmt(num(l.pd_eur))}</td><td ${cb(l.pd_beneficio_eur)}>${fmt(num(l.pd_beneficio_eur))}</td><td>${fmt(num(l.scarica_kwh), 1)}</td><td style="text-align:left">${modi}</td>
       <td>${l.quarti ?? "–"}</td><td>${nord(g)}</td></tr>`; }).join("") + `</table>`;
   const prima = $("giorno").value;
   $("giorno").innerHTML = elenco.map(g => `<option value="${g}">${giornoBreve(g)}${giorni.includes(g) ? "" : " (prezzi)"}</option>`).join("");
