@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-13T18:48:19+01:00",
+ "aggiornato": "2026-11-13T18:51:03+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -245,7 +245,7 @@
  "oggi": "2026-11-13",
  "piano": "2026-11-14",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 13/11/2026 17:46:47 UTC",
+  "Controllo di rete del giro su GitHub - 13/11/2026 17:50:30 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -282,7 +282,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-09 21:40:32  GitHub: rigioco 2026-11-09 10:20:00 -> 2026-11-09 21:20:00 (132 letture dallo storico)",
   "2026-11-09 13:30:00  Prezzi GME del 20261110 salvati: 24 ore, NORD da 0.2123 a 0.3934 EUR/kWh, con quarti d'ora",
   "2026-11-09 13:30:00  Richiesta delle previsioni di 20261110 inviata a GitHub",
   "2026-11-09 14:00:00  GitHub: inviati 2 file",
@@ -361,6 +360,7 @@
   "2026-11-13 18:47:04  GitHub: rigioco 2026-11-13 17:45:00 -> 2026-11-13 18:25:00 (8 letture dallo storico)",
   "2026-11-13 17:50:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
   "2026-11-13 18:00:00  Previsioni di GitHub per 20261114 ricevute e accettate",
-  "2026-11-13 18:15:00  Piano della sera per 20261114 salvato"
+  "2026-11-13 18:15:00  Piano della sera per 20261114 salvato",
+  "2026-11-13 18:50:47  GitHub: rigioco 2026-11-13 18:25:00 -> 2026-11-13 18:30:00 (1 letture dallo storico)"
  ]
 }
