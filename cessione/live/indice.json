@@ -1,9 +1,9 @@
 {
- "aggiornato": "2026-11-13T19:28:57+01:00",
+ "aggiornato": "2026-11-13T19:32:51+01:00",
  "revisione": "R11",
  "inizio": "2026-10-23T22:00+02:00",
- "eseguito_fino_a": "2026-11-13T19:00+01:00",
- "soc_kwh": 19.185,
+ "eseguito_fino_a": "2026-11-13T19:15+01:00",
+ "soc_kwh": 16.909,
  "modo_attuale": "tou",
  "errore_modelli": {
   "italia_meteo_arpae_icon_2i": {
