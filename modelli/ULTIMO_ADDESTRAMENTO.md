@@ -1,4 +1,4 @@
-# Ultimo addestramento - 13/11/2026 18:09
+# Ultimo addestramento - 13/11/2026 18:48
 
 Dati: 5532 quarti d'ora su 61 giorni (2026-09-12 - 2026-11-12).
 
@@ -13,4 +13,3 @@ Verifica con il meteo PREVISTO la sera prima (richieste del Mango) in 633 quarti
 
 Consumi per le decisioni: logica fuzzy.
 Pompa di calore (W per grado sotto 18 C, quadrato/10, x vento/10, x sole/1000, sopra 24 C): 40.2, 2.6, 4.4, -0.0, 327.9
-Previsioni per 20261114: accettate (consumi: logica fuzzy (migliore delle previsioni del Mango)).
