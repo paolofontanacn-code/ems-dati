@@ -1,4 +1,4 @@
-Controllo di rete del giro su GitHub - 14/11/2026 07:02:32 UTC
+Controllo di rete del giro su GitHub - 14/11/2026 07:32:36 UTC
 oauth2.fusionsolar.huawei.com
   DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname
   DNS Google:       NON TROVATO 
@@ -26,6 +26,6 @@ api.mercatoelettrico.org
   DNS su HTTPS:     192.188.248.52
   IPv6 DNS di GitHub: NON TROVATO [Errno -5] No address associated with hostname
   IPv6 DNS Google:    NON TROVATO 
-  curl come la simulazione (codice, indirizzo usato): 000 curl: (28) Connection timed out after 20002 milliseconds
-  HTTPS con DNS di GitHub: 000 curl: (28) Connection timed out after 15002 milliseconds
-  HTTPS con IP pubblico 192.188.248.52: 000 curl: (28) Connection timed out after 15002 milliseconds
+  curl come la simulazione (codice, indirizzo usato): 403 192.188.248.52
+  HTTPS con DNS di GitHub: 403
+  HTTPS con IP pubblico 192.188.248.52: 403
