@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-14T14:03:03+01:00",
+ "aggiornato": "2026-11-14T14:33:03+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -247,9 +247,9 @@
   }
  ],
  "oggi": "2026-11-14",
- "piano": "2026-11-14",
+ "piano": "2026-11-15",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 14/11/2026 13:02:31 UTC",
+  "Controllo di rete del giro su GitHub - 14/11/2026 13:32:34 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -286,11 +286,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-14 04:45:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
-  "2026-11-14 04:50:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-11-14 04:50:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
-  "2026-11-14 04:55:00  Meteo multi-modello non disponibile (rete: curl: (35) TLS connect error: error:0A000126:SSL routines::unexpected eof while reading verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless (certificati: installare ca-bundle con  opkg update && opkg install ca-bundle)): uso il modello predefinito",
-  "2026-11-14 04:55:00  Meteo non aggiornato: rete: curl: (35) TLS connect error: error:0A000126:SSL routines::unexpected eof while reading verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3 (certificati: installare ca-bundle con  opkg update && opkg install ca-bundle)",
   "2026-11-14 06:02:46  GitHub: rigioco 2026-11-14 05:10:00 -> 2026-11-14 05:40:00 (6 letture dallo storico)",
   "2026-11-14 05:15:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
   "2026-11-14 05:15:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
@@ -365,6 +360,11 @@
   "2026-11-14 14:02:42  GitHub: rigioco 2026-11-14 13:10:00 -> 2026-11-14 13:40:00 (6 letture dallo storico)",
   "2026-11-14 13:30:00  Prezzi GME del 20261115 salvati: 24 ore, NORD da 0.2032 a 0.2595 EUR/kWh, con quarti d'ora",
   "2026-11-14 13:30:00  Richiesta delle previsioni di 20261115 inviata a GitHub",
-  "2026-11-14 14:02:47  GitHub: inviati 2 file"
+  "2026-11-14 14:02:47  GitHub: inviati 2 file",
+  "2026-11-14 14:32:40  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-14 14:32:41  Token Huawei rinnovato.",
+  "2026-11-14 14:32:46  GitHub: rigioco 2026-11-14 13:40:00 -> 2026-11-14 14:10:00 (6 letture dallo storico)",
+  "2026-11-14 13:45:00  Previsioni di GitHub per 20261115 ricevute e accettate",
+  "2026-11-14 14:00:00  Piano della sera per 20261115 salvato"
  ]
 }
