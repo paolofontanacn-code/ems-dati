@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-15T22:00:35+01:00",
+ "aggiornato": "2026-11-15T22:02:50+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -253,7 +253,7 @@
  "oggi": "2026-11-15",
  "piano": "2026-11-16",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 15/11/2026 21:00:01 UTC",
+  "Controllo di rete del giro su GitHub - 15/11/2026 21:02:27 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
