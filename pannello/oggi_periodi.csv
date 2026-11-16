@@ -1,2 +1,3 @@
 profilo,inizio,fine,durata_min,azione,categoria,motivo,soc_inizio,soc_fine,carica_fv_kwh,carica_rete_kwh,scarica_kwh,prelievo_kwh,immissione_kwh,nord_medio,costo_medio,euro_netto
 C3,2026-11-16T00:00:00+01:00,2026-11-16T10:00:00+01:00,600,BATTERIA_FERMA,ferma,piano -4.02 EUR fino a fine prezzi; vantaggio su AUTO 0.008 EUR,8.799063,8.799063,0,0,0,11.295208,0.261292,0.228404,0.241541,-2.661169
+C3,2026-11-16T10:00:00+01:00,2026-11-16T11:00:00+01:00,60,SCARICA_5000,scarica,piano -3.20 EUR fino a fine prezzi; vantaggio su AUTO 0.051 EUR,8.799063,5.667423,0,0,0.416667,0.05775,2.284,0.26737,0.241541,0.586858
