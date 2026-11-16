@@ -1,4 +1,4 @@
-# Ultimo addestramento - 16/11/2026 23:32
+# Ultimo addestramento - 17/11/2026 00:06
 
 Dati: 5820 quarti d'ora su 64 giorni (2026-09-12 - 2026-11-15).
 
