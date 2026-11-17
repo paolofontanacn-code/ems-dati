@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-17T09:35:43+01:00",
+ "aggiornato": "2026-11-17T10:02:59+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -261,7 +261,7 @@
  "oggi": "2026-11-17",
  "piano": "2026-11-17",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 17/11/2026 08:32:37 UTC",
+  "Controllo di rete del giro su GitHub - 17/11/2026 09:02:29 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -298,7 +298,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-16 20:03:08  GitHub: rigioco 2026-11-16 19:10:00 -> 2026-11-16 19:40:00 (6 letture dallo storico)",
   "2026-11-16 20:32:49  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-16 20:32:49  Token Huawei rinnovato.",
   "2026-11-16 20:32:56  GitHub: rigioco 2026-11-16 19:40:00 -> 2026-11-16 20:10:00 (6 letture dallo storico)",
@@ -377,6 +376,7 @@
   "2026-11-17 09:32:46  Token Huawei rinnovato.",
   "2026-11-17 09:32:52  GitHub: rigioco 2026-11-17 08:40:00 -> 2026-11-17 09:10:00 (6 letture dallo storico)",
   "2026-11-17 08:45:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-11-17 08:45:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3"
+  "2026-11-17 08:45:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
+  "2026-11-17 10:02:42  GitHub: rigioco 2026-11-17 09:10:00 -> 2026-11-17 09:40:00 (6 letture dallo storico)"
  ]
 }
