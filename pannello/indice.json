@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-17T15:33:21+01:00",
+ "aggiornato": "2026-11-17T16:03:03+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -261,7 +261,7 @@
  "oggi": "2026-11-17",
  "piano": "2026-11-18",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 17/11/2026 14:32:40 UTC",
+  "Controllo di rete del giro su GitHub - 17/11/2026 15:02:32 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -276,7 +276,7 @@
   "  DNS di GitHub:    80.158.6.36",
   "  DNS Google:       80.158.6.36",
   "  DNS Cloudflare:   80.158.6.36",
-  "  DNS su HTTPS:     NON TROVATO Status 2",
+  "  DNS su HTTPS:     80.158.6.36",
   "  IPv6 DNS di GitHub: NON TROVATO [Errno -5] No address associated with hostname",
   "  IPv6 DNS Google:    NON TROVATO ",
   "  curl come la simulazione (codice, indirizzo usato): 302 80.158.6.36",
@@ -298,7 +298,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-17 03:04:14  GitHub: rigioco 2026-11-17 02:10:00 -> 2026-11-17 02:40:00 (6 letture dallo storico)",
   "2026-11-17 03:32:41  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-17 03:32:42  Token Huawei rinnovato.",
   "2026-11-17 03:32:46  GitHub: rigioco 2026-11-17 02:40:00 -> 2026-11-17 03:10:00 (6 letture dallo storico)",
@@ -377,6 +376,7 @@
   "2026-11-17 15:02:41  GitHub: rigioco 2026-11-17 14:10:00 -> 2026-11-17 14:40:00 (6 letture dallo storico)",
   "2026-11-17 15:32:52  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-17 15:32:53  Token Huawei rinnovato.",
-  "2026-11-17 15:33:01  GitHub: rigioco 2026-11-17 14:40:00 -> 2026-11-17 15:10:00 (6 letture dallo storico)"
+  "2026-11-17 15:33:01  GitHub: rigioco 2026-11-17 14:40:00 -> 2026-11-17 15:10:00 (6 letture dallo storico)",
+  "2026-11-17 16:02:44  GitHub: rigioco 2026-11-17 15:10:00 -> 2026-11-17 15:40:00 (6 letture dallo storico)"
  ]
 }
