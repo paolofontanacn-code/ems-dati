@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-17T13:32:57+01:00",
+ "aggiornato": "2026-11-17T14:05:44+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -261,7 +261,7 @@
  "oggi": "2026-11-17",
  "piano": "2026-11-17",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 17/11/2026 12:32:29 UTC",
+  "Controllo di rete del giro su GitHub - 17/11/2026 13:02:31 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -298,12 +298,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-17 00:32:35  Token Huawei rinnovato.",
-  "2026-11-17 00:32:44  GitHub: rigioco 2026-11-16 23:40:00 -> 2026-11-17 00:10:00 (6 letture dallo storico)",
-  "2026-11-17 00:00:00  Giorno 20261116 chiuso: costo netto condizione 0 2.95 EUR, condizione 1 (reale) 3.60 EUR; beneficio sulla 1: C2 0.65, C3 0.75 EUR",
-  "2026-11-17 00:00:00  GitHub: inviati 11 file",
-  "2026-11-17 01:02:59  GitHub: rigioco 2026-11-17 00:10:00 -> 2026-11-17 00:40:00 (6 letture dallo storico)",
-  "2026-11-17 00:15:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
   "2026-11-17 00:15:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
   "2026-11-17 00:20:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
   "2026-11-17 01:33:18  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
@@ -377,6 +371,12 @@
   "2026-11-17 12:15:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
   "2026-11-17 13:32:36  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-17 13:32:36  Token Huawei rinnovato.",
-  "2026-11-17 13:32:41  GitHub: rigioco 2026-11-17 12:40:00 -> 2026-11-17 13:10:00 (6 letture dallo storico)"
+  "2026-11-17 13:32:41  GitHub: rigioco 2026-11-17 12:40:00 -> 2026-11-17 13:10:00 (6 letture dallo storico)",
+  "2026-11-17 14:02:48  GitHub: rigioco 2026-11-17 13:10:00 -> 2026-11-17 13:40:00 (6 letture dallo storico)",
+  "2026-11-17 13:15:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
+  "2026-11-17 13:15:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
+  "2026-11-17 13:30:00  Prezzi GME del 20261118 salvati: 24 ore, NORD da 0.1833 a 0.2680 EUR/kWh, con quarti d'ora",
+  "2026-11-17 13:30:00  Richiesta delle previsioni di 20261118 inviata a GitHub",
+  "2026-11-17 14:05:30  GitHub: inviati 2 file"
  ]
 }
