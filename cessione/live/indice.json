@@ -1,8 +1,8 @@
 {
- "aggiornato": "2026-11-17T00:33:02+01:00",
+ "aggiornato": "2026-11-17T01:06:20+01:00",
  "revisione": "R11",
  "inizio": "2026-10-23T22:00+02:00",
- "eseguito_fino_a": "2026-11-17T00:15+01:00",
+ "eseguito_fino_a": "2026-11-17T00:45+01:00",
  "soc_kwh": 30.0,
  "modo_attuale": "tou",
  "errore_modelli": {
@@ -91,17 +91,17 @@
   "inverter_eta": [
    1.0,
    1.0,
-   0.9959,
+   0.9961,
    1.0
   ],
   "inverter_fonte": "misurato dal Mango (ultimo valore)",
   "eta_carica": [
-   0.9627,
+   0.9635,
    null,
    null
   ],
   "eta_scarica": [
-   0.8875,
+   0.888,
    null,
    null
   ],
