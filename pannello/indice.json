@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-18T03:23:16+01:00",
+ "aggiornato": "2026-11-18T03:34:49+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -265,7 +265,7 @@
  "oggi": "2026-11-18",
  "piano": "2026-11-18",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 18/11/2026 02:22:48 UTC",
+  "Controllo di rete del giro su GitHub - 18/11/2026 02:32:44 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -302,10 +302,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-17 13:32:41  GitHub: rigioco 2026-11-17 12:40:00 -> 2026-11-17 13:10:00 (6 letture dallo storico)",
-  "2026-11-17 14:02:48  GitHub: rigioco 2026-11-17 13:10:00 -> 2026-11-17 13:40:00 (6 letture dallo storico)",
-  "2026-11-17 13:15:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-11-17 13:15:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
   "2026-11-17 13:30:00  Prezzi GME del 20261118 salvati: 24 ore, NORD da 0.1833 a 0.2680 EUR/kWh, con quarti d'ora",
   "2026-11-17 13:30:00  Richiesta delle previsioni di 20261118 inviata a GitHub",
   "2026-11-17 14:05:30  GitHub: inviati 2 file",
@@ -381,6 +377,10 @@
   "2026-11-18 02:32:43  Token Huawei rinnovato.",
   "2026-11-18 02:32:47  GitHub: rigioco 2026-11-18 01:40:00 -> 2026-11-18 02:10:00 (6 letture dallo storico)",
   "2026-11-18 01:45:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-11-18 03:22:56  GitHub: rigioco 2026-11-18 02:10:00 -> 2026-11-18 03:00:00 (10 letture dallo storico)"
+  "2026-11-18 03:22:56  GitHub: rigioco 2026-11-18 02:10:00 -> 2026-11-18 03:00:00 (10 letture dallo storico)",
+  "2026-11-18 03:32:52  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-18 03:32:52  Token Huawei rinnovato.",
+  "2026-11-18 03:32:56  GitHub: rigioco 2026-11-18 03:00:00 -> 2026-11-18 03:10:00 (2 letture dallo storico)",
+  "2026-11-18 03:05:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito"
  ]
 }
