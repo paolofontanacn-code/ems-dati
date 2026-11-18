@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-18T16:33:19+01:00",
+ "aggiornato": "2026-11-18T17:03:43+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -265,7 +265,7 @@
  "oggi": "2026-11-18",
  "piano": "2026-11-19",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 18/11/2026 15:32:43 UTC",
+  "Controllo di rete del giro su GitHub - 18/11/2026 16:03:16 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -302,19 +302,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-18 01:33:11  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-18 01:33:12  Token Huawei rinnovato.",
-  "2026-11-18 01:33:14  GitHub: rigioco 2026-11-18 00:40:00 -> 2026-11-18 01:10:00 (6 letture dallo storico)",
-  "2026-11-18 02:02:46  GitHub: rigioco 2026-11-18 01:10:00 -> 2026-11-18 01:40:00 (6 letture dallo storico)",
-  "2026-11-18 01:15:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-11-18 01:15:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
-  "2026-11-18 02:32:43  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-18 02:32:43  Token Huawei rinnovato.",
-  "2026-11-18 02:32:47  GitHub: rigioco 2026-11-18 01:40:00 -> 2026-11-18 02:10:00 (6 letture dallo storico)",
-  "2026-11-18 01:45:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-11-18 03:22:56  GitHub: rigioco 2026-11-18 02:10:00 -> 2026-11-18 03:00:00 (10 letture dallo storico)",
-  "2026-11-18 03:32:52  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-18 03:32:52  Token Huawei rinnovato.",
   "2026-11-18 03:32:56  GitHub: rigioco 2026-11-18 03:00:00 -> 2026-11-18 03:10:00 (2 letture dallo storico)",
   "2026-11-18 03:05:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
   "2026-11-18 04:02:42  GitHub: rigioco 2026-11-18 03:10:00 -> 2026-11-18 03:40:00 (6 letture dallo storico)",
@@ -381,6 +368,19 @@
   "2026-11-18 16:03:51  GitHub: rigioco 2026-11-18 15:10:00 -> 2026-11-18 15:40:00 (6 letture dallo storico)",
   "2026-11-18 16:32:51  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-18 16:32:51  Token Huawei rinnovato.",
-  "2026-11-18 16:32:58  GitHub: rigioco 2026-11-18 15:40:00 -> 2026-11-18 16:10:00 (6 letture dallo storico)"
+  "2026-11-18 16:32:58  GitHub: rigioco 2026-11-18 15:40:00 -> 2026-11-18 16:10:00 (6 letture dallo storico)",
+  "2026-11-18 17:03:26  GitHub: rigioco 2026-11-18 16:10:00 -> 2026-11-18 16:40:00 (6 letture dallo storico)",
+  "2026-11-18 16:15:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}): uso il modello predefinito",
+  "2026-11-18 16:15:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}",
+  "2026-11-18 16:20:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}): uso il modello predefinito",
+  "2026-11-18 16:20:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}",
+  "2026-11-18 16:25:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}): uso il modello predefinito",
+  "2026-11-18 16:25:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}",
+  "2026-11-18 16:30:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}): uso il modello predefinito",
+  "2026-11-18 16:30:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}",
+  "2026-11-18 16:35:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}): uso il modello predefinito",
+  "2026-11-18 16:35:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}",
+  "2026-11-18 16:40:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}): uso il modello predefinito",
+  "2026-11-18 16:40:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}"
  ]
 }
