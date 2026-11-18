@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-19T00:03:25+01:00",
+ "aggiornato": "2026-11-19T00:33:01+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -259,13 +259,17 @@
   },
   {
    "g": "2026-11-18",
+   "tipo": "simulato"
+  },
+  {
+   "g": "2026-11-19",
    "tipo": "oggi"
   }
  ],
- "oggi": "2026-11-18",
+ "oggi": "2026-11-19",
  "piano": "2026-11-19",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 18/11/2026 23:02:50 UTC",
+  "Controllo di rete del giro su GitHub - 18/11/2026 23:32:26 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -302,11 +306,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-18 09:32:44  GitHub: rigioco 2026-11-18 08:40:00 -> 2026-11-18 09:10:00 (6 letture dallo storico)",
-  "2026-11-18 10:03:01  GitHub: rigioco 2026-11-18 09:10:00 -> 2026-11-18 09:40:00 (6 letture dallo storico)",
-  "2026-11-18 09:15:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-11-18 10:32:43  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-18 10:32:44  Token Huawei rinnovato.",
   "2026-11-18 10:32:49  GitHub: rigioco 2026-11-18 09:40:00 -> 2026-11-18 10:10:00 (6 letture dallo storico)",
   "2026-11-18 09:45:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
   "2026-11-18 11:03:51  GitHub: rigioco 2026-11-18 10:10:00 -> 2026-11-18 10:40:00 (6 letture dallo storico)",
@@ -381,6 +380,11 @@
   "2026-11-18 23:32:33  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-18 23:32:34  Token Huawei rinnovato.",
   "2026-11-18 23:32:43  GitHub: rigioco 2026-11-18 22:40:00 -> 2026-11-18 23:10:00 (6 letture dallo storico)",
-  "2026-11-19 00:03:05  GitHub: rigioco 2026-11-18 23:10:00 -> 2026-11-18 23:40:00 (6 letture dallo storico)"
+  "2026-11-19 00:03:05  GitHub: rigioco 2026-11-18 23:10:00 -> 2026-11-18 23:40:00 (6 letture dallo storico)",
+  "2026-11-19 00:32:35  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-19 00:32:35  Token Huawei rinnovato.",
+  "2026-11-19 00:32:46  GitHub: rigioco 2026-11-18 23:40:00 -> 2026-11-19 00:10:00 (6 letture dallo storico)",
+  "2026-11-19 00:00:00  Giorno 20261118 chiuso: costo netto condizione 0 2.44 EUR, condizione 1 (reale) 2.73 EUR; beneficio sulla 1: C2 -0.38, C3 0.35 EUR",
+  "2026-11-19 00:00:00  GitHub: inviati 11 file"
  ]
 }
