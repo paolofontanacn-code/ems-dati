@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-19T14:03:16+01:00",
+ "aggiornato": "2026-11-19T14:32:55+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -267,9 +267,9 @@
   }
  ],
  "oggi": "2026-11-19",
- "piano": "2026-11-19",
+ "piano": "2026-11-20",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 19/11/2026 13:02:38 UTC",
+  "Controllo di rete del giro su GitHub - 19/11/2026 13:32:27 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -306,11 +306,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-18 20:23:03  GitHub: rigioco 2026-11-18 19:40:00 -> 2026-11-18 20:00:00 (4 letture dallo storico)",
-  "2026-11-18 20:32:40  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-18 20:32:40  Token Huawei rinnovato.",
-  "2026-11-18 20:32:46  GitHub: rigioco 2026-11-18 20:00:00 -> 2026-11-18 20:10:00 (2 letture dallo storico)",
-  "2026-11-18 21:02:47  GitHub: rigioco 2026-11-18 20:10:00 -> 2026-11-18 20:40:00 (6 letture dallo storico)",
   "2026-11-18 21:32:38  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-18 21:32:38  Token Huawei rinnovato.",
   "2026-11-18 21:32:45  GitHub: rigioco 2026-11-18 20:40:00 -> 2026-11-18 21:10:00 (6 letture dallo storico)",
@@ -385,6 +380,11 @@
   "2026-11-19 14:02:54  GitHub: rigioco 2026-11-19 13:10:00 -> 2026-11-19 13:40:00 (6 letture dallo storico)",
   "2026-11-19 13:30:00  Prezzi GME del 20261120 salvati: 24 ore, NORD da 0.1688 a 0.2511 EUR/kWh, con quarti d'ora",
   "2026-11-19 13:30:00  Richiesta delle previsioni di 20261120 inviata a GitHub",
-  "2026-11-19 14:03:01  GitHub: inviati 2 file"
+  "2026-11-19 14:03:01  GitHub: inviati 2 file",
+  "2026-11-19 14:32:34  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-19 14:32:34  Token Huawei rinnovato.",
+  "2026-11-19 14:32:41  GitHub: rigioco 2026-11-19 13:40:00 -> 2026-11-19 14:10:00 (6 letture dallo storico)",
+  "2026-11-19 13:45:00  Previsioni di GitHub per 20261120 ricevute e accettate",
+  "2026-11-19 14:00:00  Piano della sera per 20261120 salvato"
  ]
 }
