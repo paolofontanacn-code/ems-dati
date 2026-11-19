@@ -1,6 +1,6 @@
 {
  "revisione": "R07",
- "aggiornato": "2026-11-19T22:33+01:00",
+ "aggiornato": "2026-11-19T23:03+01:00",
  "verifica": {
   "giorni": 7,
   "mae_fuzzy": 616.9,
@@ -138,19 +138,6 @@
   }
  ],
  "storico": [
-  {
-   "quando": "2026-11-13T23:03+01:00",
-   "giorni": 7,
-   "mae_fuzzy": 595.5,
-   "mae_mango": 638.6,
-   "mae_ml": 641.5,
-   "scelta": "logica fuzzy",
-   "accettata": true,
-   "motivo": "migliore delle previsioni del Mango",
-   "inerzia_ore": 6,
-   "oblio": 0.98,
-   "ritardi": false
-  },
   {
    "quando": "2026-11-13T23:38+01:00",
    "giorni": 7,
@@ -4040,6 +4027,19 @@
   },
   {
    "quando": "2026-11-19T22:33+01:00",
+   "giorni": 7,
+   "mae_fuzzy": 616.9,
+   "mae_mango": 639.6,
+   "mae_ml": 690.0,
+   "scelta": "logica fuzzy",
+   "accettata": true,
+   "motivo": "migliore delle previsioni del Mango",
+   "inerzia_ore": 48,
+   "oblio": 0.98,
+   "ritardi": true
+  },
+  {
+   "quando": "2026-11-19T23:03+01:00",
    "giorni": 7,
    "mae_fuzzy": 616.9,
    "mae_mango": 639.6,
