@@ -1,2 +1,2 @@
-BENCHMARK totale 0.549 s  (batteria 0.001 s, ottimizzatore 0.510 s, json 0.038 s)
+BENCHMARK totale 0.908 s  (batteria 0.002 s, ottimizzatore 0.841 s, json 0.065 s)
 Lua: Lua 5.1  memoria 1028 kB
