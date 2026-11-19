@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-19T06:03:12+01:00",
+ "aggiornato": "2026-11-19T06:33:09+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -269,7 +269,7 @@
  "oggi": "2026-11-19",
  "piano": "2026-11-19",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 19/11/2026 05:02:35 UTC",
+  "Controllo di rete del giro su GitHub - 19/11/2026 05:32:35 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -306,9 +306,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-18 14:32:41  GitHub: rigioco 2026-11-18 13:40:00 -> 2026-11-18 14:10:00 (6 letture dallo storico)",
-  "2026-11-18 13:45:00  Previsioni di GitHub per 20261119 non accettate (non migliore del Mango): uso le mie",
-  "2026-11-18 14:00:00  Piano della sera per 20261119 salvato",
   "2026-11-18 15:03:55  GitHub: rigioco 2026-11-18 14:10:00 -> 2026-11-18 14:40:00 (6 letture dallo storico)",
   "2026-11-18 15:32:41  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-18 15:32:41  Token Huawei rinnovato.",
@@ -385,6 +382,9 @@
   "2026-11-19 05:32:40  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-19 05:32:41  Token Huawei rinnovato.",
   "2026-11-19 05:32:44  GitHub: rigioco 2026-11-19 04:40:00 -> 2026-11-19 05:10:00 (6 letture dallo storico)",
-  "2026-11-19 06:02:50  GitHub: rigioco 2026-11-19 05:10:00 -> 2026-11-19 05:40:00 (6 letture dallo storico)"
+  "2026-11-19 06:02:50  GitHub: rigioco 2026-11-19 05:10:00 -> 2026-11-19 05:40:00 (6 letture dallo storico)",
+  "2026-11-19 06:32:45  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-19 06:32:46  Token Huawei rinnovato.",
+  "2026-11-19 06:32:51  GitHub: rigioco 2026-11-19 05:40:00 -> 2026-11-19 06:10:00 (6 letture dallo storico)"
  ]
 }
