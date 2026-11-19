@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-19T14:32:55+01:00",
+ "aggiornato": "2026-11-19T15:03:37+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -269,7 +269,7 @@
  "oggi": "2026-11-19",
  "piano": "2026-11-20",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 19/11/2026 13:32:27 UTC",
+  "Controllo di rete del giro su GitHub - 19/11/2026 14:03:07 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -306,19 +306,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-18 21:32:38  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-18 21:32:38  Token Huawei rinnovato.",
-  "2026-11-18 21:32:45  GitHub: rigioco 2026-11-18 20:40:00 -> 2026-11-18 21:10:00 (6 letture dallo storico)",
-  "2026-11-18 22:02:41  GitHub: rigioco 2026-11-18 21:10:00 -> 2026-11-18 21:40:00 (6 letture dallo storico)",
-  "2026-11-18 22:33:17  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-18 22:33:17  Token Huawei rinnovato.",
-  "2026-11-18 22:33:26  GitHub: rigioco 2026-11-18 21:40:00 -> 2026-11-18 22:10:00 (6 letture dallo storico)",
-  "2026-11-18 23:02:44  GitHub: rigioco 2026-11-18 22:10:00 -> 2026-11-18 22:40:00 (6 letture dallo storico)",
-  "2026-11-18 23:32:33  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-18 23:32:34  Token Huawei rinnovato.",
-  "2026-11-18 23:32:43  GitHub: rigioco 2026-11-18 22:40:00 -> 2026-11-18 23:10:00 (6 letture dallo storico)",
-  "2026-11-19 00:03:05  GitHub: rigioco 2026-11-18 23:10:00 -> 2026-11-18 23:40:00 (6 letture dallo storico)",
-  "2026-11-19 00:32:35  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-19 00:32:35  Token Huawei rinnovato.",
   "2026-11-19 00:32:46  GitHub: rigioco 2026-11-18 23:40:00 -> 2026-11-19 00:10:00 (6 letture dallo storico)",
   "2026-11-19 00:00:00  Giorno 20261118 chiuso: costo netto condizione 0 2.44 EUR, condizione 1 (reale) 2.73 EUR; beneficio sulla 1: C2 -0.38, C3 0.35 EUR",
@@ -385,6 +372,19 @@
   "2026-11-19 14:32:34  Token Huawei rinnovato.",
   "2026-11-19 14:32:41  GitHub: rigioco 2026-11-19 13:40:00 -> 2026-11-19 14:10:00 (6 letture dallo storico)",
   "2026-11-19 13:45:00  Previsioni di GitHub per 20261120 ricevute e accettate",
-  "2026-11-19 14:00:00  Piano della sera per 20261120 salvato"
+  "2026-11-19 14:00:00  Piano della sera per 20261120 salvato",
+  "2026-11-19 15:03:20  GitHub: rigioco 2026-11-19 14:10:00 -> 2026-11-19 14:40:00 (6 letture dallo storico)",
+  "2026-11-19 14:15:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\"}): uso il modello predefinito",
+  "2026-11-19 14:15:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\"}",
+  "2026-11-19 14:20:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\",\"error\":true}): uso il modello predefinito",
+  "2026-11-19 14:20:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\",\"error\":true}",
+  "2026-11-19 14:25:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\"}): uso il modello predefinito",
+  "2026-11-19 14:25:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\",\"error\":true}",
+  "2026-11-19 14:30:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\"}): uso il modello predefinito",
+  "2026-11-19 14:30:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\"}",
+  "2026-11-19 14:35:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\",\"error\":true}): uso il modello predefinito",
+  "2026-11-19 14:35:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\"}",
+  "2026-11-19 14:40:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\",\"error\":true}): uso il modello predefinito",
+  "2026-11-19 14:40:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\"}"
  ]
 }
