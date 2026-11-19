@@ -1,6 +1,6 @@
 {
  "revisione": "R07",
- "aggiornato": "2026-11-19T03:32+01:00",
+ "aggiornato": "2026-11-19T04:03+01:00",
  "verifica": {
   "giorni": 7,
   "mae_fuzzy": 616.9,
@@ -3988,6 +3988,19 @@
   },
   {
    "quando": "2026-11-19T03:32+01:00",
+   "giorni": 7,
+   "mae_fuzzy": 616.9,
+   "mae_mango": 639.6,
+   "mae_ml": 690.0,
+   "scelta": "logica fuzzy",
+   "accettata": true,
+   "motivo": "migliore delle previsioni del Mango",
+   "inerzia_ore": 48,
+   "oblio": 0.98,
+   "ritardi": true
+  },
+  {
+   "quando": "2026-11-19T04:03+01:00",
    "giorni": 7,
    "mae_fuzzy": 616.9,
    "mae_mango": 639.6,
