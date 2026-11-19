@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-19T13:32:52+01:00",
+ "aggiornato": "2026-11-19T14:03:16+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -269,7 +269,7 @@
  "oggi": "2026-11-19",
  "piano": "2026-11-19",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 19/11/2026 12:32:24 UTC",
+  "Controllo di rete del giro su GitHub - 19/11/2026 13:02:38 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -306,10 +306,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-18 19:32:46  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-18 19:32:47  Token Huawei rinnovato.",
-  "2026-11-18 19:32:54  GitHub: rigioco 2026-11-18 18:40:00 -> 2026-11-18 19:10:00 (6 letture dallo storico)",
-  "2026-11-18 20:03:12  GitHub: rigioco 2026-11-18 19:10:00 -> 2026-11-18 19:40:00 (6 letture dallo storico)",
   "2026-11-18 20:23:03  GitHub: rigioco 2026-11-18 19:40:00 -> 2026-11-18 20:00:00 (4 letture dallo storico)",
   "2026-11-18 20:32:40  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-18 20:32:40  Token Huawei rinnovato.",
@@ -385,6 +381,10 @@
   "2026-11-19 13:02:42  GitHub: rigioco 2026-11-19 12:10:00 -> 2026-11-19 12:40:00 (6 letture dallo storico)",
   "2026-11-19 13:32:32  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-19 13:32:33  Token Huawei rinnovato.",
-  "2026-11-19 13:32:39  GitHub: rigioco 2026-11-19 12:40:00 -> 2026-11-19 13:10:00 (6 letture dallo storico)"
+  "2026-11-19 13:32:39  GitHub: rigioco 2026-11-19 12:40:00 -> 2026-11-19 13:10:00 (6 letture dallo storico)",
+  "2026-11-19 14:02:54  GitHub: rigioco 2026-11-19 13:10:00 -> 2026-11-19 13:40:00 (6 letture dallo storico)",
+  "2026-11-19 13:30:00  Prezzi GME del 20261120 salvati: 24 ore, NORD da 0.1688 a 0.2511 EUR/kWh, con quarti d'ora",
+  "2026-11-19 13:30:00  Richiesta delle previsioni di 20261120 inviata a GitHub",
+  "2026-11-19 14:03:01  GitHub: inviati 2 file"
  ]
 }
