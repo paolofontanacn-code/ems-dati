@@ -1,4 +1,4 @@
-Controllo di rete del giro su GitHub - 20/11/2026 10:02:34 UTC
+Controllo di rete del giro su GitHub - 20/11/2026 17:59:29 UTC
 oauth2.fusionsolar.huawei.com
   DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname
   DNS Google:       NON TROVATO 
@@ -12,7 +12,7 @@ oauth2.fusionsolar.huawei.com
 eu5.fusionsolar.huawei.com
   DNS di GitHub:    80.158.6.36
   DNS Google:       80.158.6.36
-  DNS Cloudflare:   NON TROVATO timed out
+  DNS Cloudflare:   80.158.6.36
   DNS su HTTPS:     80.158.6.36
   IPv6 DNS di GitHub: NON TROVATO [Errno -5] No address associated with hostname
   IPv6 DNS Google:    NON TROVATO 
