@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-20T02:33:06+01:00",
+ "aggiornato": "2026-11-20T03:33:10+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -273,7 +273,7 @@
  "oggi": "2026-11-20",
  "piano": "2026-11-20",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 20/11/2026 01:32:33 UTC",
+  "Controllo di rete del giro su GitHub - 20/11/2026 02:32:40 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -310,9 +310,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-19 13:45:00  Previsioni di GitHub per 20261120 ricevute e accettate",
-  "2026-11-19 14:00:00  Piano della sera per 20261120 salvato",
-  "2026-11-19 15:03:20  GitHub: rigioco 2026-11-19 14:10:00 -> 2026-11-19 14:40:00 (6 letture dallo storico)",
   "2026-11-19 14:15:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\"}): uso il modello predefinito",
   "2026-11-19 14:15:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\"}",
   "2026-11-19 14:20:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\",\"error\":true}): uso il modello predefinito",
@@ -389,6 +386,9 @@
   "2026-11-20 02:14:09  GitHub: rigioco 2026-11-20 01:40:00 -> 2026-11-20 01:50:00 (2 letture dallo storico)",
   "2026-11-20 02:32:41  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-20 02:32:42  Token Huawei rinnovato.",
-  "2026-11-20 02:32:46  GitHub: rigioco 2026-11-20 01:50:00 -> 2026-11-20 02:10:00 (4 letture dallo storico)"
+  "2026-11-20 02:32:46  GitHub: rigioco 2026-11-20 01:50:00 -> 2026-11-20 02:10:00 (4 letture dallo storico)",
+  "2026-11-20 03:32:48  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-20 03:32:49  Token Huawei rinnovato.",
+  "2026-11-20 03:32:52  GitHub: rigioco 2026-11-20 02:10:00 -> 2026-11-20 03:10:00 (12 letture dallo storico)"
  ]
 }
