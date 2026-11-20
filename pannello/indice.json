@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-20T10:33:21+01:00",
+ "aggiornato": "2026-11-20T11:03:13+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -273,7 +273,7 @@
  "oggi": "2026-11-20",
  "piano": "2026-11-20",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 20/11/2026 09:32:55 UTC",
+  "Controllo di rete del giro su GitHub - 20/11/2026 10:02:34 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -287,7 +287,7 @@
   "eu5.fusionsolar.huawei.com",
   "  DNS di GitHub:    80.158.6.36",
   "  DNS Google:       80.158.6.36",
-  "  DNS Cloudflare:   80.158.6.36",
+  "  DNS Cloudflare:   NON TROVATO timed out",
   "  DNS su HTTPS:     80.158.6.36",
   "  IPv6 DNS di GitHub: NON TROVATO [Errno -5] No address associated with hostname",
   "  IPv6 DNS Google:    NON TROVATO ",
@@ -310,7 +310,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-19 19:15:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
   "2026-11-19 19:15:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
   "2026-11-19 20:03:23  GitHub: rigioco 2026-11-19 19:15:00 -> 2026-11-19 19:40:00 (5 letture dallo storico)",
   "2026-11-19 20:32:46  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
@@ -389,6 +388,7 @@
   "2026-11-20 09:45:00  Meteo non aggiornato: rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3",
   "2026-11-20 10:33:00  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
   "2026-11-20 10:33:00  Token Huawei rinnovato.",
-  "2026-11-20 10:33:06  GitHub: rigioco 2026-11-20 09:45:00 -> 2026-11-20 10:10:00 (5 letture dallo storico)"
+  "2026-11-20 10:33:06  GitHub: rigioco 2026-11-20 09:45:00 -> 2026-11-20 10:10:00 (5 letture dallo storico)",
+  "2026-11-20 11:02:55  GitHub: rigioco 2026-11-20 10:10:00 -> 2026-11-20 10:40:00 (6 letture dallo storico)"
  ]
 }
