@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-20T19:00:22+01:00",
+ "aggiornato": "2026-11-21T00:58:21+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -267,13 +267,17 @@
   },
   {
    "g": "2026-11-20",
+   "tipo": "simulato"
+  },
+  {
+   "g": "2026-11-21",
    "tipo": "oggi"
   }
  ],
- "oggi": "2026-11-20",
- "piano": "2026-11-20",
+ "oggi": "2026-11-21",
+ "piano": "2026-11-21",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 20/11/2026 17:59:29 UTC",
+  "Controllo di rete del giro su GitHub - 20/11/2026 23:57:23 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -310,13 +314,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-19 21:32:35  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-19 21:32:36  Token Huawei rinnovato.",
-  "2026-11-19 21:32:44  GitHub: rigioco 2026-11-19 20:40:00 -> 2026-11-19 21:10:00 (6 letture dallo storico)",
-  "2026-11-19 22:03:14  GitHub: rigioco 2026-11-19 21:10:00 -> 2026-11-19 21:40:00 (6 letture dallo storico)",
-  "2026-11-19 21:15:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}): uso il modello predefinito",
-  "2026-11-19 21:15:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}",
-  "2026-11-19 21:20:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}): uso il modello predefinito",
   "2026-11-19 21:20:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}",
   "2026-11-19 21:25:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}): uso il modello predefinito",
   "2026-11-19 21:25:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}",
@@ -389,6 +386,13 @@
   "2026-11-20 18:59:41  GitHub: rigioco 2026-11-20 10:40:00 -> 2026-11-20 18:35:00 (95 letture dallo storico)",
   "2026-11-20 13:30:00  Prezzi GME del 20261121 salvati: 24 ore, NORD da 0.1559 a 0.2505 EUR/kWh, con quarti d'ora",
   "2026-11-20 13:30:00  Richiesta delle previsioni di 20261121 inviata a GitHub",
-  "2026-11-20 14:00:00  GitHub: inviati 2 file"
+  "2026-11-20 14:00:00  GitHub: inviati 2 file",
+  "2026-11-21 00:57:32  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-21 00:57:33  Token Huawei rinnovato.",
+  "2026-11-21 00:57:43  GitHub: rigioco 2026-11-20 18:35:00 -> 2026-11-21 00:35:00 (72 letture dallo storico)",
+  "2026-11-20 18:45:00  Previsioni di GitHub per 20261121 ricevute e accettate",
+  "2026-11-20 19:00:00  Piano della sera per 20261121 salvato",
+  "2026-11-21 00:00:00  Giorno 20261120 chiuso: costo netto condizione 0 1.66 EUR, condizione 1 (reale) 2.19 EUR; beneficio sulla 1: C2 0.02, C3 0.52 EUR",
+  "2026-11-21 00:00:00  GitHub: inviati 11 file"
  ]
 }

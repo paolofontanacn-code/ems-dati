@@ -1,156 +1,143 @@
 {
  "revisione": "R07",
- "aggiornato": "2026-11-20T19:00+01:00",
+ "aggiornato": "2026-11-21T00:58+01:00",
  "verifica": {
   "giorni": 7,
-  "mae_fuzzy": 626.4,
-  "mae_mango": 647.5,
-  "mae_ml": 699.2,
+  "mae_fuzzy": 624.1,
+  "mae_mango": 648.3,
+  "mae_ml": 663.2,
   "scelta": "logica fuzzy",
   "accettata": true,
   "motivo": "migliore delle previsioni del Mango"
  },
  "parametri": {
-  "inerzia_ore": 6,
+  "inerzia_ore": 48,
   "oblio": 0.98,
-  "ore_dei_giorni_prima": true
+  "ore_dei_giorni_prima": false
  },
  "prove_automiglioramento": [
   {
    "inerzia_ore": 3,
    "oblio": 0.98,
    "ritardi": false,
-   "mae_w": 630.3
+   "mae_w": 626.9
   },
   {
    "inerzia_ore": 3,
    "oblio": 0.98,
    "ritardi": true,
-   "mae_w": 628.8
+   "mae_w": 627.6
   },
   {
    "inerzia_ore": 3,
    "oblio": 0.995,
    "ritardi": false,
-   "mae_w": 630.3
-  },
-  {
-   "inerzia_ore": 3,
-   "oblio": 0.995,
-   "ritardi": true,
-   "mae_w": 629.7
-  },
-  {
-   "inerzia_ore": 6,
-   "oblio": 0.98,
-   "ritardi": false,
-   "mae_w": 628.0
-  },
-  {
-   "inerzia_ore": 6,
-   "oblio": 0.98,
-   "ritardi": true,
    "mae_w": 626.4
   },
   {
+   "inerzia_ore": 3,
+   "oblio": 0.995,
+   "ritardi": true,
+   "mae_w": 627.4
+  },
+  {
+   "inerzia_ore": 6,
+   "oblio": 0.98,
+   "ritardi": false,
+   "mae_w": 624.7
+  },
+  {
+   "inerzia_ore": 6,
+   "oblio": 0.98,
+   "ritardi": true,
+   "mae_w": 625.3
+  },
+  {
    "inerzia_ore": 6,
    "oblio": 0.995,
    "ritardi": false,
-   "mae_w": 628.3
+   "mae_w": 624.3
   },
   {
    "inerzia_ore": 6,
    "oblio": 0.995,
    "ritardi": true,
-   "mae_w": 627.5
+   "mae_w": 625.0
   },
   {
    "inerzia_ore": 12,
    "oblio": 0.98,
    "ritardi": false,
-   "mae_w": 629.8
+   "mae_w": 625.3
   },
   {
    "inerzia_ore": 12,
    "oblio": 0.98,
    "ritardi": true,
-   "mae_w": 627.5
+   "mae_w": 625.8
   },
   {
    "inerzia_ore": 12,
    "oblio": 0.995,
    "ritardi": false,
-   "mae_w": 630.8
+   "mae_w": 625.2
   },
   {
    "inerzia_ore": 12,
    "oblio": 0.995,
    "ritardi": true,
-   "mae_w": 629.2
+   "mae_w": 625.6
   },
   {
    "inerzia_ore": 24,
    "oblio": 0.98,
    "ritardi": false,
-   "mae_w": 629.9
+   "mae_w": 624.5
   },
   {
    "inerzia_ore": 24,
    "oblio": 0.98,
    "ritardi": true,
-   "mae_w": 627.7
+   "mae_w": 625.1
   },
   {
    "inerzia_ore": 24,
    "oblio": 0.995,
    "ritardi": false,
-   "mae_w": 631.3
+   "mae_w": 624.5
   },
   {
    "inerzia_ore": 24,
    "oblio": 0.995,
    "ritardi": true,
-   "mae_w": 629.6
+   "mae_w": 625.1
   },
   {
    "inerzia_ore": 48,
    "oblio": 0.98,
    "ritardi": false,
-   "mae_w": 628.8
+   "mae_w": 624.1
   },
   {
    "inerzia_ore": 48,
    "oblio": 0.98,
    "ritardi": true,
-   "mae_w": 626.5
+   "mae_w": 624.6
   },
   {
    "inerzia_ore": 48,
    "oblio": 0.995,
    "ritardi": false,
-   "mae_w": 630.4
+   "mae_w": 624.2
   },
   {
    "inerzia_ore": 48,
    "oblio": 0.995,
    "ritardi": true,
-   "mae_w": 628.4
+   "mae_w": 625.0
   }
  ],
  "storico": [
-  {
-   "quando": "2026-11-14T12:07+01:00",
-   "giorni": 7,
-   "mae_fuzzy": 593.0,
-   "mae_mango": 640.6,
-   "mae_ml": 635.7,
-   "scelta": "logica fuzzy",
-   "accettata": true,
-   "motivo": "migliore delle previsioni del Mango",
-   "inerzia_ore": 3,
-   "oblio": 0.995,
-   "ritardi": false
-  },
   {
    "quando": "2026-11-14T12:32+01:00",
    "giorni": 7,
@@ -4050,45 +4037,45 @@
    "inerzia_ore": 6,
    "oblio": 0.98,
    "ritardi": true
+  },
+  {
+   "quando": "2026-11-21T00:58+01:00",
+   "giorni": 7,
+   "mae_fuzzy": 624.1,
+   "mae_mango": 648.3,
+   "mae_ml": 663.2,
+   "scelta": "logica fuzzy",
+   "accettata": true,
+   "motivo": "migliore delle previsioni del Mango",
+   "inerzia_ore": 48,
+   "oblio": 0.98,
+   "ritardi": false
   }
  ],
  "incidenze": {
   "riscaldamento_w_per_temperatura_efficace": {
    "-5.0": 0.0,
-   "0.0": 69.8,
-   "5.0": 349.3,
-   "10.0": 226.5,
-   "15.0": 78.2,
-   "20.0": 37.9
+   "0.0": 0.0,
+   "5.0": 370.5,
+   "10.0": 244.3,
+   "15.0": 103.6,
+   "20.0": 37.1
   },
-  "ore_dei_giorni_prima_w": {
-   "giorno_prima": {
-    "300.0": 124.1,
-    "800.0": 168.3,
-    "1500.0": 153.9,
-    "2500.0": 283.0
-   },
-   "settimana_prima": {
-    "300.0": 130.4,
-    "800.0": 179.1,
-    "1500.0": 168.2,
-    "2500.0": 251.6
-   }
-  },
+  "ore_dei_giorni_prima_w": null,
   "acqua_calda_kwh_giorno_per_temperatura": {
-   "0.0": 4.42,
-   "10.0": 2.66,
-   "20.0": 1.5
+   "0.0": 5.33,
+   "10.0": 2.54,
+   "20.0": 1.47
   },
   "pregresso_w_per_rapporto_giorno_prima": {
-   "0.7": 172.7,
-   "1.0": 267.0,
-   "1.3": 289.6
+   "0.7": 459.9,
+   "1.0": 571.5,
+   "1.3": 610.2
   },
   "comportamento_kwh_giorno": {
-   "lavoro": 2.15,
-   "sabato": 5.04,
-   "festa": 3.73
+   "lavoro": 2.25,
+   "sabato": 5.57,
+   "festa": 4.38
   },
   "nota": "valori medi delle regole; la separazione tra le parti e' una stima (c'e' solo il consumo totale)"
  },
@@ -4719,6 +4706,17 @@
    "indice_vs_settimana_prima": 0.28,
    "indice_vs_mango_media7": 0.019,
    "indice_vs_settimana_prima_media7": 0.143
+  },
+  {
+   "giorno": "2026-11-20",
+   "fonte": "stima del giorno prima (meteo previsto)",
+   "mae_fuzzy": 606.934,
+   "mae_settimana_prima": 842.951,
+   "mae_mango": 606.934,
+   "indice_vs_mango": 0.0,
+   "indice_vs_settimana_prima": 0.28,
+   "indice_vs_mango_media7": 0.019,
+   "indice_vs_settimana_prima_media7": 0.136
   }
  ],
  "carichi_ripetitivi": {
@@ -4729,9 +4727,9 @@
    "1": 0.17,
    "2": 0.27,
    "3": 0.23,
-   "4": 0.07,
-   "5": 0.17,
-   "6": 0.4,
+   "4": 0.1,
+   "5": 0.13,
+   "6": 0.37,
    "7": 0.47,
    "8": 0.3,
    "9": 0.37,
@@ -4739,9 +4737,9 @@
    "11": 0.47,
    "12": 0.4,
    "13": 0.37,
-   "14": 0.3,
-   "15": 0.33,
-   "16": 0.13,
+   "14": 0.27,
+   "15": 0.37,
+   "16": 0.17,
    "17": 0.23,
    "18": 0.33,
    "19": 0.7,
