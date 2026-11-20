@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-20T01:03:02+01:00",
+ "aggiornato": "2026-11-20T01:33:01+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -273,7 +273,7 @@
  "oggi": "2026-11-20",
  "piano": "2026-11-20",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 20/11/2026 00:02:34 UTC",
+  "Controllo di rete del giro su GitHub - 20/11/2026 00:32:29 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -310,9 +310,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-19 13:32:39  GitHub: rigioco 2026-11-19 12:40:00 -> 2026-11-19 13:10:00 (6 letture dallo storico)",
-  "2026-11-19 14:02:54  GitHub: rigioco 2026-11-19 13:10:00 -> 2026-11-19 13:40:00 (6 letture dallo storico)",
-  "2026-11-19 13:30:00  Prezzi GME del 20261120 salvati: 24 ore, NORD da 0.1688 a 0.2511 EUR/kWh, con quarti d'ora",
   "2026-11-19 13:30:00  Richiesta delle previsioni di 20261120 inviata a GitHub",
   "2026-11-19 14:03:01  GitHub: inviati 2 file",
   "2026-11-19 14:32:34  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
@@ -389,6 +386,9 @@
   "2026-11-20 00:32:50  GitHub: rigioco 2026-11-19 23:40:00 -> 2026-11-20 00:10:00 (6 letture dallo storico)",
   "2026-11-20 00:00:00  Giorno 20261119 chiuso: costo netto condizione 0 2.82 EUR, condizione 1 (reale) 3.30 EUR; beneficio sulla 1: C2 1.18, C3 0.48 EUR",
   "2026-11-20 00:00:00  GitHub: inviati 11 file",
-  "2026-11-20 01:02:42  GitHub: rigioco 2026-11-20 00:10:00 -> 2026-11-20 00:40:00 (6 letture dallo storico)"
+  "2026-11-20 01:02:42  GitHub: rigioco 2026-11-20 00:10:00 -> 2026-11-20 00:40:00 (6 letture dallo storico)",
+  "2026-11-20 01:32:40  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-20 01:32:41  Token Huawei rinnovato.",
+  "2026-11-20 01:32:43  GitHub: rigioco 2026-11-20 00:40:00 -> 2026-11-20 01:10:00 (6 letture dallo storico)"
  ]
 }
