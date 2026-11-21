@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-21T07:59:58+01:00",
+ "aggiornato": "2026-11-21T16:17:51+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -277,7 +277,7 @@
  "oggi": "2026-11-21",
  "piano": "2026-11-21",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 21/11/2026 06:57:42 UTC",
+  "Controllo di rete del giro su GitHub - 21/11/2026 15:16:58 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -314,12 +314,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-19 21:35:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}): uso il modello predefinito",
-  "2026-11-19 21:35:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}",
-  "2026-11-19 21:40:00  Meteo multi-modello non disponibile (Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}): uso il modello predefinito",
-  "2026-11-19 21:40:00  Meteo non aggiornato: Open-Meteo HTTP 429: {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}",
-  "2026-11-19 22:32:39  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-19 22:32:40  Token Huawei rinnovato.",
   "2026-11-19 22:32:47  GitHub: rigioco 2026-11-19 21:40:00 -> 2026-11-19 22:10:00 (6 letture dallo storico)",
   "2026-11-19 23:02:46  GitHub: rigioco 2026-11-19 22:10:00 -> 2026-11-19 22:40:00 (6 letture dallo storico)",
   "2026-11-19 23:32:39  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
@@ -393,6 +387,12 @@
   "2026-11-21 07:57:51  Token Huawei rinnovato.",
   "2026-11-21 07:57:56  GitHub: rigioco 2026-11-21 00:35:00 -> 2026-11-21 07:35:00 (84 letture dallo storico)",
   "2026-11-21 00:40:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-11-21 04:00:00  Coefficienti da GitHub: non applicati: non accettato"
+  "2026-11-21 04:00:00  Coefficienti da GitHub: non applicati: non accettato",
+  "2026-11-21 16:17:03  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-21 16:17:04  Token Huawei rinnovato.",
+  "2026-11-21 16:17:10  GitHub: rigioco 2026-11-21 07:35:00 -> 2026-11-21 15:55:00 (100 letture dallo storico)",
+  "2026-11-21 13:30:00  Prezzi GME del 20261122 salvati: 24 ore, NORD da 0.1905 a 0.2651 EUR/kWh, con quarti d'ora",
+  "2026-11-21 13:30:00  Richiesta delle previsioni di 20261122 inviata a GitHub",
+  "2026-11-21 14:00:00  GitHub: inviati 2 file"
  ]
 }
