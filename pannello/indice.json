@@ -1,5 +1,5 @@
 {
- "aggiornato": "2026-11-28T02:56:03+01:00",
+ "aggiornato": "2026-11-28T11:17:21+01:00",
  "giorni": [
   {
    "g": "2026-09-15",
@@ -305,7 +305,7 @@
  "oggi": "2026-11-28",
  "piano": "2026-11-28",
  "diagnosi_rete": [
-  "Controllo di rete del giro su GitHub - 28/11/2026 01:55:13 UTC",
+  "Controllo di rete del giro su GitHub - 28/11/2026 10:16:43 UTC",
   "oauth2.fusionsolar.huawei.com",
   "  DNS di GitHub:    NON TROVATO [Errno -5] No address associated with hostname",
   "  DNS Google:       NON TROVATO ",
@@ -342,10 +342,6 @@
   "202610"
  ],
  "registro": [
-  "2026-11-23 03:55:00  Meteo multi-modello non disponibile (rete: curl: (28) Connection timed out after 25002 milliseconds verso https://api.open-meteo.com/v1/forecast?latitude=44.3975&longitude=7.4772&hourly=temperature_2m,relative_humidity_2m,cloud_cover,shortwave_radiation,wind_speed_10m,precipitation&timeformat=unixtime&timezone=GMT&past_days=1&forecast_days=3&models=icon_seamless,ecmwf_ifs025,gfs_seamless): uso il modello predefinito",
-  "2026-11-23 04:00:00  Coefficienti da GitHub: non applicati: non accettato",
-  "2026-11-24 01:19:44  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
-  "2026-11-24 01:19:44  Token Huawei rinnovato.",
   "2026-11-24 01:19:56  GitHub: rigioco 2026-11-23 13:00:00 -> 2026-11-24 00:55:00 (143 letture dallo storico)",
   "2026-11-23 13:30:00  Prezzi GME del 20261124 salvati: 24 ore, NORD da 0.2107 a 0.3040 EUR/kWh, con quarti d'ora",
   "2026-11-23 13:30:00  Richiesta delle previsioni di 20261124 inviata a GitHub",
@@ -421,6 +417,10 @@
   "2026-11-27 19:45:00  Previsioni di GitHub per 20261128 ricevute e accettate",
   "2026-11-27 20:00:00  Piano della sera per 20261128 salvato",
   "2026-11-28 00:00:00  Giorno 20261127 chiuso: costo netto condizione 0 6.06 EUR, condizione 1 (reale) 6.16 EUR; beneficio sulla 1: C2 0.87, C3 0.09 EUR",
-  "2026-11-28 00:00:00  GitHub: inviati 11 file"
+  "2026-11-28 00:00:00  GitHub: inviati 11 file",
+  "2026-11-28 11:16:50  Rinnovo token Huawei: oauth2.fusionsolar.huawei.com non trovato nel DNS, provo subito con l'indirizzo 80.158.45.213",
+  "2026-11-28 11:16:50  Token Huawei rinnovato.",
+  "2026-11-28 11:16:56  GitHub: rigioco 2026-11-28 02:35:00 -> 2026-11-28 10:55:00 (100 letture dallo storico)",
+  "2026-11-28 04:00:00  Coefficienti da GitHub: non applicati: non accettato"
  ]
 }
