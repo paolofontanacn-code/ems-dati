@@ -1,8 +1,8 @@
 {
- "aggiornato": "2026-11-27T19:54:53+01:00",
+ "aggiornato": "2026-11-28T02:56:47+01:00",
  "revisione": "R11",
  "inizio": "2026-10-23T22:00+02:00",
- "eseguito_fino_a": "2026-11-27T19:30+01:00",
+ "eseguito_fino_a": "2026-11-28T02:30+01:00",
  "soc_kwh": 0.0,
  "modo_attuale": "tou",
  "errore_modelli": {
@@ -70,13 +70,13 @@
   "ecmwf_ifs025"
  ],
  "theta": {
-  "valore_finale": 0.5239,
-  "k_scenari": 0.2095,
-  "peso_lati": 0.4026,
-  "costo_cambio": 0.1533,
-  "fz_basso": 0.2801,
-  "fz_alto": 0.9199,
-  "fz_scarica": 1.1578
+  "valore_finale": 0.38,
+  "k_scenari": 0.0,
+  "peso_lati": 0.2652,
+  "costo_cambio": 0.2062,
+  "fz_basso": 0.1498,
+  "fz_alto": 0.95,
+  "fz_scarica": 1.4136
  },
  "parametri": {
   "p_impianto_kw": 20.0,
